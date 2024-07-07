@@ -1,4 +1,9 @@
+import dask
+import dask.array as da
+import dask.dataframe as dd
+import dask.delayed
 import numpy as np
+from dask.delayed import Delayed
 
 from microscopy_proc.funcs.cellc_funcs import (
     dog_filter,
@@ -7,10 +12,9 @@ from microscopy_proc.funcs.cellc_funcs import (
     get_local_maxima,
     get_sizes,
     label_objects,
+    manual_thresholding,
     mask,
-    maxima_to_coords_df,
     mean_thresholding,
-    region_to_coords_df,
     tophat_filter,
 )
 
@@ -29,7 +33,10 @@ def get_maxima_block(block):
     res_maxima = label_objects(res_maxima)
     # res_watershed = watershed_segm(block, res_maxima, res)
 
-    return res
+    # Converting back to uint8
+    res_maxima = manual_thresholding(res_maxima, 0)
+    # Returning
+    return res_maxima
 
 
 def get_region_block(block):
@@ -42,6 +49,9 @@ def get_region_block(block):
     df_sizes = get_sizes(res)
     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
 
+    # Converting back to uint8
+    res = manual_thresholding(res, 0)
+    # Returning
     return res
 
 
@@ -51,27 +61,37 @@ def get_maxima_block_from_region(block_raw, block_region):
     res = label_objects(res)
     # res_watershed = watershed_segm(block, res_maxima, res)
 
+    # Converting back to uint8
+    res = manual_thresholding(res, 0)
+    # Returning
     return res
 
 
-def calc_inds(arr):
+def block_to_coords(func, arr: da.Array) -> Delayed:
     """
-    Calculate indices for each block in a Dask array.
+    Applies the `func` to `arr`.
+    Expects `func` to convert `arr` to coords df (of sorts).
+
+    Importantly, this offsets the coords in each block.
     """
-    return np.meshgrid(*[np.cumsum([0, *i[:-1]]) for i in arr.chunks], indexing="ij")
+    inds = np.meshgrid(*[np.cumsum([0, *i[:-1]]) for i in arr.chunks], indexing="ij")
 
+    @dask.delayed
+    def func_offsetted(block, z_offset, y_offset, x_offset):
+        df = func(block)
+        df["z"] += z_offset
+        df["y"] += y_offset
+        df["x"] += x_offset
+        return df
 
-def get_region_df_block(block):
-    """
-    Expects block to be labelled maxima
-    """
-    df_cells = region_to_coords_df(block)
-    return df_cells
-
-
-def get_maxima_df_block(arr, z_offset, y_offset, x_offset):
-    df = maxima_to_coords_df(arr)
-    df["z"] += z_offset
-    df["y"] += y_offset
-    df["x"] += x_offset
-    return df
+    return dd.from_delayed(
+        [
+            func_offsetted(block, i, j, k)
+            for block, i, j, k in zip(
+                arr.to_delayed().ravel(),
+                inds[0].ravel(),
+                inds[1].ravel(),
+                inds[2].ravel(),
+            )
+        ]
+    )

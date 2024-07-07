@@ -127,6 +127,18 @@ def mean_thresholding(arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
+@numpy_2_cupy_decorator(out_type=np.uint8)
+def manual_thresholding(arr: np.ndarray, val: int):
+    """
+    Perform manual thresholding on a tensor.
+    """
+    logging.debug("Applying the threshold")
+    res = arr > val
+    # Returning
+    return res
+
+
+@clear_cuda_memory_decorator
 @numpy_2_cupy_decorator(out_type=np.uint32)
 def label_objects(arr: np.ndarray) -> np.ndarray:
     """
@@ -264,7 +276,7 @@ def watershed_segm(arr_raw: np.ndarray, arr_maxima: np.ndarray, arr_mask: np.nda
 
 
 @clear_cuda_memory_decorator
-def region_to_coords_df(arr_region: np.ndarray):
+def region_to_coords(arr_region: np.ndarray):
     """
     Get coordinates of regions in 3D tensor.
 
@@ -292,7 +304,7 @@ def region_to_coords_df(arr_region: np.ndarray):
 
 
 @clear_cuda_memory_decorator
-def maxima_to_coords_df(arr_maxima: np.ndarray):
+def maxima_to_coords(arr_maxima: np.ndarray):
     """
     Get coordinates of maxima in 3D tensor.
 
@@ -300,7 +312,7 @@ def maxima_to_coords_df(arr_maxima: np.ndarray):
 
     Keeps only the first row (i.e cell) for each label.
     """
-    df = region_to_coords_df(arr_maxima)
+    df = region_to_coords(arr_maxima)
     logging.debug("Keeping only first row per label (some maxima may be contiguous)")
     df = df.groupby("label").first()
     # Returning
