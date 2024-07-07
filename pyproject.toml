@@ -19,6 +19,7 @@ dask = {extras = ["complete"], version = "^2024.7.0"}
 graphviz = "^0.20.3"
 # cupy-cuda12x = "^13.2.0"
 natsort = "^8.4.0"
+dask-cuda = "^24.6.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.8"
