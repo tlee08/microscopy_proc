@@ -1,10 +1,23 @@
-
 import logging
 
 import numpy as np
 import tifffile
 
-from .cellc_funcs import tophat_filter, dog_filter, gaussian_subtraction_filter, mean_thresholding, label_objects, get_sizes, labels_map, visualise_stats, filter_large_objects, get_local_maxima, mask, watershed_segm, region_to_coords_df
+from microscopy_proc.funcs.cellc_funcs import (
+    dog_filter,
+    filter_large_objects,
+    gaussian_subtraction_filter,
+    get_local_maxima,
+    get_sizes,
+    label_objects,
+    labels_map,
+    mask,
+    mean_thresholding,
+    region_to_coords_df,
+    tophat_filter,
+    visualise_stats,
+    watershed_segm,
+)
 
 logging.basicConfig(level=logging.DEBUG)
 

@@ -4,9 +4,6 @@ import logging
 import cupy as cp
 
 
-
-
-
 import numpy as np
 
 def clear_cuda_memory():

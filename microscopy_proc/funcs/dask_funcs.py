@@ -1,5 +1,19 @@
+import numpy as np
 
-from cellc_funcs import tophat_filter, dog_filter, gaussian_subtraction_filter, mean_thresholding, label_objects, get_sizes, labels_map, visualise_stats, filter_large_objects, get_local_maxima, mask, watershed_segm, region_to_coords_df, maxima_to_coords_df
+from microscopy_proc.funcs.cellc_funcs import (
+    dog_filter,
+    filter_large_objects,
+    gaussian_subtraction_filter,
+    get_local_maxima,
+    get_sizes,
+    label_objects,
+    mask,
+    maxima_to_coords_df,
+    mean_thresholding,
+    region_to_coords_df,
+    tophat_filter,
+)
+
 
 def get_maxima_block(block):
     res = block
@@ -9,15 +23,12 @@ def get_maxima_block(block):
     res = mean_thresholding(res, 0.0)
     res = label_objects(res)
     df_sizes = get_sizes(res)
-    # arr_sizes = labels_map(arr_labels, df_sizes)
-    # visualise_stats(df_sizes)
     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
     res_maxima = get_local_maxima(block, 10)
     res_maxima = mask(res_maxima, res)
     res_maxima = label_objects(res_maxima)
     # res_watershed = watershed_segm(block, res_maxima, res)
 
-    # Can choose either res, res_maxima, or res_watershed
     return res
 
 
@@ -29,11 +40,8 @@ def get_region_block(block):
     res = mean_thresholding(res, 0.0)
     res = label_objects(res)
     df_sizes = get_sizes(res)
-    # arr_sizes = labels_map(arr_labels, df_sizes)
-    # visualise_stats(df_sizes)
     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
 
-    # Can choose either res, res_maxima, or res_watershed
     return res
 
 
@@ -43,7 +51,6 @@ def get_maxima_block_from_region(block_raw, block_region):
     res = label_objects(res)
     # res_watershed = watershed_segm(block, res_maxima, res)
 
-    # Can choose either res, res_maxima, or res_watershed
     return res
 
 
@@ -54,7 +61,6 @@ def calc_inds(arr):
     return np.meshgrid(*[np.cumsum([0, *i[:-1]]) for i in arr.chunks], indexing="ij")
 
 
-@dask.delayed
 def get_region_df_block(block):
     """
     Expects block to be labelled maxima
@@ -63,7 +69,6 @@ def get_region_df_block(block):
     return df_cells
 
 
-@dask.delayed
 def get_maxima_df_block(arr, z_offset, y_offset, x_offset):
     df = maxima_to_coords_df(arr)
     df["z"] += z_offset
