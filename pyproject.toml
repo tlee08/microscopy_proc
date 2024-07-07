@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "microscopy-proc"
+version = "0.1.0"
+description = ""
+authors = ["tlee08 <timothy.e.lee@sydney.edu.au>"]
+license = "GPL-3.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+tifffile = "^2024.7.2"
+numpy = "^2.0.0"
+pandas = "^2.2.2"
+seaborn = "^0.13.2"
+scikit-image = "^0.24.0"
+h5py = "^3.11.0"
+zarr = "^2.18.2"
+dask = {extras = ["complete"], version = "^2024.7.0"}
+graphviz = "^0.20.3"
+# cupy-cuda12x = "^13.2.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.8"
+mkdocs-material = "^9.5.18"
+mkdocstrings-python = "^1.9.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

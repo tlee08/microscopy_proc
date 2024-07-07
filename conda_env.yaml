@@ -1,0 +1,14 @@
+name: microscopy_proc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python
+  # Interactivity
+  - ipykernel
+  - jupyterlab
+  - fiji
+  # GPU acceleration
+  - cupy
+  - pip:
+    - -e .
