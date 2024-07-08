@@ -2,7 +2,7 @@ import os
 
 import dask.array as da
 import tifffile
-from dask.distributed import Client
+from dask.distributed import Client, LocalCluster
 
 
 if __name__ == "__main__":
@@ -16,7 +16,8 @@ if __name__ == "__main__":
     # Defining process params
     chunks = (50, 50, 50)
 
-    client = Client()
+    cluster = LocalCluster(processes=False)
+    client = Client(cluster)
     print(client.dashboard_link)
 
     # Tiff to zarr (better without cluster)
