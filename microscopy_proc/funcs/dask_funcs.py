@@ -1,73 +1,59 @@
 import dask
+import dask.array
 import dask.array as da
 import dask.dataframe as dd
 import dask.delayed
 import numpy as np
-from dask.delayed import Delayed
 
-from microscopy_proc.funcs.cellc_funcs import (
-    dog_filter,
-    filter_large_objects,
-    gaussian_subtraction_filter,
-    get_local_maxima,
-    get_sizes,
-    label_objects,
-    manual_thresholding,
-    mask,
-    mean_thresholding,
-    tophat_filter,
-)
+# def get_maxima_block(block):
+#     res = block
+#     res = tophat_filter(res, 10.0)
+#     res = dog_filter(res, 2.0, 5.0)
+#     res = gaussian_subtraction_filter(res, 101)
+#     res = mean_thresholding(res, 0.0)
+#     res = label_objects(res)
+#     df_sizes = get_sizes(res)
+#     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
+#     res_maxima = get_local_maxima(block, 10)
+#     res_maxima = mask(res_maxima, res)
+#     res_maxima = label_objects(res_maxima)
+#     # res_watershed = watershed_segm(block, res_maxima, res)
 
-
-def get_maxima_block(block):
-    res = block
-    res = tophat_filter(res, 10.0)
-    res = dog_filter(res, 2.0, 5.0)
-    res = gaussian_subtraction_filter(res, 101)
-    res = mean_thresholding(res, 0.0)
-    res = label_objects(res)
-    df_sizes = get_sizes(res)
-    res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
-    res_maxima = get_local_maxima(block, 10)
-    res_maxima = mask(res_maxima, res)
-    res_maxima = label_objects(res_maxima)
-    # res_watershed = watershed_segm(block, res_maxima, res)
-
-    # Converting back to uint8
-    res_maxima = manual_thresholding(res_maxima, 0)
-    # Returning
-    return res_maxima
+#     # Converting back to uint8
+#     res_maxima = manual_thresholding(res_maxima, 0)
+#     # Returning
+#     return res_maxima
 
 
-def get_region_block(block):
-    res = block
-    res = tophat_filter(res, 10.0)
-    res = dog_filter(res, 2.0, 5.0)
-    res = gaussian_subtraction_filter(res, 101)
-    res = mean_thresholding(res, 0.0)
-    res = label_objects(res)
-    df_sizes = get_sizes(res)
-    res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
+# def get_region_block(block):
+#     res = block
+#     res = tophat_filter(res, 10.0)
+#     res = dog_filter(res, 2.0, 5.0)
+#     res = gaussian_subtraction_filter(res, 101)
+#     res = mean_thresholding(res, 0.0)
+#     res = label_objects(res)
+#     df_sizes = get_sizes(res)
+#     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
 
-    # Converting back to uint8
-    res = manual_thresholding(res, 0)
-    # Returning
-    return res
-
-
-def get_maxima_block_from_region(block_raw, block_region):
-    res = get_local_maxima(block_raw, 10)
-    res = mask(res, block_region)
-    res = label_objects(res)
-    # res_watershed = watershed_segm(block, res_maxima, res)
-
-    # Converting back to uint8
-    res = manual_thresholding(res, 0)
-    # Returning
-    return res
+#     # Converting back to uint8
+#     res = manual_thresholding(res, 0)
+#     # Returning
+#     return res
 
 
-def block_to_coords(func, arr: da.Array) -> Delayed:
+# def get_maxima_block_from_region(block_raw, block_region):
+#     res = get_local_maxima(block_raw, 10)
+#     res = mask(res, block_region)
+#     res = label_objects(res)
+#     # res_watershed = watershed_segm(block, res_maxima, res)
+
+#     # Converting back to uint8
+#     res = manual_thresholding(res, 0)
+#     # Returning
+#     return res
+
+
+def block_to_coords(func, arr: da.Array) -> dd.DataFrame:
     """
     Applies the `func` to `arr`.
     Expects `func` to convert `arr` to coords df (of sorts).
@@ -79,9 +65,9 @@ def block_to_coords(func, arr: da.Array) -> Delayed:
     @dask.delayed
     def func_offsetted(block, z_offset, y_offset, x_offset):
         df = func(block)
-        df["z"] += z_offset
-        df["y"] += y_offset
-        df["x"] += x_offset
+        df["z"] = df["z"] + z_offset if "z" in df.columns else z_offset
+        df["y"] = df["y"] + y_offset if "y" in df.columns else y_offset
+        df["x"] = df["x"] + x_offset if "x" in df.columns else x_offset
         return df
 
     return dd.from_delayed(
@@ -95,3 +81,8 @@ def block_to_coords(func, arr: da.Array) -> Delayed:
             )
         ]
     )
+
+
+def disk_cache(arr: da.Array, fp):
+    arr.to_zarr(fp, overwrite=True)
+    return da.from_zarr(fp)

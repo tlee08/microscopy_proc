@@ -7,7 +7,6 @@ from dask.distributed import Client, LocalCluster
 
 if __name__ == "__main__":
     # Filenames
-    # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
     in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # Out filenames

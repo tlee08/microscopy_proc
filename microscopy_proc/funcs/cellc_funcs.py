@@ -140,12 +140,30 @@ def manual_thresholding(arr: np.ndarray, val: int):
 
 @clear_cuda_memory_decorator
 @numpy_2_cupy_decorator(out_type=np.uint32)
-def label_objects(arr: np.ndarray) -> np.ndarray:
+def label_objects_with_ids(arr: np.ndarray) -> np.ndarray:
     """
     Label objects in a 3D tensor.
     """
-    logging.debug("Label objects")
-    res, counts = cupy_label(arr)
+    logging.debug("Labelling objects")
+    res, _ = cupy_label(arr)
+    logging.debug("Returning")
+    return res
+
+
+@clear_cuda_memory_decorator
+@numpy_2_cupy_decorator(out_type=np.uint32)
+def label_objects_with_sizes(arr: np.ndarray) -> np.ndarray:
+    """
+    Label objects in a 3D tensor.
+    """
+    logging.debug("Labelling objects")
+    res, _ = cupy_label(arr)
+    logging.debug("Getting vector of ids and sizes (not incl. 0)")
+    ids, counts = cp.unique(arr[arr > 0], return_counts=True)
+    # NOTE: assumes ids is perfectly incrementing from 1
+    counts = cp.concatenate([cp.asarray([0]), counts])
+    logging.debug("Converting arr intensity to sizes")
+    res = counts[res]
     logging.debug("Returning")
     return res
 
@@ -161,8 +179,7 @@ def get_sizes(arr: np.ndarray) -> pd.Series:
     xp = cp
     logging.debug("Getting sizes of labels")
     arr = xp.asarray(arr)
-    arr0 = arr[arr > 0]
-    ids, counts = cp.unique(arr0, return_counts=True)
+    ids, counts = cp.unique(arr[arr > 0], return_counts=True)
     # Returning
     return pd.Series(
         counts.get().astype(np.uint32),
@@ -189,32 +206,38 @@ def labels_map(arr: np.ndarray, vect: pd.Series) -> np.ndarray:
     return res
 
 
-def visualise_stats(vect: pd.Series):
+@clear_cuda_memory_decorator
+def visualise_stats(arr: np.ndarray):
     """
     Visualise statistics.
+
+    NOTE: expects arr to be a 3D tensor of a property
+    (e.g. size).
     """
+    logging.debug("Converting arr to vector of the ids")
+    ids = arr[arr > 0]
     logging.debug("Making histogram")
     fig, ax = plt.subplots()
     sns.histplot(
-        x=vect,
+        x=ids,
         log_scale=True,
         ax=ax,
     )
+    return fig
 
 
 @clear_cuda_memory_decorator
 @numpy_2_cupy_decorator(out_type=np.uint32)
-def filter_large_objects(
-    arr: np.ndarray, vect: pd.Series, min_size=None, max_size=None
-):
-    # Choosing numpy or cupy
-    xp = cp
-    logging.debug("Getting array of small and large object to filter out")
-    min_size = min_size if min_size is not None else 0
-    max_size = max_size if max_size is not None else vect.max()
-    filt_objs = xp.asarray(vect[(vect < min_size) | (vect > max_size)].index.values)
+def filter_by_size(arr: np.ndarray, smin=None, smax=None):
+    """
+    Assumes
+    """
+    logging.debug("Getting filter of small and large object to filter out")
+    smin = smin if smin is not None else 0
+    smax = smax if smax is not None else arr.max()
+    filt_objs = (arr < smin) | (arr > smax)
     logging.debug("Filter out objects (by setting them to 0)")
-    arr[xp.isin(arr, filt_objs)] = 0
+    arr[filt_objs] = 0
     # Returning
     return arr
 
@@ -253,16 +276,12 @@ def watershed_segm(arr_raw: np.ndarray, arr_maxima: np.ndarray, arr_mask: np.nda
 
     Expects `arr_maxima` to have unique labels for each maxima.
     """
-    # Choosing numpy or cupy
-    xp = np
-    logging.debug("Converting other arrays to chosen type")
-    arr_raw = xp.asarray(arr_raw)
-    arr_maxima = xp.asarray(arr_maxima)
-    arr_mask = xp.asarray(arr_mask)
+    logging.debug("Labelling maxima objects")
+    arr_maxima = label_objects_with_ids(arr_maxima)
     logging.debug("Padding everything with a 1 pixel empty border")
-    arr_raw = xp.pad(arr_raw, pad_width=1, mode="constant", constant_values=0)
-    arr_maxima = xp.pad(arr_maxima, pad_width=1, mode="constant", constant_values=0)
-    arr_mask = xp.pad(arr_mask, pad_width=1, mode="constant", constant_values=0)
+    arr_raw = np.pad(arr_raw, pad_width=1, mode="constant", constant_values=0)
+    arr_maxima = np.pad(arr_maxima, pad_width=1, mode="constant", constant_values=0)
+    arr_mask = np.pad(arr_mask, pad_width=1, mode="constant", constant_values=0)
     logging.debug("Watershed segmentation")
     res = watershed(
         image=-arr_raw,
@@ -270,7 +289,7 @@ def watershed_segm(arr_raw: np.ndarray, arr_maxima: np.ndarray, arr_mask: np.nda
         mask=arr_mask > 0,
     )
     logging.debug("Unpadding")
-    res = res[1:-1, 1:-1, 1:-1]
+    res = res[1:-1, 1:-1, 1:-1].astype(np.uint32)
     # Returning
     return res
 
