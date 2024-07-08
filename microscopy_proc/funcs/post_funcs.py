@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from microscopy_proc.constants import RAW_CHUNKS
+from microscopy_proc.constants import PROC_CHUNKS
 
 
 def make_maxima_scatter(df):
@@ -48,7 +48,7 @@ def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
     arr = da.zeros(
         shape,
         dtype=np.uint16,
-        chunks=RAW_CHUNKS,
+        chunks=PROC_CHUNKS,
     )
     arr.to_zarr(arr_out_fp, overwrite=True)
     arr = da.from_zarr(arr_out_fp)
