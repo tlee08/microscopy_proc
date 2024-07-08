@@ -83,6 +83,22 @@ def block_to_coords(func, arr: da.Array) -> dd.DataFrame:
     )
 
 
+def coords_to_block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
+    """
+    Converts the coords to a block.
+    """
+    # Getting block info
+    z, y, x = block_info[0]["array-location"]
+    # Copying df
+    df = df.copy()
+    # Offsetting
+    df["z"] = df["z"] - z[0]
+    df["y"] = df["y"] - y[0]
+    df["x"] = df["x"] - x[0]
+    # Returning df
+    return df
+
+
 def disk_cache(arr: da.Array, fp):
     arr.to_zarr(fp, overwrite=True)
     return da.from_zarr(fp)

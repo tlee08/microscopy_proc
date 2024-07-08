@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import tifffile
 
-from microscopy_proc.constants import PROC_CHUNKS
+from microscopy_proc.utils.io_utils import silentremove
 
 
 def make_maxima_scatter(df):
@@ -39,32 +40,22 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
 
 def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
     # Initialising spatial array
-    # arr = np.memmap(
-    #     "temp.dat",
-    #     mode="w+",
-    #     shape=shape,
-    #     dtype=np.int16,
-    # )
-    arr = da.zeros(
-        shape,
-        dtype=np.uint16,
-        chunks=PROC_CHUNKS,
+    arr = np.memmap(
+        "temp.dat",
+        mode="w+",
+        shape=shape,
+        dtype=np.int16,
     )
-    arr.to_zarr(arr_out_fp, overwrite=True)
-    arr = da.from_zarr(arr_out_fp)
     return arr
 
 
 def coords_to_points_end(arr, arr_out_fp):
     # # Saving the subsampled array
-    # tifffile.imwrite(arr_out_fp, arr)
-    # # Removing temporary memmap
-    # silentremove("temp.dat")
-    # # Returning arr array
-    # return tifffile.memmap(arr_out_fp)
-    arr.to_zarr(arr_out_fp, overwrite=True)
-    arr = da.from_zarr(arr_out_fp)
-    return arr
+    tifffile.imwrite(arr_out_fp, arr)
+    # Removing temporary memmap
+    silentremove("temp.dat")
+    # Returning arr array
+    return tifffile.memmap(arr_out_fp)
 
 
 #####################################################################
