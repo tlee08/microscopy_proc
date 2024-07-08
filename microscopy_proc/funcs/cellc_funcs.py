@@ -133,7 +133,7 @@ def manual_threshold(arr: np.ndarray, val: int):
     Perform manual thresholding on a tensor.
     """
     logging.debug("Applying the threshold")
-    res = arr > val
+    res = arr >= val
     # Returning
     return res
 
@@ -144,7 +144,7 @@ def label_objects_with_ids(arr: np.ndarray) -> np.ndarray:
     """
     Label objects in a 3D tensor.
     """
-    logging.debug("Labelling objects")
+    logging.debug("Labelling contiguous objects uniquely")
     res, _ = cupy_label(arr)
     logging.debug("Returning")
     return res
@@ -156,14 +156,14 @@ def label_objects_with_sizes(arr: np.ndarray) -> np.ndarray:
     """
     Label objects in a 3D tensor.
     """
-    logging.debug("Labelling objects")
-    res, _ = cupy_label(arr)
+    logging.debug("Labelling contiguous objects uniquely")
+    arr, _ = cupy_label(arr)
     logging.debug("Getting vector of ids and sizes (not incl. 0)")
     ids, counts = cp.unique(arr[arr > 0], return_counts=True)
     # NOTE: assumes ids is perfectly incrementing from 1
     counts = cp.concatenate([cp.asarray([0]), counts])
     logging.debug("Converting arr intensity to sizes")
-    res = counts[res]
+    res = counts[arr]
     logging.debug("Returning")
     return res
 

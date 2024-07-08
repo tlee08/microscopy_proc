@@ -15,7 +15,6 @@ from microscopy_proc.funcs.cellc_funcs import (
     mask,
     region_to_coords,
     tophat_filter,
-    watershed_segm,
 )
 from microscopy_proc.funcs.dask_funcs import block_to_coords, disk_cache
 
@@ -54,9 +53,7 @@ if __name__ == "__main__":
     # NOTE: visually inspect sd offset to use
     arr_adaptv0 = arr_adaptv[arr_adaptv > 0]
     (t_p,) = dask.compute(arr_adaptv0.mean() + 0.0 * arr_adaptv0.std())
-    arr_threshd = arr_adaptv.map_overlap(
-        lambda i: manual_threshold(i, t_p), depth=depth
-    )
+    arr_threshd = arr_adaptv.map_blocks(lambda i: manual_threshold(i, t_p))
     arr_threshd = disk_cache(arr_threshd, os.path.join(out_dir, "4_thresh.zarr"))
 
     # Step 5: Object sizes
@@ -68,16 +65,17 @@ if __name__ == "__main__":
     # Step 6: Filter out large objects (likely outlines, not cells)
     # TODO: Need to manually set min_size and max_size
     arr_filt = arr_sizes.map_blocks(lambda i: filter_by_size(i, smin=None, smax=3000))
+    arr_filt = arr_filt.map_blocks(lambda i: manual_threshold(i, 1))
     arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "6_filt.zarr"))
 
     # Step 7: Get maxima of image masked by labels
-    arr_maxima = arr_filt.map_overlap(lambda i: get_local_maxima(i, 10), depth=depth)
+    arr_maxima = arr_raw.map_overlap(lambda i: get_local_maxima(i, 10), depth=depth)
     arr_maxima = da.map_blocks(mask, arr_maxima, arr_filt)
     arr_maxima = disk_cache(arr_maxima, os.path.join(out_dir, "7_maxima.zarr"))
 
     # Step 8: Watershed segmentation
-    arr_watershed = da.map_blocks(watershed_segm, arr_raw, arr_maxima, arr_filt)
-    arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
+    # arr_watershed = da.map_blocks(watershed_segm, arr_raw, arr_maxima, arr_filt)
+    # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
 
     # Step 9b: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(region_to_coords, arr_filt)
