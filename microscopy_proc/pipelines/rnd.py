@@ -13,7 +13,7 @@ from microscopy_proc.funcs.cellc_funcs import (
     labels_map,
     mask,
     mean_thresholding,
-    region_to_coords_df,
+    region_to_coords,
     tophat_filter,
     visualise_stats,
     watershed_segm,
