@@ -19,7 +19,7 @@ def make_maxima_scatter(df):
 
 
 def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
-    shape = arr.shape
+    shape = arr.shape  # noqa: F841
     # Formatting coord values as (z, y, x) and rounding to integers
     coords = (
         coords[["z", "y", "x"]]
