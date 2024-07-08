@@ -1,9 +1,8 @@
 import os
 
-import tifffile
 from dask.distributed import Client, LocalCluster
 
-from microscopy_proc.funcs.tiff_to_zarr_funcs import mmap_to_zarr
+from microscopy_proc.funcs.tiff_to_zarr_funcs import tiff_to_zarr
 
 if __name__ == "__main__":
     # Filenames
@@ -15,10 +14,13 @@ if __name__ == "__main__":
     client = Client(cluster)
     print(client.dashboard_link)
 
-    shape = tifffile.memmap(in_fp).shape
-    hshape = [int(i / 2) for i in shape]
-    mmap = tifffile.memmap(in_fp)[::2, ::2, ::2]
-    mmap_to_zarr(mmap, os.path.join(out_dir, "raw.zarr"))
+    # Converting mmap to zarr with some downsampling
+    # shape = tifffile.memmap(in_fp).shape
+    # hshape = [int(i / 2) for i in shape]
+    # mmap = tifffile.memmap(in_fp)[::2, ::2, ::2]
+    # mmap_to_zarr(mmap, os.path.join(out_dir, "raw.zarr"))
+
+    tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"))
 
     # Closing client
     client.close()

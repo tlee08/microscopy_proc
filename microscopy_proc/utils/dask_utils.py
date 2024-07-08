@@ -5,53 +5,6 @@ import dask.dataframe as dd
 import dask.delayed
 import numpy as np
 
-# def get_maxima_block(block):
-#     res = block
-#     res = tophat_filter(res, 10.0)
-#     res = dog_filter(res, 2.0, 5.0)
-#     res = gaussian_subtraction_filter(res, 101)
-#     res = mean_thresholding(res, 0.0)
-#     res = label_objects(res)
-#     df_sizes = get_sizes(res)
-#     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
-#     res_maxima = get_local_maxima(block, 10)
-#     res_maxima = mask(res_maxima, res)
-#     res_maxima = label_objects(res_maxima)
-#     # res_watershed = watershed_segm(block, res_maxima, res)
-
-#     # Converting back to uint8
-#     res_maxima = manual_thresholding(res_maxima, 0)
-#     # Returning
-#     return res_maxima
-
-
-# def get_region_block(block):
-#     res = block
-#     res = tophat_filter(res, 10.0)
-#     res = dog_filter(res, 2.0, 5.0)
-#     res = gaussian_subtraction_filter(res, 101)
-#     res = mean_thresholding(res, 0.0)
-#     res = label_objects(res)
-#     df_sizes = get_sizes(res)
-#     res = filter_large_objects(res, df_sizes, min_size=None, max_size=3000)
-
-#     # Converting back to uint8
-#     res = manual_thresholding(res, 0)
-#     # Returning
-#     return res
-
-
-# def get_maxima_block_from_region(block_raw, block_region):
-#     res = get_local_maxima(block_raw, 10)
-#     res = mask(res, block_region)
-#     res = label_objects(res)
-#     # res_watershed = watershed_segm(block, res_maxima, res)
-
-#     # Converting back to uint8
-#     res = manual_thresholding(res, 0)
-#     # Returning
-#     return res
-
 
 def block_to_coords(func, arr: da.Array) -> dd.DataFrame:
     """

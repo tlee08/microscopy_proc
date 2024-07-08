@@ -44,7 +44,7 @@ def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
         "temp.dat",
         mode="w+",
         shape=shape,
-        dtype=np.int16,
+        dtype=np.uint8,
     )
     return arr
 
@@ -54,8 +54,6 @@ def coords_to_points_end(arr, arr_out_fp):
     tifffile.imwrite(arr_out_fp, arr)
     # Removing temporary memmap
     silentremove("temp.dat")
-    # Returning arr array
-    return tifffile.memmap(arr_out_fp)
 
 
 #####################################################################
@@ -102,19 +100,17 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
 
     # Constructing sphere array mask
     zz, yy, xx = np.ogrid[1 : r * 2, 1 : r * 2, 1 : r * 2]
-    circle_arr = np.sqrt((xx - r) ** 2 + (yy - r) ** 2 + (zz - r) ** 2) < r
+    circ = np.sqrt((xx - r) ** 2 + (yy - r) ** 2 + (zz - r) ** 2) < r
     # Constructing offset indices
     i = np.arange(-r + 1, r)
     z_ind, y_ind, x_ind = np.meshgrid(i, i, i, indexing="ij")
     # Adding coords to image
-    for i, j, k, t in zip(
-        z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circle_arr.ravel()
-    ):
+    for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
         if t:
             coords_i = coords.copy()
-            coords_i["z"] += i
-            coords_i["y"] += j
-            coords_i["x"] += k
+            coords_i["z"] += z
+            coords_i["y"] += y
+            coords_i["x"] += x
             coords_to_points_workers(arr, coords_i)
 
     # Saving the subsampled array

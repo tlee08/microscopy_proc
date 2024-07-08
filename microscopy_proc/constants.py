@@ -1,4 +1,4 @@
-RAW_CHUNKS = (50, 50, 50)
+RAW_CHUNKS = (100, 100, 100)
 
 DEPTH = 50
 

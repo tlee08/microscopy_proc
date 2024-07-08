@@ -17,7 +17,7 @@ from microscopy_proc.funcs.cellc_funcs import (
     region_to_coords,
     tophat_filter,
 )
-from microscopy_proc.funcs.dask_funcs import block_to_coords, disk_cache
+from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache
 
 if __name__ == "__main__":
     # Filenames
