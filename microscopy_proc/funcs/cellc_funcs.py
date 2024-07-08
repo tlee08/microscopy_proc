@@ -81,7 +81,7 @@ def intensity_cutoff(arr: np.ndarray, min_=None, max_=None) -> np.ndarray:
 
 @clear_cuda_memory_decorator
 @numpy_2_cupy_decorator(out_type=np.uint8)
-def otsu_thresholding(arr: np.ndarray) -> np.ndarray:
+def otsu_threshold(arr: np.ndarray) -> np.ndarray:
     """
     Perform Otsu's thresholding on a 3D tensor.
     """
@@ -112,7 +112,7 @@ def otsu_thresholding(arr: np.ndarray) -> np.ndarray:
 
 @clear_cuda_memory_decorator
 @numpy_2_cupy_decorator(out_type=np.uint8)
-def mean_thresholding(arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
+def mean_threshold(arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
     """
     Perform adaptive thresholding on a 3D tensor on GPU.
     """
@@ -128,7 +128,7 @@ def mean_thresholding(arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
 
 @clear_cuda_memory_decorator
 @numpy_2_cupy_decorator(out_type=np.uint8)
-def manual_thresholding(arr: np.ndarray, val: int):
+def manual_threshold(arr: np.ndarray, val: int):
     """
     Perform manual thresholding on a tensor.
     """

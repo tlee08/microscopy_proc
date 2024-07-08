@@ -12,8 +12,7 @@ from microscopy_proc.funcs.cellc_funcs import (
     label_objects,
     labels_map,
     mask,
-    mean_thresholding,
-    region_to_coords,
+    mean_threshold,
     tophat_filter,
     visualise_stats,
     watershed_segm,
@@ -41,7 +40,7 @@ tifffile.imwrite("3_adaptive_filt.tif", arr_adaptv)
 
 # Step 4: Mean thresholding with standard deviation offset
 # NOTE: visually inspect sd offset to use
-arr_threshd = mean_thresholding(arr_adaptv, 0.0)
+arr_threshd = mean_threshold(arr_adaptv, 0.0)
 tifffile.imwrite("4_thresh.tif", arr_threshd)
 
 # Step 5: Label objects
