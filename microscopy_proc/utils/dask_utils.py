@@ -1,3 +1,5 @@
+import ctypes
+
 import dask
 import dask.array
 import dask.array as da
@@ -66,3 +68,8 @@ def custom_dask_configs():
             "distributed.worker.memory.terminate": 0.98,
         }
     )
+
+
+def trim_memory() -> int:
+    libc = ctypes.CDLL("libc.so.6")
+    return libc.malloc_trim(0)
