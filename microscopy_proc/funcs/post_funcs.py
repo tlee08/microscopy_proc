@@ -14,6 +14,12 @@ def make_maxima_scatter(df):
     ax.invert_yaxis()
 
 
+def make_img(arr):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.imshow(arr.max(axis=0), cmap="gray")
+    ax.axis("off")
+
+
 #####################################################################
 #             Converting coordinates to spatial
 #####################################################################

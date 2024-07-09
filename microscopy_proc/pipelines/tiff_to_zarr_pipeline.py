@@ -5,12 +5,8 @@ import numpy as np
 import tifffile
 from dask.distributed import Client, LocalCluster
 
-from microscopy_proc.constants import INTER_RAW_CHUNKS, RAW_CHUNKS
+from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.utils.io_utils import silentremove
-
-
-def arr_to_zarr_chunk(arr, out_fp):
-    da.from_array(arr, chunks=RAW_CHUNKS).to_zarr(out_fp, overwrite=True)
 
 
 def inter_fp(fp, idx):
@@ -22,13 +18,13 @@ def tiff_to_zarr_ijk_chunk(in_fp, out_fp, idx):
     # Getting tiff array shape
     shape = tifffile.memmap(in_fp).shape
     # Getting chunk dimensions
-    lb = idx * INTER_RAW_CHUNKS
-    ub = np.minimum(lb + INTER_RAW_CHUNKS, shape)
+    lb = idx * PROC_CHUNKS
+    ub = np.minimum(lb + PROC_CHUNKS, shape)
     # Writing chunked tiff to zarr
-    arr_to_zarr_chunk(
+    da.from_array(
         tifffile.memmap(in_fp)[*(slice(i, j) for i, j in zip(lb, ub))],
-        inter_fp(out_fp, idx),
-    )
+        chunks=PROC_CHUNKS,
+    ).to_zarr(inter_fp(out_fp, idx), overwrite=True)
 
 
 def make_inter_zarrs(in_fp, out_fp, chunkshape):
@@ -58,7 +54,7 @@ def remove_inter_zarrs(fp, chunkshape):
 def large_tiff_to_zarr(in_fp, out_fp):
     # Getting shape
     shape = np.array(tifffile.memmap(in_fp).shape)
-    chunkshape = [int(np.ceil(i / j)) for i, j in zip(shape, INTER_RAW_CHUNKS)]
+    chunkshape = [int(np.ceil(i / j)) for i, j in zip(shape, PROC_CHUNKS)]
     # # Making chunked tiff to intermediate zarr files
     make_inter_zarrs(in_fp, out_fp, chunkshape)
     # Getting array of intermediate zarr files
