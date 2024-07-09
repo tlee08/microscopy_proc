@@ -39,7 +39,7 @@ if __name__ == "__main__":
     client = Client(cluster)
     print(client.dashboard_link)
 
-    # Step 0: read image
+    # Read image
     arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
     # Make overlapping blocks
@@ -61,6 +61,9 @@ if __name__ == "__main__":
     client = Client(cluster)
     print(client.dashboard_link)
 
+    # Step 1: Read overlapped image
+    arr_raw = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
+
     # Step 1: Top-hat filter (background subtraction)
     arr_bgsub = arr_overlap.map_blocks(lambda i: tophat_filter(i, 5.0))
     arr_bgsub = disk_cache(arr_bgsub, os.path.join(out_dir, "1_bgsub.zarr"))
@@ -75,7 +78,7 @@ if __name__ == "__main__":
     arr_adaptv = disk_cache(arr_adaptv, os.path.join(out_dir, "3_adaptive_filt.zarr"))
 
     # Step 4: Mean thresholding with standard deviation offset
-    # NOTE: visually inspect sd offset to use
+    # NOTE: visually inspect sd offset
     arr_adaptv0 = arr_adaptv[arr_adaptv > 0]
     (t_p,) = dask.compute(arr_adaptv0.mean() + 0.0 * arr_adaptv0.std())
     arr_threshd = arr_adaptv.map_blocks(lambda i: manual_threshold(i, t_p))
@@ -114,31 +117,31 @@ if __name__ == "__main__":
     print(client.dashboard_link)
 
     # Step 9a: trimming overlaps
-    arr_filt = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
-    arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "9_filt_f.zarr"))
+    arr_filt_f = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
+    arr_filt_f = disk_cache(arr_filt_f, os.path.join(out_dir, "9_filt_f.zarr"))
 
     # Step 9a: trimming overlaps
-    arr_filt = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
-    arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "9_maxima_f.zarr"))
+    arr_maxima_f = da.overlap.trim_overlap(arr_maxima, depth=S_DEPTH)
+    arr_maxima_f = disk_cache(arr_maxima_f, os.path.join(out_dir, "9_maxima_f.zarr"))
 
-    # # Closing client
-    # client.close()
-    # cluster.close()
+    # Closing client
+    client.close()
+    cluster.close()
 
     #########################
     # ARR TO COORDS
     #########################
 
-    # # Making Dask cluster and client
-    # cluster = LocalCluster(n_workers=8, threads_per_worker=1)
-    # client = Client(cluster)
-    # print(client.dashboard_link)
+    # Making Dask cluster and client
+    cluster = LocalCluster(n_workers=8, threads_per_worker=1)
+    client = Client(cluster)
+    print(client.dashboard_link)
 
     # Step 10b: Get coords of maxima and get corresponding sizes from watershed
-    cell_coords = block_to_coords(region_to_coords, arr_filt)
+    cell_coords = block_to_coords(region_to_coords, arr_filt_f)
     cell_coords.to_parquet(os.path.join(out_dir, "10_regions.parquet"))
     # Step 10a: Get coords of maxima and get corresponding sizes from watershed
-    cell_coords = block_to_coords(region_to_coords, arr_maxima)
+    cell_coords = block_to_coords(region_to_coords, arr_maxima_f)
     cell_coords.to_parquet(os.path.join(out_dir, "10_maximas.parquet"))
 
     # Closing client
