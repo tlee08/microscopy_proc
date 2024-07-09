@@ -72,8 +72,7 @@ if __name__ == "__main__":
     arr_dog = arr_bgrm.map_blocks(lambda i: dog_filter(i, 2.0, 4.0))
     arr_dog = disk_cache(arr_dog, os.path.join(out_dir, "2_dog.zarr"))
 
-    # Step 3: Gaussian subtraction with large sigma
-    # (adaptive thresholding - different from top-hat filter)
+    # Step 3: Gaussian subtraction with large sigma for adaptive thresholding
     arr_adaptv = arr_dog.map_blocks(lambda i: gaussian_subtraction_filter(i, 101))
     arr_adaptv = disk_cache(arr_adaptv, os.path.join(out_dir, "3_adaptv.zarr"))
 
@@ -125,14 +124,12 @@ if __name__ == "__main__":
 
     # Step 9a: trimming overlaps
     arr_filt_f = arr_filt.map_blocks(my_trim, chunks=arr_raw.chunks)
-    # arr_filt_f = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH).rechunk(PROC_CHUNKS)
+    # arr_filt_f = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
     arr_filt_f = disk_cache(arr_filt_f, os.path.join(out_dir, "9_filt_f.zarr"))
 
     # Step 9a: trimming overlaps
     arr_maxima_f = arr_maxima.map_blocks(my_trim, chunks=arr_raw.chunks)
-    # arr_maxima_f = da.overlap.trim_overlap(arr_maxima, depth=S_DEPTH).rechunk(
-    #     PROC_CHUNKS
-    # )
+    # arr_maxima_f = da.overlap.trim_overlap(arr_maxima, depth=S_DEPTH)
     arr_maxima_f = disk_cache(arr_maxima_f, os.path.join(out_dir, "9_maxima_f.zarr"))
 
     # Closing client
