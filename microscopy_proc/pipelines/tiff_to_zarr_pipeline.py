@@ -1,6 +1,5 @@
 import os
 
-import dask
 import dask.array as da
 import numpy as np
 import tifffile
@@ -75,14 +74,6 @@ if __name__ == "__main__":
     # Filenames
     in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-
-    dask.config.set(
-        {
-            "distributed.nanny.pre-spawn-environ.MALLOC_TRIM_THRESHOLD_": "0",
-            "distributed.worker.memory.target": 0.8,
-            "distributed.worker.memory.terminate": 2.0,
-        }
-    )
 
     # Making Dask cluster and client (thread-based cluster)
     cluster = LocalCluster(processes=False)

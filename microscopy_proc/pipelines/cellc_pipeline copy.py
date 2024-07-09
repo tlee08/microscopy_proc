@@ -17,25 +17,18 @@ from microscopy_proc.funcs.cellc_funcs import (
     region_to_coords,
     tophat_filter,
 )
-from microscopy_proc.utils.dask_utils import (
-    block_to_coords,
-    disk_cache,
-)
+from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache
 
 if __name__ == "__main__":
     # Filenames
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    # # Custom dask configs
-    # custom_dask_configs()
-
     #########################
-    # RECHUNK AND OVERLAP
+    # OVERLAPS
     #########################
 
     # Making Dask cluster and client
-    # NOTE: works best threaded (and with few threads)
-    cluster = LocalCluster(processes=False, threads_per_worker=8)
+    cluster = LocalCluster(n_workers=8, threads_per_worker=1)
     client = Client(cluster)
     print(client.dashboard_link)
 
@@ -48,9 +41,6 @@ if __name__ == "__main__":
 
     # Closing client
     client.close()
-    cluster.close()
-
-    exit()
 
     #########################
     # HEAVY GPU PROCESSING
@@ -62,15 +52,20 @@ if __name__ == "__main__":
     print(client.dashboard_link)
 
     # Step 1: Top-hat filter (background subtraction)
+    # arr_bgsub = arr_raw.map_overlap(lambda i: tophat_filter(i, 5.0), depth=S_DEPTH)
     arr_bgsub = arr_overlap.map_blocks(lambda i: tophat_filter(i, 5.0))
     arr_bgsub = disk_cache(arr_bgsub, os.path.join(out_dir, "1_bgsub.zarr"))
 
     # Step 2: Difference of Gaussians (edge detection)
+    # arr_dog = arr_bgsub.map_overlap(lambda i: dog_filter(i, 2.0, 4.0), depth=S_DEPTH)
     arr_dog = arr_bgsub.map_blocks(lambda i: dog_filter(i, 2.0, 4.0))
     arr_dog = disk_cache(arr_dog, os.path.join(out_dir, "2_dog.zarr"))
 
     # Step 3: Gaussian subtraction with large sigma
     # (adaptive thresholding - different from top-hat filter)
+    # arr_adaptv = arr_dog.map_overlap(
+    #     lambda i: gaussian_subtraction_filter(i, 101), depth=B_DEPTH
+    # )
     arr_adaptv = arr_dog.map_blocks(lambda i: gaussian_subtraction_filter(i, 101))
     arr_adaptv = disk_cache(arr_adaptv, os.path.join(out_dir, "3_adaptive_filt.zarr"))
 
@@ -82,6 +77,9 @@ if __name__ == "__main__":
     arr_threshd = disk_cache(arr_threshd, os.path.join(out_dir, "4_thresh.zarr"))
 
     # Step 5: Object sizes
+    # arr_sizes = arr_threshd.map_overlap(
+    #     lambda i: label_objects_with_sizes(i), depth=S_DEPTH
+    # )
     arr_sizes = arr_threshd.map_blocks(lambda i: label_objects_with_sizes(i))
     arr_sizes = disk_cache(arr_sizes, os.path.join(out_dir, "5_sizes.zarr"))
 
@@ -92,6 +90,7 @@ if __name__ == "__main__":
     arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "6_filt.zarr"))
 
     # Step 7: Get maxima of image masked by labels
+    # arr_maxima = arr_raw.map_overlap(lambda i: get_local_maxima(i, 10), depth=S_DEPTH)
     arr_maxima = arr_raw.map_blocks(lambda i: get_local_maxima(i, 10))
     arr_maxima = da.map_blocks(mask, arr_maxima, arr_filt)
     arr_maxima = disk_cache(arr_maxima, os.path.join(out_dir, "7_maxima.zarr"))
@@ -100,39 +99,9 @@ if __name__ == "__main__":
     # arr_watershed = da.map_blocks(watershed_segm, arr_raw, arr_maxima, arr_filt)
     # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
 
-    # Closing client
-    client.close()
-    cluster.close()
-
-    #########################
-    # TRIMMING OVERLAPS
-    #########################
-
-    # Making Dask cluster and client
-    cluster = LocalCluster(processes=False)
-    client = Client(cluster)
-    print(client.dashboard_link)
-
-    # Step 9a: trimming overlaps
-    arr_filt = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
-    arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "9_filt_f.zarr"))
-
-    # Step 9a: trimming overlaps
-    arr_filt = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
-    arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "9_maxima_f.zarr"))
-
-    # # Closing client
-    # client.close()
-    # cluster.close()
-
-    #########################
-    # ARR TO COORDS
-    #########################
-
-    # # Making Dask cluster and client
-    # cluster = LocalCluster(n_workers=8, threads_per_worker=1)
-    # client = Client(cluster)
-    # print(client.dashboard_link)
+    # Step 9: trimming overlaps
+    arr_final = da.overlap.trim_overlap(arr_filt, depth=S_DEPTH)
+    arr_final = disk_cache(arr_final, os.path.join(out_dir, "9_final.zarr"))
 
     # Step 10b: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(region_to_coords, arr_filt)
@@ -143,4 +112,3 @@ if __name__ == "__main__":
 
     # Closing client
     client.close()
-    cluster.close()
