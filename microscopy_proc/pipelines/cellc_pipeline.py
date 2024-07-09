@@ -5,7 +5,7 @@ import dask.array as da
 from dask.distributed import Client, LocalCluster
 from dask_cuda import LocalCUDACluster
 
-from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
+from microscopy_proc.constants import S_DEPTH
 from microscopy_proc.funcs.cellc_funcs import (
     dog_filter,
     filter_by_size,
@@ -24,13 +24,20 @@ from microscopy_proc.utils.dask_utils import (
 
 if __name__ == "__main__":
     # Filenames
+    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     # # Custom dask configs
     # custom_dask_configs()
 
     #########################
-    # RECHUNK AND OVERLAP
+    # TIFF TO ZARR
+    #########################
+
+    # tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+
+    #########################
+    # OVERLAP
     #########################
 
     # Making Dask cluster and client
@@ -39,8 +46,8 @@ if __name__ == "__main__":
     client = Client(cluster)
     print(client.dashboard_link)
 
-    # Read image
-    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    # Read raw arr
+    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
 
     # Make overlapping blocks
     arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
