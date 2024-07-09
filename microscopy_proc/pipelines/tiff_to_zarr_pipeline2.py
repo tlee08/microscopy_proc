@@ -35,9 +35,19 @@ def tiff_to_zarr_ijk_chunk(in_fp, out_fp, idx):
 def make_inter_zarrs(in_fp, out_fp, chunkshape):
     # Making chunked tiff to intermediate zarr files
     grid = np.meshgrid(*(np.arange(i) for i in chunkshape), indexing="ij")
+    futures_ls = []
     for idx in zip(*(i.ravel() for i in grid)):
         print(idx)
-        tiff_to_zarr_ijk_chunk(in_fp, out_fp, idx)
+        # tiff_to_zarr_ijk_chunk(in_fp, out_fp, idx)
+        futures_ls.append(
+            client.submit(
+                tiff_to_zarr_ijk_chunk,
+                in_fp,
+                out_fp,
+                idx,
+            )
+        )
+    client.gather(futures_ls)
 
 
 def get_inter_zarrs(fp, chunkshape):
@@ -68,7 +78,7 @@ def large_tiff_to_zarr(in_fp, out_fp):
     arr = da.block(arr_c.tolist())
     arr.to_zarr(out_fp, overwrite=True)
     # Removing intermediate zarr files
-    remove_inter_zarrs(arr_c.shape, out_fp)
+    remove_inter_zarrs(out_fp, chunkshape)
 
 
 if __name__ == "__main__":
@@ -85,7 +95,8 @@ if __name__ == "__main__":
     )
 
     # Making Dask cluster and client (thread-based cluster)
-    cluster = LocalCluster(processes=False)
+    # cluster = LocalCluster(processes=False)
+    cluster = LocalCluster(n_workers=4, threads_per_worker=2)
     client = Client(cluster)
     print(client.dashboard_link)
 

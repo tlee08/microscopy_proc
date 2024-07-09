@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 
 import numpy as np
 from natsort import natsorted
@@ -20,7 +21,7 @@ def get_fps(dir, pattern):
         - Use `*` to indicate "any character any number of times" (i.e. for the Z number)
     An example pattern is:
     ```
-    `r"Sample_11_zoom0.52_2.5x_dual_side_fusion_2x4 vertical-stitched_T001_Z(\d+?)_C01.tif"`
+    `r"Sample_11_zoom0.52_2.5x_dual_side_fusion_2x4 vertical-stitched_T001_Z(\\d+?)_C01.tif"`
     ```
     """
     fps_all = natsorted(os.listdir(dir))
@@ -148,7 +149,13 @@ ElementDataFile = {os.path.split(fp)[1]}
 
 
 def silentremove(fp):
-    try:
-        os.remove(fp)
-    except OSError:
-        pass
+    if os.path.isfile(fp):
+        try:
+            os.remove(fp)
+        except OSError:
+            pass
+    elif os.path.isdir(fp):
+        try:
+            shutil.rmtree(fp)
+        except OSError:
+            pass

@@ -1,9 +1,10 @@
 import os
 
-import numpy as np
+import dask.array as da
 import tifffile
 from dask.distributed import Client, LocalCluster
 
+from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.funcs.reg_funcs import downsmpl_fine_arr, downsmpl_rough_arr
 
 # logging.basicConfig(level=logging.DEBUG)
@@ -25,21 +26,18 @@ if __name__ == "__main__":
     y_d_fine = 0.8
     x_d_fine = 0.8
 
-    # Defining process params
-    n_workers = 10
-    depth = 50
-    chunks = (500, 1400, 1400)
-    device_id = 1
-
     # Making Dask cluster and client
-    cluster = LocalCluster(n_workers=n_workers, threads_per_worker=1)
+    cluster = LocalCluster(n_workers=8, threads_per_worker=2)
     client = Client(cluster)
 
     # Rough downsample
-    arr_raw = tifffile.memmap("/home/linux1/Desktop/A-1-1/abcd.tif")
+    # arr_raw = tifffile.memmap("/home/linux1/Desktop/A-1-1/abcd.tif")
+
+    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
     arr_downs_i = downsmpl_rough_arr(arr_raw, z_d_rough, y_d_rough, x_d_rough)
-    # Converting from memmap to np array in memory
-    arr_downs_i = np.asarray(arr_downs_i)
+    # Converting from memmap/dask to np array in memory
+    # arr_downs_i = np.asarray(arr_downs_i)
+    arr_downs_i = arr_downs_i.compute()
     arr_downs_f = downsmpl_fine_arr(arr_downs_i, z_d_fine, y_d_fine, x_d_fine)
     # Trim
     # TODO
