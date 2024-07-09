@@ -42,22 +42,20 @@ if __name__ == "__main__":
 
     # Making Dask cluster and client
     # NOTE: works best threaded (and with few threads)
-    cluster = LocalCluster(processes=False, threads_per_worker=8)
-    client = Client(cluster)
-    print(client.dashboard_link)
+    # cluster = LocalCluster(processes=False, threads_per_worker=8)
+    # client = Client(cluster)
+    # print(client.dashboard_link)
 
-    # Read raw arr
-    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
+    # # Read raw arr
+    # arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
 
-    # Make overlapping blocks
-    arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
-    arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
+    # # Make overlapping blocks
+    # arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
+    # arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
 
-    # Closing client
-    client.close()
-    cluster.close()
-
-    exit()
+    # # Closing client
+    # client.close()
+    # cluster.close()
 
     #########################
     # HEAVY GPU PROCESSING
@@ -69,7 +67,7 @@ if __name__ == "__main__":
     print(client.dashboard_link)
 
     # Step 1: Read overlapped image
-    arr_raw = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
+    arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
 
     # Step 1: Top-hat filter (background subtraction)
     arr_bgsub = arr_overlap.map_blocks(lambda i: tophat_filter(i, 5.0))
@@ -102,12 +100,12 @@ if __name__ == "__main__":
     arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "6_filt.zarr"))
 
     # Step 7: Get maxima of image masked by labels
-    arr_maxima = arr_raw.map_blocks(lambda i: get_local_maxima(i, 10))
+    arr_maxima = arr_overlap.map_blocks(lambda i: get_local_maxima(i, 10))
     arr_maxima = da.map_blocks(mask, arr_maxima, arr_filt)
     arr_maxima = disk_cache(arr_maxima, os.path.join(out_dir, "7_maxima.zarr"))
 
     # Step 8: Watershed segmentation
-    # arr_watershed = da.map_blocks(watershed_segm, arr_raw, arr_maxima, arr_filt)
+    # arr_watershed = da.map_blocks(watershed_segm, arr_overlap, arr_maxima, arr_filt)
     # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
 
     # Closing client

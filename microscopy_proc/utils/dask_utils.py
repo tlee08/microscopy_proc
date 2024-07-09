@@ -1,5 +1,3 @@
-import ctypes
-
 import dask
 import dask.array
 import dask.array as da
@@ -57,19 +55,3 @@ def coords_to_block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
 def disk_cache(arr: da.Array, fp):
     arr.to_zarr(fp, overwrite=True)
     return da.from_zarr(fp)
-
-
-def custom_dask_configs():
-    dask.config.set(
-        {
-            "distributed.nanny.pre-spawn-environ.MALLOC_TRIM_THRESHOLD_": "0",
-            "distributed.worker.memory.target": 0.8,
-            "distributed.worker.memory.pause": 0.9,
-            "distributed.worker.memory.terminate": 0.98,
-        }
-    )
-
-
-def trim_memory() -> int:
-    libc = ctypes.CDLL("libc.so.6")
-    return libc.malloc_trim(0)
