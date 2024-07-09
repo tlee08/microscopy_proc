@@ -151,7 +151,7 @@ def label_objects_with_ids(arr: np.ndarray) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(out_type=np.uint32)
+@numpy_2_cupy_decorator()
 def label_objects_with_sizes(arr: np.ndarray) -> np.ndarray:
     """
     Label objects in a 3D tensor.

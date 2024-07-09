@@ -5,6 +5,8 @@ import dask.dataframe as dd
 import dask.delayed
 import numpy as np
 
+from microscopy_proc.constants import S_DEPTH
+
 
 def block_to_coords(func, arr: da.Array) -> dd.DataFrame:
     """
@@ -55,3 +57,7 @@ def coords_to_block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
 def disk_cache(arr: da.Array, fp):
     arr.to_zarr(fp, overwrite=True)
     return da.from_zarr(fp)
+
+
+def my_trim(arr, d=S_DEPTH):
+    return arr[d:-d, d:-d, d:-d]

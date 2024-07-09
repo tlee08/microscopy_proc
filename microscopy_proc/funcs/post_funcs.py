@@ -16,7 +16,7 @@ def make_maxima_scatter(df):
 
 def make_img(arr):
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(arr.max(axis=0), cmap="gray")
+    ax.imshow(arr.max(axis=0), cmap="grey")
     ax.axis("off")
 
 
