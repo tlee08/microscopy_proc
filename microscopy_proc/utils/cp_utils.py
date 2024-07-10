@@ -1,10 +1,8 @@
-
 import logging
 
 import cupy as cp
-
-
 import numpy as np
+
 
 def clear_cuda_memory():
     # Also removing ALL references to the arguments
@@ -36,7 +34,7 @@ def clear_cuda_memory_decorator(func):
     return wrapper
 
 
-def numpy_2_cupy_decorator(in_type=cp.float32, out_type=np.uint16):
+def np_2_cp_decorator(in_type=cp.float32, out_type=np.uint16):
     def decorator(func):
         def wrapper(arr, *args, **kwargs):
             logging.debug("Converting to cupy array (float32)")

@@ -2,12 +2,12 @@ import dask
 import dask.array as da
 import numpy as np
 import tifffile
-from cupyx.scipy.ndimage import zoom
+from cupyx.scipy import ndimage as cp_ndimage
 
 # from scipy.ndimage import zoom
 from microscopy_proc.utils.cp_utils import (
     clear_cuda_memory_decorator,
-    numpy_2_cupy_decorator,
+    np_2_cp_decorator,
 )
 
 
@@ -20,9 +20,9 @@ def downsmpl_rough_arr(arr: np.ndarray, z_slice, y_slice, x_slice) -> np.ndarray
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator()
+@np_2_cp_decorator()
 def downsmpl_fine_arr(arr: np.ndarray, z_slice, y_slice, x_slice) -> np.ndarray:
-    res = zoom(arr, (z_slice, y_slice, x_slice))
+    res = cp_ndimage.zoom(arr, (z_slice, y_slice, x_slice))
     return res
 
 

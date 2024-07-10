@@ -5,20 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from cupyx.scipy.ndimage import gaussian_filter as cupy_gaussian_filter
-from cupyx.scipy.ndimage import label as cupy_label
-from cupyx.scipy.ndimage import maximum_filter as cupy_maximum_filter
-from cupyx.scipy.ndimage import white_tophat as cupy_white_tophat
+from cupyx.scipy import ndimage as cp_ndimage
 from skimage.segmentation import watershed
 
 from microscopy_proc.utils.cp_utils import (
     clear_cuda_memory_decorator,
-    numpy_2_cupy_decorator,
+    np_2_cp_decorator,
 )
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator()
+@np_2_cp_decorator()
 def tophat_filter(arr: np.ndarray, sigma=10) -> np.ndarray:
     """
     Top hat is calculated as:
@@ -28,7 +25,7 @@ def tophat_filter(arr: np.ndarray, sigma=10) -> np.ndarray:
     ```
     """
     logging.debug("Perform white top-hat filter")
-    res = cupy_white_tophat(arr, sigma)
+    res = cp_ndimage.white_tophat(arr, sigma)
     logging.debug("ReLu")
     res = cp.maximum(res, 0)
     # Returning
@@ -36,12 +33,12 @@ def tophat_filter(arr: np.ndarray, sigma=10) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator()
+@np_2_cp_decorator()
 def dog_filter(arr: np.ndarray, sigma1=1.0, sigma2=2.0) -> np.ndarray:
     logging.debug("Making gaussian blur 1")
-    gaus1 = cupy_gaussian_filter(arr, sigma=sigma1)
+    gaus1 = cp_ndimage.gaussian_filter(arr, sigma=sigma1)
     logging.debug("Making gaussian blur 2")
-    gaus2 = cupy_gaussian_filter(arr, sigma=sigma2)
+    gaus2 = cp_ndimage.gaussian_filter(arr, sigma=sigma2)
     logging.debug("Subtracting gaussian blurs")
     res = gaus1 - gaus2
     logging.debug("ReLu")
@@ -51,10 +48,10 @@ def dog_filter(arr: np.ndarray, sigma1=1.0, sigma2=2.0) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator()
+@np_2_cp_decorator()
 def gaussian_subtraction_filter(arr: np.ndarray, sigma=1.0) -> np.ndarray:
     logging.debug("Calculate local Gaussian blur")
-    gaus = cupy_gaussian_filter(arr, sigma=sigma)
+    gaus = cp_ndimage.gaussian_filter(arr, sigma=sigma)
     logging.debug("Apply the adaptive filter")
     res = arr - gaus
     logging.debug("ReLu")
@@ -64,7 +61,7 @@ def gaussian_subtraction_filter(arr: np.ndarray, sigma=1.0) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator()
+@np_2_cp_decorator()
 def intensity_cutoff(arr: np.ndarray, min_=None, max_=None) -> np.ndarray:
     """
     Performing cutoffs on a 3D tensor.
@@ -80,7 +77,7 @@ def intensity_cutoff(arr: np.ndarray, min_=None, max_=None) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(out_type=np.uint8)
+@np_2_cp_decorator(out_type=np.uint8)
 def otsu_threshold(arr: np.ndarray) -> np.ndarray:
     """
     Perform Otsu's thresholding on a 3D tensor.
@@ -111,7 +108,7 @@ def otsu_threshold(arr: np.ndarray) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(out_type=np.uint8)
+@np_2_cp_decorator(out_type=np.uint8)
 def mean_threshold(arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
     """
     Perform adaptive thresholding on a 3D tensor on GPU.
@@ -127,7 +124,7 @@ def mean_threshold(arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(out_type=np.uint8)
+@np_2_cp_decorator(out_type=np.uint8)
 def manual_threshold(arr: np.ndarray, val: int):
     """
     Perform manual thresholding on a tensor.
@@ -139,25 +136,25 @@ def manual_threshold(arr: np.ndarray, val: int):
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(out_type=np.uint32)
+@np_2_cp_decorator(out_type=np.uint32)
 def label_objects_with_ids(arr: np.ndarray) -> np.ndarray:
     """
     Label objects in a 3D tensor.
     """
     logging.debug("Labelling contiguous objects uniquely")
-    res, _ = cupy_label(arr)
+    res, _ = cp_ndimage.label(arr)
     logging.debug("Returning")
     return res
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator()
+@np_2_cp_decorator()
 def label_objects_with_sizes(arr: np.ndarray) -> np.ndarray:
     """
     Label objects in a 3D tensor.
     """
     logging.debug("Labelling contiguous objects uniquely")
-    arr, _ = cupy_label(arr)
+    arr, _ = cp_ndimage.label(arr)
     logging.debug("Getting vector of ids and sizes (not incl. 0)")
     ids, counts = cp.unique(arr[arr > 0], return_counts=True)
     # NOTE: assumes ids is perfectly incrementing from 1
@@ -189,7 +186,7 @@ def get_sizes(arr: np.ndarray) -> pd.Series:
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(in_type=cp.uint32, out_type=np.uint32)
+@np_2_cp_decorator(in_type=cp.uint32, out_type=np.uint32)
 def labels_map(arr: np.ndarray, vect: pd.Series) -> np.ndarray:
     """
     NOTE: assumes the `vect` index is incrementing from 1
@@ -227,7 +224,7 @@ def visualise_stats(arr: np.ndarray):
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(out_type=np.uint32)
+@np_2_cp_decorator(out_type=np.uint32)
 def filter_by_size(arr: np.ndarray, smin=None, smax=None):
     """
     Assumes
@@ -243,13 +240,13 @@ def filter_by_size(arr: np.ndarray, smin=None, smax=None):
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(in_type=cp.int32, out_type=np.uint8)
+@np_2_cp_decorator(in_type=cp.int32, out_type=np.uint8)
 def get_local_maxima(arr: np.ndarray, sigma=10):
     """
     NOTE: there can be multiple maxima per label
     """
     logging.debug("Making max filter for raw arr (holds the maximum in given area)")
-    max_arr = cupy_maximum_filter(arr, sigma)
+    max_arr = cp_ndimage.maximum_filter(arr, sigma)
     logging.debug("Add 1 (so we separate the max pixel from the max_filter)")
     arr = arr + 1
     logging.debug("Getting local maxima (where arr - max_arr == 1)")
@@ -259,7 +256,7 @@ def get_local_maxima(arr: np.ndarray, sigma=10):
 
 
 @clear_cuda_memory_decorator
-@numpy_2_cupy_decorator(in_type=cp.int32, out_type=np.uint8)
+@np_2_cp_decorator(in_type=cp.int32, out_type=np.uint8)
 def mask(arr: np.ndarray, mask: np.ndarray):
     # Choosing numpy or cupy
     xp = cp
