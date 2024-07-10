@@ -5,7 +5,6 @@ import numpy as np
 from dask.distributed import Client, LocalCluster
 from dask_cuda import LocalCUDACluster
 
-from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.cellc_funcs import (
     dog_filter,
     filter_by_size,
@@ -17,7 +16,6 @@ from microscopy_proc.funcs.cellc_funcs import (
     region_to_coords,
     tophat_filter,
 )
-from microscopy_proc.funcs.tiff_to_zarr import tiff_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
 if __name__ == "__main__":
@@ -29,28 +27,28 @@ if __name__ == "__main__":
     # TIFF TO ZARR
     #########################
 
-    tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    # tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
-    #########################
-    # OVERLAP
-    #########################
+    # #########################
+    # # OVERLAP
+    # #########################
 
-    # Making Dask cluster and client
-    # NOTE: works best threaded (and with few threads)
-    cluster = LocalCluster(processes=False, threads_per_worker=8)
-    client = Client(cluster)
-    print(client.dashboard_link)
+    # # Making Dask cluster and client
+    # # NOTE: works best threaded (and with few threads)
+    # cluster = LocalCluster(processes=False, threads_per_worker=8)
+    # client = Client(cluster)
+    # print(client.dashboard_link)
 
-    # Read raw arr
-    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
+    # # Read raw arr
+    # arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
 
-    # Make overlapping blocks
-    arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
-    arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
+    # # Make overlapping blocks
+    # arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
+    # arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
 
-    # Closing client
-    client.close()
-    cluster.close()
+    # # Closing client
+    # client.close()
+    # cluster.close()
 
     #########################
     # HEAVY GPU PROCESSING
@@ -79,7 +77,7 @@ if __name__ == "__main__":
     # Step 4: Mean thresholding with standard deviation offset
     # NOTE: visually inspect sd offset
     arr_adaptv_mean = (
-        arr_adaptv.sum() / (np.prod(arr_adaptv.shape()) - arr_adaptv.equals(0))
+        arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - arr_adaptv.equals(0))
     ).compute()
     print(arr_adaptv_mean)
     t_p = 30

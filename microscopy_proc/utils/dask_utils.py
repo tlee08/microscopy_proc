@@ -61,3 +61,15 @@ def disk_cache(arr: da.Array, fp):
 
 def my_trim(arr, d=S_DEPTH):
     return arr[d:-d, d:-d, d:-d]
+
+
+def my_configs():
+    dask.config.set(
+        {
+            "distributed.scheduler.active-memory-manager.measure": "managed",
+            "distributed.worker.memory.rebalance.measure": "managed",
+            "distributed.worker.memory.spill": False,
+            "distributed.worker.memory.pause": False,
+            "distributed.worker.memory.terminate": False,
+        }
+    )
