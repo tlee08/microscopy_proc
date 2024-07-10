@@ -3,7 +3,6 @@ import os
 import dask.array as da
 import numpy as np
 from dask.distributed import Client, LocalCluster
-from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.funcs.cellc_funcs import (
     dog_filter,
@@ -12,9 +11,9 @@ from microscopy_proc.funcs.cellc_funcs import (
     get_local_maxima,
     label_objects_with_sizes,
     manual_threshold,
+    # tophat_filter,
     mask,
     region_to_coords,
-    tophat_filter,
 )
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
@@ -34,13 +33,12 @@ if __name__ == "__main__":
     # #########################
 
     # # Making Dask cluster and client
-    # # NOTE: works best threaded (and with few threads)
-    # cluster = LocalCluster(processes=False, threads_per_worker=8)
+    # cluster = LocalCluster(n_workers=6, threads_per_worker=4)
     # client = Client(cluster)
     # print(client.dashboard_link)
 
     # # Read raw arr
-    # arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
+    # arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
     # # Make overlapping blocks
     # arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
@@ -55,16 +53,18 @@ if __name__ == "__main__":
     #########################
 
     # Making Dask cluster and client
-    cluster = LocalCUDACluster()
+    # cluster = LocalCUDACluster()
+    cluster = LocalCluster(processes=False, threads_per_worker=1)
     client = Client(cluster)
     print(client.dashboard_link)
 
     # # Step 0: Read overlapped image
-    arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
+    # arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
+    arr_bgrm = da.from_zarr(os.path.join(out_dir, "1_bgrm.zarr"))
 
-    # # Step 1: Top-hat filter (background subtraction)
-    arr_bgrm = arr_overlap.map_blocks(lambda i: tophat_filter(i, 5.0))
-    arr_bgrm = disk_cache(arr_bgrm, os.path.join(out_dir, "1_bgrm.zarr"))
+    # # # Step 1: Top-hat filter (background subtraction)
+    # arr_bgrm = arr_overlap.map_blocks(lambda i: tophat_filter(i, 5.0))
+    # arr_bgrm = disk_cache(arr_bgrm, os.path.join(out_dir, "1_bgrm.zarr"))
 
     # # Step 2: Difference of Gaussians (edge detection)
     arr_dog = arr_bgrm.map_blocks(lambda i: dog_filter(i, 2.0, 4.0))
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # Step 4: Mean thresholding with standard deviation offset
     # NOTE: visually inspect sd offset
     arr_adaptv_mean = (
-        arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - arr_adaptv.equals(0))
+        arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
     ).compute()
     print(arr_adaptv_mean)
     t_p = 30
