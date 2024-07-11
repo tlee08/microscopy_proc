@@ -55,7 +55,7 @@ if __name__ == "__main__":
     )
 
     imgs_ls = (
-        ("raw", 10000),
+        # ("raw", 10000),
         # ("0_overlap", 10000),
         # ("1_bgrm", 2000),
         # ("2_dog", 100),
@@ -65,9 +65,9 @@ if __name__ == "__main__":
         # ("6_filt", 5),
         # ("7_maxima", 5),
         # ("9_filt_f", 5),
-        ("9_maxima_f", 5), 
+        ("9_maxima_f", 1), 
         # ("points", 5),
-        ("heatmaps", 20),
+        # ("heatmaps", 20),
     )
     fp_ls = [os.path.join(out_dir, f"{i}.zarr") for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

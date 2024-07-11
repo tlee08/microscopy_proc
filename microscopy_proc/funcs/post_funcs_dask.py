@@ -49,7 +49,9 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
     )
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
+        print("A", arr.sum())
         arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
+        print("B", arr.sum())
     # Return arr
     return arr
 
@@ -131,12 +133,14 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
             coords_i["y"] += y
             coords_i["x"] += x
             arr = arr.map_blocks(lambda i, df=coords_i, block_info=None: coords_to_points_workers(i, df, block_info))
+            print("a", arr.sum().compute())
             arr = disk_cache(arr, arr_out_fp)
+            print("b", arr.sum().compute())
             # coords_to_points_workers(arr, coords_i)
     # arr = arr.to_zarr(arr_out_fp, overwrite=True)
 
     # Saving the subsampled array
-    coords_to_points_end(arr, arr_out_fp)
+    # coords_to_points_end(arr, arr_out_fp)
 
 
 def coords_to_regions(coords, shape, arr_out_fp):
