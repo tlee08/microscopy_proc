@@ -12,7 +12,6 @@ from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_tri
 
 
 def img_overlap_pipeline(out_dir):
-    # Making Dask cluster and client
     cluster = LocalCluster(n_workers=1, threads_per_worker=2)
     client = Client(cluster)
     print(client.dashboard_link)
@@ -24,13 +23,11 @@ def img_overlap_pipeline(out_dir):
     arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
     arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
 
-    # Closing client
     client.close()
     cluster.close()
 
 
 def img_proc_pipeline(out_dir):
-    # Making Dask cluster and client
     cluster = LocalCUDACluster()
     # cluster = LocalCluster(processes=False, threads_per_worker=1)
     client = Client(cluster)
@@ -40,11 +37,11 @@ def img_proc_pipeline(out_dir):
     arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
 
     # Step 1: Top-hat filter (background subtraction)
-    arr_bgrm = arr_overlap.map_blocks(lambda i: GpuArrFuncs.tophat_filt(i, 5.0))
+    arr_bgrm = arr_overlap.map_blocks(lambda i: GpuArrFuncs.tophat_filt(i, 10))
     arr_bgrm = disk_cache(arr_bgrm, os.path.join(out_dir, "1_bgrm.zarr"))
 
     # # Step 2: Difference of Gaussians (edge detection)
-    arr_dog = arr_bgrm.map_blocks(lambda i: GpuArrFuncs.dog_filt(i, 2.0, 4.0))
+    arr_dog = arr_bgrm.map_blocks(lambda i: GpuArrFuncs.dog_filt(i, 2, 5))
     arr_dog = disk_cache(arr_dog, os.path.join(out_dir, "2_dog.zarr"))
 
     # Step 3: Gaussian subtraction with large sigma for adaptive thresholding
@@ -79,14 +76,12 @@ def img_proc_pipeline(out_dir):
     # arr_watershed = da.map_blocks(watershed_segm, arr_overlap, arr_maxima, arr_filt)
     # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
 
-    # Closing client
     client.close()
     cluster.close()
 
 
 def img_trim_pipeline(out_dir):
-    # Making Dask cluster and client
-    cluster = LocalCluster(n_workers=6, threads_per_worker=4)
+    cluster = LocalCluster()
     client = Client(cluster)
     print(client.dashboard_link)
 
@@ -102,16 +97,17 @@ def img_trim_pipeline(out_dir):
     arr_maxima_f = arr_maxima.map_blocks(my_trim, chunks=arr_raw.chunks)
     arr_maxima_f = disk_cache(arr_maxima_f, os.path.join(out_dir, "9_maxima_f.zarr"))
 
-    # Closing client
     client.close()
     cluster.close()
 
 
 def img_to_coords_pipeline(out_dir):
-    # Making Dask cluster and client
-    cluster = LocalCluster(n_workers=8, threads_per_worker=1)
+    cluster = LocalCluster()
     client = Client(cluster)
     print(client.dashboard_link)
+
+    arr_filt_f = da.from_zarr(os.path.join(out_dir, "9_filt_f.zarr"))
+    arr_maxima_f = da.from_zarr(os.path.join(out_dir, "9_maxima_f.zarr"))
 
     # Step 10b: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_filt_f)
@@ -120,14 +116,14 @@ def img_to_coords_pipeline(out_dir):
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_maxima_f)
     cell_coords.to_parquet(os.path.join(out_dir, "10_maxima.parquet"))
 
-    # Closing client
     client.close()
     cluster.close()
 
 
 if __name__ == "__main__":
     # Filenames
-    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
+    # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     #########################
@@ -140,7 +136,7 @@ if __name__ == "__main__":
     # # OVERLAP
     # #########################
 
-    img_overlap_pipeline(in_fp, out_dir)
+    img_overlap_pipeline(out_dir)
 
     #########################
     # HEAVY GPU PROCESSING

@@ -1,3 +1,4 @@
+import dask.array as da
 import tifffile
 import zarr
 
@@ -17,7 +18,7 @@ def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     )
     img_zarr[:] = img_mmap
     # To final dask tiff
-    img_zarr = zarr.open(f"{out_fp}_tmp.zarr")
+    img_zarr = da.from_zarr(f"{out_fp}_tmp.zarr")
     img_zarr.to_zarr(out_fp, overwrite=True)
     # Remove intermediate
     silentremove(f"{out_fp}_tmp.zarr")
