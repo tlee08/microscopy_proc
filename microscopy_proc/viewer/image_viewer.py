@@ -49,9 +49,9 @@ if __name__ == "__main__":
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     slicer = (
-        slice(300, 400, None), #  slice(None, None, 3),
-        slice(1000, 5000, None), #  slice(None, None, 12),
-        slice(1000, 4000, None), #  slice(None, None, 12),
+        slice(500, 550, None), #  slice(None, None, 3),
+        slice(2000, 3000, None), #  slice(None, None, 12),
+        slice(2000, 3000, None), #  slice(None, None, 12),
     )
 
     imgs_ls = (
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         # ("6_filt", 5),
         # ("7_maxima", 5),
         # ("9_filt_f", 5),
-        # ("9_maxima_f", 5), 
+        ("9_maxima_f", 5), 
         # ("points", 5),
         ("heatmaps", 20),
     )

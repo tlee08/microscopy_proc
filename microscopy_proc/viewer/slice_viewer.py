@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     slicer = (
         # slice(300, 400, None), #  slice(None, None, 3),
-        300,
+        100,
         slice(0, 5000, None), #  slice(None, None, 12),
         slice(0, 4000, None), #  slice(None, None, 12),
     )
