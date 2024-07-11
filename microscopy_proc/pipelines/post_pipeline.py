@@ -16,17 +16,17 @@ if __name__ == "__main__":
     client = Client(cluster)
     print(client.dashboard_link)
 
-    # region_df = dd.read_parquet(os.path.join(out_dir, "10_region.parquet")).compute()
-    # coords_to_points(
-    #     region_df,
-    #     da.from_zarr(os.path.join(out_dir, "raw.zarr")).shape,
-    #     os.path.join(out_dir, "points.zarr"),
-    # )
+    region_df = dd.read_parquet(os.path.join(out_dir, "10_region.parquet")).compute()
+    coords_to_points(
+        region_df,
+        da.from_zarr(os.path.join(out_dir, "raw.zarr")).shape,
+        os.path.join(out_dir, "points.zarr"),
+    )
 
     maxima_df = dd.read_parquet(os.path.join(out_dir, "10_maxima.parquet")).compute()
     coords_to_heatmaps(
         maxima_df,
-        2,
+        3,
         da.from_zarr(os.path.join(out_dir, "raw.zarr")).shape,
         os.path.join(out_dir, "heatmaps.zarr"),
     )

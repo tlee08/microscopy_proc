@@ -96,7 +96,9 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
     # Initialising spatial array
     arr = coords_to_points_start(shape, arr_out_fp)
     # Adding coords to image
-    coords_to_points_workers(arr, coords)
+    arr = arr.map_blocks(lambda i, df=coords_i, block_info=None: coords_to_points_workers(i, df, block_info))
+    arr.to_zarr(arr_out_fp, overwrite=True)
+    # coords_to_points_workers(arr, coords)
     # Saving the subsampled array
     coords_to_points_end(arr, arr_out_fp)
 
