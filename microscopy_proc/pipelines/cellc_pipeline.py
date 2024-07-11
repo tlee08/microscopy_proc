@@ -7,7 +7,7 @@ from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-from microscopy_proc.funcs.tiff_to_zarr import tiff_to_zarr
+from microscopy_proc.funcs.io_funcs import tiff_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
 
@@ -122,8 +122,8 @@ def img_to_coords_pipeline(out_dir):
 
 if __name__ == "__main__":
     # Filenames
-    # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
-    in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
+    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     #########################

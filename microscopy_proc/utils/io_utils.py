@@ -104,50 +104,6 @@ ElementDataFile = {os.path.split(fp)[1]}
     return
 
 
-#####################################################################
-#           Generating plots to compare images superimposed
-#####################################################################
-
-
-# def compare_imgs(ims, **kwargs):
-#     """
-#     Compares two images superimposes onto eachother.
-#     Used to visually hand-check for registration process.
-
-#     **kwargs are passed to `Axes.set` method
-#     """
-#     # Initialising fig
-#     fig, ax = plt.subplots()
-#     # List of cmaps
-#     cmaps = [
-#         # "inferno",
-#         # "viridis",
-#         # "plasma",
-#         # "cividis",
-#         "Reds",
-#         "Greens",
-#         "Blues",
-#         "Greys_r",
-#         "Purples",
-#     ]
-#     # Making images
-#     for i, im in enumerate(ims):
-#         ax.imshow(
-#             im,
-#             cmap=cmaps[i],
-#             alpha=0.5,
-#         )
-#     ax.set_xlim(0, np.max([i.shape[1] for i in ims]))
-#     ax.set_ylim(0, np.max([i.shape[0] for i in ims]))
-#     ax.set(**kwargs)
-#     return fig, ax
-
-
-#####################################################################
-#             Annotation Ontology File Handler Functions
-#####################################################################
-
-
 def silentremove(fp):
     if os.path.isfile(fp):
         try:
