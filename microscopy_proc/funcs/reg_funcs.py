@@ -3,7 +3,10 @@ import dask.array as da
 import numpy as np
 import tifffile
 from cupyx.scipy import ndimage as cp_ndimage
-
+import zarr
+from natsort import natsorted
+from microscopy_proc.constants import PROC_CHUNKS
+from microscopy_proc.utils.io_utils import silentremove
 # from scipy.ndimage import zoom
 from microscopy_proc.utils.cp_utils import (
     clear_cuda_memory_decorator,
@@ -74,24 +77,47 @@ def slice_arr(arr_in_fp, arr_out_fp, slices):
 #####################################################################
 
 
-def stitch_load_slice(fp):
-    return tifffile.memmap(fp)
+
+def read_tiff(fp):
+    arr = tifffile.imread(fp)
+    for i in np.arange(len(arr.shape)):
+        arr = np.squeeze(arr)
+    return arr
 
 
-def stitch_arr(fp_ls, arr_out_fp):
-    """
-    Assumes each image is a z-slice, and is in `(y, x)` format.
-    The stitched 3D array is stored in `(z, y, x)` format dimensions.
-    """
+def btiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
+    # To intermediate tiff
+    arr_mmap = tifffile.memmap(in_fp)
+    arr_zarr = zarr.open(
+        f"{out_fp}_tmp.zarr",
+        mode="w",
+        shape=arr_mmap.shape,
+        dtype=arr_mmap.dtype,
+        chunks=chunks,
+    )
+    arr_zarr[:] = arr_mmap
+    # To final dask tiff
+    arr_zarr = da.from_zarr(f"{out_fp}_tmp.zarr")
+    arr_zarr.to_zarr(out_fp, overwrite=True)
+    # Remove intermediate
+    silentremove(f"{out_fp}_tmp.zarr")
+
+
+def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
+    # Natsorting in_fp_ls
+    in_fp_ls = natsorted(in_fp_ls)
     # Getting shape and dtype
-    arr1 = tifffile.imread(fp_ls[0])
-    shape = (len(fp_ls), arr1.shape[0], img1.shape[1])
-    dtype = np.uint16
-    # Initialising temporary memmap
-    load = dask.delayed(stitch_load_slice)
-    res_ls = [load(fp) for fp in fp_ls]
-    res = da.concatenate(res_ls, axis=0)
-    # Saving to file
-    tifffile.imwrite(arr_out_fp, res)
-    # Making MHD header so it can be read by ImageJ
-    # make_npy_header(arr_out_fp)
+    arr1 = read_tiff(in_fp_ls[0])
+    shape = (len(in_fp_ls), *arr1.shape)
+    dtype = arr1.dtype
+    # Getting list of dask delayed tiffs
+    tiffs_ls = [dask.delayed(read_tiff)(i) for i in in_fp_ls]
+    # Getting list of dask array tiffs and rechunking each (in prep later rechunking)
+    tiffs_ls = [
+        da.from_delayed(i, dtype=dtype, shape=shape[1:]).rechunk(chunks[1:])
+        for i in tiffs_ls
+    ]
+    # Stacking tiffs and rechunking
+    arr = da.stack(tiffs_ls, axis=0).rechunk(chunks)
+    # Saving to zarr
+    arr.to_zarr(out_fp, overwrite=True)

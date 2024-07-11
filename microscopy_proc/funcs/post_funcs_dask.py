@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import tifffile
+import dask
 
 from microscopy_proc.utils.io_utils import silentremove
-
+from microscopy_proc.constants import PROC_CHUNKS
 
 def make_maxima_scatter(df):
     fig, ax = plt.subplots(figsize=(5, 10))
@@ -26,6 +27,7 @@ def make_img(arr, **kwargs):
 
 
 def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
+    arr = arr.copy()
     shape = arr.shape  # noqa: F841
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
@@ -48,20 +50,22 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
 
 def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
     # Initialising spatial array
-    arr = np.memmap(
-        "temp.dat",
-        mode="w+",
-        shape=shape,
-        dtype=np.uint8,
-    )
-    return arr
+    # arr = np.memmap(
+    #     "temp.dat",
+    #     mode="w+",
+    #     shape=shape,
+    #     dtype=np.uint8,
+    # )
+    da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8).to_zarr(arr_out_fp, overwrite=True)
+    return da.from_zarr(arr_out_fp)
 
 
 def coords_to_points_end(arr, arr_out_fp):
-    # # Saving the subsampled array
-    tifffile.imwrite(arr_out_fp, arr)
-    # Removing temporary memmap
-    silentremove("temp.dat")
+    # # # Saving the subsampled array
+    # tifffile.imwrite(arr_out_fp, arr)
+    # # Removing temporary memmap
+    # silentremove("temp.dat")
+    pass
 
 
 #####################################################################
@@ -120,7 +124,9 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
             coords_i["z"] += z
             coords_i["y"] += y
             coords_i["x"] += x
-            coords_to_points_workers(arr, coords_i)
+            arr = arr.map_blocks(lambda i, df=coords_i: coords_to_points_workers(i, df))
+            # coords_to_points_workers(arr, coords_i)
+    arr = arr.to_zarr(arr_out_fp, overwrite=True)
 
     # Saving the subsampled array
     coords_to_points_end(arr, arr_out_fp)
