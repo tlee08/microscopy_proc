@@ -60,7 +60,10 @@ def disk_cache(arr: da.Array, fp):
 
 
 def my_trim(arr, d=S_DEPTH):
-    return arr[d:-d, d:-d, d:-d]
+    return arr.map_blocks(
+        lambda x: x[d:-d, d:-d, d:-d],
+        chunks=[tuple(np.array(i) - 2*2) for i in arr.chunks],
+    )
 
 
 def my_configs():
@@ -74,9 +77,10 @@ def my_configs():
         }
     )
 
-def cluster_proc_dec(cluster):
+def cluster_proc_dec(cluster_factory):
     def decorator(func):
         def wrapper(*args, **kwargs):
+            cluster =cluster_factory()
             client = Client(cluster)
             print(client.dashboard_link)
             res = func(*args, **kwargs)

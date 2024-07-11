@@ -7,12 +7,11 @@ from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-from microscopy_proc.funcs.io_funcs import btiff_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim, cluster_proc_dec
 from microscopy_proc.funcs.io_funcs import tiffs_to_zarr
 
 
-@cluster_proc_dec(LocalCluster())
+@cluster_proc_dec(lambda: LocalCluster())
 def tiff_to_zarr(in_dir, out_dir):
     tiffs_to_zarr(
         [os.path.join(in_dir, f) for f in os.listdir(in_fp)],
@@ -20,7 +19,7 @@ def tiff_to_zarr(in_dir, out_dir):
         chunks=PROC_CHUNKS,
     )
 
-@cluster_proc_dec(LocalCluster(n_workers=1, threads_per_worker=2))
+@cluster_proc_dec(lambda: LocalCluster(n_workers=1, threads_per_worker=2))
 def img_overlap_pipeline(out_dir):
     # Read raw arr
     arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
@@ -30,7 +29,7 @@ def img_overlap_pipeline(out_dir):
     arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
 
 
-@cluster_proc_dec(LocalCUDACluster())
+@cluster_proc_dec(lambda: LocalCUDACluster())
 def img_proc_pipeline(out_dir):
     # Step 0: Read overlapped image
     arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
@@ -76,22 +75,21 @@ def img_proc_pipeline(out_dir):
     # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
 
 
-@cluster_proc_dec(LocalCluster())
+@cluster_proc_dec(lambda: LocalCluster())
 def img_trim_pipeline(out_dir):
-    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
     arr_filt = da.from_zarr(os.path.join(out_dir, "6_filt.zarr"))
     arr_maxima = da.from_zarr(os.path.join(out_dir, "7_maxima.zarr"))
 
     # Step 9a: trimming overlaps
-    arr_filt_f = arr_filt.map_blocks(my_trim, chunks=arr_raw.chunks)
+    arr_filt_f = my_trim(arr_filt)
     arr_filt_f = disk_cache(arr_filt_f, os.path.join(out_dir, "9_filt_f.zarr"))
 
     # Step 9a: trimming overlaps
-    arr_maxima_f = arr_maxima.map_blocks(my_trim, chunks=arr_raw.chunks)
+    arr_maxima_f = my_trim(arr_maxima)
     arr_maxima_f = disk_cache(arr_maxima_f, os.path.join(out_dir, "9_maxima_f.zarr"))
 
 
-@cluster_proc_dec(LocalCluster())
+@cluster_proc_dec(lambda: LocalCluster())
 def img_to_coords_pipeline(out_dir):
     arr_filt_f = da.from_zarr(os.path.join(out_dir, "9_filt_f.zarr"))
     arr_maxima_f = da.from_zarr(os.path.join(out_dir, "9_maxima_f.zarr"))
