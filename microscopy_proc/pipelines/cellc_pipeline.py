@@ -7,7 +7,7 @@ from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-from microscopy_proc.funcs.io_funcs import tiff_to_zarr
+from microscopy_proc.funcs.io_funcs import btiff_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
 
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # TIFF TO ZARR
     #########################
 
-    tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    btiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
     # #########################
     # # OVERLAP

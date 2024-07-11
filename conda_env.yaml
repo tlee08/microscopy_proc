@@ -8,6 +8,8 @@ dependencies:
   # Interactivity
   - ipykernel
   - fiji
+  # Visualisation
+  - python-graphviz
   # GPU acceleration
   - cupy
   - pip:

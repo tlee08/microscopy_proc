@@ -18,7 +18,7 @@ class CpuArrFuncs:
         Top hat is calculated as:
 
         ```
-        res = img - max_filter(min_filter(img, sigma), sigma)
+        res = arr - max_filter(min_filter(arr, sigma), sigma)
         ```
         """
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)

@@ -7,7 +7,7 @@ from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-from microscopy_proc.funcs.tiff_to_zarr import tiff_to_zarr
+from microscopy_proc.funcs.io_funcs import tiffs_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
 
@@ -123,35 +123,48 @@ def img_to_coords_pipeline(out_dir):
 if __name__ == "__main__":
     # Filenames
     # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
-    in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    in_dir = in_fp = "/home/linux1/Desktop/A-1-1/example"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    #########################
-    # TIFF TO ZARR
-    #########################
+    cluster = LocalCluster()
+    client = Client(cluster)
 
-    tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    tiffs_to_zarr(
+        [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
+        os.path.join(out_dir, "raw.zarr"),
+        chunks=PROC_CHUNKS,
+    )
+
+    client.close()
+    cluster.close()
 
     # #########################
-    # # OVERLAP
+    # # TIFF TO ZARR
     # #########################
 
-    img_overlap_pipeline(out_dir)
+    # tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
-    #########################
-    # HEAVY GPU PROCESSING
-    #########################
+    # # #########################
+    # # # OVERLAP
+    # # #########################
 
-    img_proc_pipeline(out_dir)
+    # img_overlap_pipeline(out_dir)
 
-    #########################
-    # TRIMMING OVERLAPS
-    #########################
+    # #########################
+    # # HEAVY GPU PROCESSING
+    # #########################
 
-    img_trim_pipeline(out_dir)
+    # img_proc_pipeline(out_dir)
 
-    #########################
-    # ARR TO COORDS
-    #########################
+    # #########################
+    # # TRIMMING OVERLAPS
+    # #########################
 
-    img_to_coords_pipeline(out_dir)
+    # img_trim_pipeline(out_dir)
+
+    # #########################
+    # # ARR TO COORDS
+    # #########################
+
+    # img_to_coords_pipeline(out_dir)

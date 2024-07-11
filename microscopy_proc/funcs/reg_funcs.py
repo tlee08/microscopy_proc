@@ -48,11 +48,11 @@ def reorient_arr(arr, orient_ls):
             arr = np.flip(arr, ax_new)
     # Reordering axes
     arr = arr.transpose(orient_ls)
-    # Returning img array
+    # Returning
     return arr
 
 
-def slice_img(img_in_fp, img_out_fp, slices):
+def slice_arr(arr_in_fp, arr_out_fp, slices):
     """
     Assumes `slices` is given in `(x, y, z)` format.
     Assumes the array is stored in `(z, y, x)` format.
@@ -61,12 +61,12 @@ def slice_img(img_in_fp, img_out_fp, slices):
     # Setting up variables
     x_slice, y_slice, z_slice = slices
     # Loading stitched numpy array (entire image)
-    arr = np.load(img_in_fp, mmap_mode="r")
+    arr = np.load(arr_in_fp, mmap_mode="r")
     # Slicing array (subsampling)
     s_arr = arr[z_slice, y_slice, x_slice]
     # Saving the subsampled array
-    np.save(img_out_fp, s_arr)
-    return np.load(img_out_fp, mmap_mode="r")
+    np.save(arr_out_fp, s_arr)
+    return np.load(arr_out_fp, mmap_mode="r")
 
 
 #####################################################################
@@ -78,20 +78,20 @@ def stitch_load_slice(fp):
     return tifffile.memmap(fp)
 
 
-def stitch_img(fp_ls, img_out_fp):
+def stitch_arr(fp_ls, arr_out_fp):
     """
     Assumes each image is a z-slice, and is in `(y, x)` format.
     The stitched 3D array is stored in `(z, y, x)` format dimensions.
     """
     # Getting shape and dtype
-    img1 = tifffile.imread(fp_ls[0])
-    shape = (len(fp_ls), img1.shape[0], img1.shape[1])
+    arr1 = tifffile.imread(fp_ls[0])
+    shape = (len(fp_ls), arr1.shape[0], img1.shape[1])
     dtype = np.uint16
     # Initialising temporary memmap
     load = dask.delayed(stitch_load_slice)
     res_ls = [load(fp) for fp in fp_ls]
     res = da.concatenate(res_ls, axis=0)
     # Saving to file
-    tifffile.imwrite(img_out_fp, res)
+    tifffile.imwrite(arr_out_fp, res)
     # Making MHD header so it can be read by ImageJ
-    # make_npy_header(img_out_fp)
+    # make_npy_header(arr_out_fp)
