@@ -7,17 +7,17 @@ from microscopy_proc.utils.io_utils import silentremove
 
 def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     # To intermediate tiff
-    mmap = tifffile.memmap(in_fp)
-    z_f = zarr.open(
+    img_mmap = tifffile.memmap(in_fp)
+    img_zarr = zarr.open(
         f"{out_fp}_tmp.zarr",
         mode="w",
-        shape=mmap.shape,
-        dtype=mmap.dtype,
+        shape=img_mmap.shape,
+        dtype=img_mmap.dtype,
         chunks=chunks,
     )
-    z_f[:] = mmap
+    img_zarr[:] = img_mmap
     # To final dask tiff
-    z_f = zarr.open(f"{out_fp}_tmp.zarr")
-    z_f.to_zarr(out_fp, overwrite=True)
+    img_zarr = zarr.open(f"{out_fp}_tmp.zarr")
+    img_zarr.to_zarr(out_fp, overwrite=True)
     # Remove intermediate
     silentremove(f"{out_fp}_tmp.zarr")
