@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # img_overlap_pipeline(out_dir)
 
-    img_proc_pipeline(out_dir)
+    # img_proc_pipeline(out_dir)
 
     img_trim_pipeline(out_dir)
 

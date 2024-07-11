@@ -7,9 +7,9 @@ from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-from microscopy_proc.funcs.io_funcs import btiff_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim, cluster_proc_dec
 from microscopy_proc.funcs.io_funcs import tiffs_to_zarr
+
 
 @cluster_proc_dec(lambda: LocalCluster())
 def tiff_to_zarr(in_dir, out_dir):
@@ -100,6 +100,7 @@ def img_to_coords_pipeline(out_dir):
     # Step 10a: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_maxima_f)
     cell_coords.to_parquet(os.path.join(out_dir, "10_maxima.parquet"))
+
 
 if __name__ == "__main__":
     # Filenames

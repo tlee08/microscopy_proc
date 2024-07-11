@@ -62,7 +62,7 @@ def disk_cache(arr: da.Array, fp):
 def my_trim(arr, d=S_DEPTH):
     return arr.map_blocks(
         lambda x: x[d:-d, d:-d, d:-d],
-        chunks=[tuple(np.array(i) - 2*2) for i in arr.chunks],
+        chunks=[tuple(np.array(i) - d*2) for i in arr.chunks],
     )
 
 
