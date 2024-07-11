@@ -10,21 +10,8 @@ from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
 from microscopy_proc.funcs.tiff_to_zarr import tiff_to_zarr
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
-if __name__ == "__main__":
-    # Filenames
-    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
-    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    #########################
-    # TIFF TO ZARR
-    #########################
-
-    tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
-
-    # #########################
-    # # OVERLAP
-    # #########################
-
+def img_overlap_pipeline(out_dir):
     # Making Dask cluster and client
     cluster = LocalCluster(n_workers=1, threads_per_worker=2)
     client = Client(cluster)
@@ -41,10 +28,8 @@ if __name__ == "__main__":
     client.close()
     cluster.close()
 
-    #########################
-    # HEAVY GPU PROCESSING
-    #########################
 
+def img_proc_pipeline(out_dir):
     # Making Dask cluster and client
     cluster = LocalCUDACluster()
     # cluster = LocalCluster(processes=False, threads_per_worker=1)
@@ -98,10 +83,8 @@ if __name__ == "__main__":
     client.close()
     cluster.close()
 
-    #########################
-    # TRIMMING OVERLAPS
-    #########################
 
+def img_trim_pipeline(out_dir):
     # Making Dask cluster and client
     cluster = LocalCluster(n_workers=6, threads_per_worker=4)
     client = Client(cluster)
@@ -123,10 +106,8 @@ if __name__ == "__main__":
     client.close()
     cluster.close()
 
-    #########################
-    # ARR TO COORDS
-    #########################
 
+def img_to_coords_pipeline(out_dir):
     # Making Dask cluster and client
     cluster = LocalCluster(n_workers=8, threads_per_worker=1)
     client = Client(cluster)
@@ -142,3 +123,39 @@ if __name__ == "__main__":
     # Closing client
     client.close()
     cluster.close()
+
+
+if __name__ == "__main__":
+    # Filenames
+    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
+    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+
+    #########################
+    # TIFF TO ZARR
+    #########################
+
+    tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+
+    # #########################
+    # # OVERLAP
+    # #########################
+
+    img_overlap_pipeline(in_fp, out_dir)
+
+    #########################
+    # HEAVY GPU PROCESSING
+    #########################
+
+    img_proc_pipeline(out_dir)
+
+    #########################
+    # TRIMMING OVERLAPS
+    #########################
+
+    img_trim_pipeline(out_dir)
+
+    #########################
+    # ARR TO COORDS
+    #########################
+
+    img_to_coords_pipeline(out_dir)
