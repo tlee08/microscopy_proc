@@ -128,7 +128,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    def label_objects_with_ids(cls, arr: np.ndarray) -> np.ndarray:
+    def label_with_ids(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
         """
@@ -139,7 +139,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint32)
 
     @classmethod
-    def label_objects_with_sizes(cls, arr: np.ndarray) -> np.ndarray:
+    def label_with_sizes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
         """
@@ -207,7 +207,7 @@ class CpuArrFuncs:
         return fig
 
     @classmethod
-    def filter_by_size(cls, arr: np.ndarray, smin=None, smax=None):
+    def filt_by_size(cls, arr: np.ndarray, smin=None, smax=None):
         """
         Assumes
         """

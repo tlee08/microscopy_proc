@@ -69,14 +69,12 @@ class GpuArrFuncs(CpuArrFuncs):
         return clear_cuda_mem_dec(super().manual_thresh)(*args, **kwargs).get()
 
     @classmethod
-    def label_objects_with_ids(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().label_objects_with_ids)(*args, **kwargs).get()
+    def label_with_ids(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().label_with_ids)(*args, **kwargs).get()
 
     @classmethod
-    def label_objects_with_sizes(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().label_objects_with_sizes)(
-            *args, **kwargs
-        ).get()
+    def label_with_sizes(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().label_with_sizes)(*args, **kwargs).get()
 
     @classmethod
     def get_sizes(cls, *args, **kwargs):
@@ -91,8 +89,8 @@ class GpuArrFuncs(CpuArrFuncs):
         return clear_cuda_mem_dec(super().visualise_stats)(*args, **kwargs)
 
     @classmethod
-    def filter_by_size(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().filter_by_size)(*args, **kwargs).get()
+    def filt_by_size(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().filt_by_size)(*args, **kwargs).get()
 
     @classmethod
     def get_local_maxima(cls, *args, **kwargs):

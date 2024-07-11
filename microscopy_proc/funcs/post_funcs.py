@@ -14,9 +14,9 @@ def make_maxima_scatter(df):
     ax.invert_yaxis()
 
 
-def make_img(arr):
+def make_img(arr, **kwargs):
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(arr.max(axis=0), cmap="grey")
+    ax.imshow(arr.max(axis=0), cmap="grey", **kwargs)
     ax.axis("off")
 
 

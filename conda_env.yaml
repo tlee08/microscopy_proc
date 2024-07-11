@@ -4,9 +4,9 @@ channels:
   - bioconda
 dependencies:
   - python
+  - pip
   # Interactivity
   - ipykernel
-  - jupyterlab
   - fiji
   # GPU acceleration
   - cupy
