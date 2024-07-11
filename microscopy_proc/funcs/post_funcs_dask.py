@@ -8,6 +8,9 @@ import dask
 
 from microscopy_proc.utils.io_utils import silentremove
 from microscopy_proc.constants import PROC_CHUNKS
+from microscopy_proc.utils.dask_utils import disk_cache
+from microscopy_proc.utils.dask_utils import coords_to_block
+
 
 def make_maxima_scatter(df):
     fig, ax = plt.subplots(figsize=(5, 10))
@@ -17,7 +20,7 @@ def make_maxima_scatter(df):
 
 def make_img(arr, **kwargs):
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(arr.max(axis=0), cmap="grey", **kwargs)
+    ax.imshow(arr, cmap="grey", **kwargs)
     ax.axis("off")
 
 
@@ -26,9 +29,12 @@ def make_img(arr, **kwargs):
 #####################################################################
 
 
-def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
+def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
     arr = arr.copy()
     shape = arr.shape  # noqa: F841
+    # Offsetting coords with chunk space
+    if block_info is not None:
+        coords = coords_to_block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering
@@ -41,6 +47,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
         )
         .values
     )
+    print(coords.shape)
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
         arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
@@ -124,9 +131,10 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
             coords_i["z"] += z
             coords_i["y"] += y
             coords_i["x"] += x
-            arr = arr.map_blocks(lambda i, df=coords_i: coords_to_points_workers(i, df))
+            arr = arr.map_blocks(lambda i, df=coords_i, block_info=None: coords_to_points_workers(i, df, block_info))
+            arr = disk_cache(arr, arr_out_fp)
             # coords_to_points_workers(arr, coords_i)
-    arr = arr.to_zarr(arr_out_fp, overwrite=True)
+    # arr = arr.to_zarr(arr_out_fp, overwrite=True)
 
     # Saving the subsampled array
     coords_to_points_end(arr, arr_out_fp)
