@@ -7,15 +7,21 @@ from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
+from microscopy_proc.funcs.io_funcs import btiff_to_zarr
+from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim, cluster_proc_dec
 from microscopy_proc.funcs.io_funcs import tiffs_to_zarr
-from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim
 
 
+@cluster_proc_dec(LocalCluster())
+def tiff_to_zarr(in_dir, out_dir):
+    tiffs_to_zarr(
+        [os.path.join(in_dir, f) for f in os.listdir(in_fp)],
+        os.path.join(out_dir, "raw.zarr"),
+        chunks=PROC_CHUNKS,
+    )
+
+@cluster_proc_dec(LocalCluster(n_workers=1, threads_per_worker=2))
 def img_overlap_pipeline(out_dir):
-    cluster = LocalCluster(n_workers=1, threads_per_worker=2)
-    client = Client(cluster)
-    print(client.dashboard_link)
-
     # Read raw arr
     arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
@@ -23,16 +29,9 @@ def img_overlap_pipeline(out_dir):
     arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
     arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
 
-    client.close()
-    cluster.close()
 
-
+@cluster_proc_dec(LocalCUDACluster())
 def img_proc_pipeline(out_dir):
-    cluster = LocalCUDACluster()
-    # cluster = LocalCluster(processes=False, threads_per_worker=1)
-    client = Client(cluster)
-    print(client.dashboard_link)
-
     # Step 0: Read overlapped image
     arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
 
@@ -76,15 +75,9 @@ def img_proc_pipeline(out_dir):
     # arr_watershed = da.map_blocks(watershed_segm, arr_overlap, arr_maxima, arr_filt)
     # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
 
-    client.close()
-    cluster.close()
 
-
+@cluster_proc_dec(LocalCluster())
 def img_trim_pipeline(out_dir):
-    cluster = LocalCluster()
-    client = Client(cluster)
-    print(client.dashboard_link)
-
     arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))
     arr_filt = da.from_zarr(os.path.join(out_dir, "6_filt.zarr"))
     arr_maxima = da.from_zarr(os.path.join(out_dir, "7_maxima.zarr"))
@@ -97,15 +90,9 @@ def img_trim_pipeline(out_dir):
     arr_maxima_f = arr_maxima.map_blocks(my_trim, chunks=arr_raw.chunks)
     arr_maxima_f = disk_cache(arr_maxima_f, os.path.join(out_dir, "9_maxima_f.zarr"))
 
-    client.close()
-    cluster.close()
 
-
+@cluster_proc_dec(LocalCluster())
 def img_to_coords_pipeline(out_dir):
-    cluster = LocalCluster()
-    client = Client(cluster)
-    print(client.dashboard_link)
-
     arr_filt_f = da.from_zarr(os.path.join(out_dir, "9_filt_f.zarr"))
     arr_maxima_f = da.from_zarr(os.path.join(out_dir, "9_maxima_f.zarr"))
 
@@ -116,56 +103,20 @@ def img_to_coords_pipeline(out_dir):
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_maxima_f)
     cell_coords.to_parquet(os.path.join(out_dir, "10_maxima.parquet"))
 
-    client.close()
-    cluster.close()
-
 
 if __name__ == "__main__":
     # Filenames
-    # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
     # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
-    in_dir = in_fp = "/home/linux1/Desktop/A-1-1/example"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
 
-    # #########################
-    # # TIFF TO ZARR
-    # #########################
+    # tiff_to_zarr(in_fp, out_dir)
 
-    # cluster = LocalCluster()
-    # client = Client(cluster)
+    # img_overlap_pipeline(out_dir)
 
-    # tiffs_to_zarr(
-    #     [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
-    #     os.path.join(out_dir, "raw.zarr"),
-    #     chunks=PROC_CHUNKS,
-    # )
-    # # tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    img_proc_pipeline(out_dir)
 
+    img_trim_pipeline(out_dir)
 
-    # client.close()
-    # cluster.close()
-    
-    # #########################
-    # # OVERLAP
-    # #########################
-
-    img_overlap_pipeline(out_dir)
-
-    # #########################
-    # # HEAVY GPU PROCESSING
-    # #########################
-
-    # img_proc_pipeline(out_dir)
-
-    # #########################
-    # # TRIMMING OVERLAPS
-    # #########################
-
-    # img_trim_pipeline(out_dir)
-
-    # #########################
-    # # ARR TO COORDS
-    # #########################
-
-    # img_to_coords_pipeline(out_dir)
+    img_to_coords_pipeline(out_dir)

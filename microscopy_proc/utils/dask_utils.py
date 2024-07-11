@@ -2,8 +2,8 @@ import dask
 import dask.array
 import dask.array as da
 import dask.dataframe as dd
-import dask.delayed
 import numpy as np
+from dask.distributed import Client
 
 from microscopy_proc.constants import S_DEPTH
 
@@ -73,3 +73,16 @@ def my_configs():
             "distributed.worker.memory.terminate": False,
         }
     )
+
+def cluster_proc_dec(cluster):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            client = Client(cluster)
+            print(client.dashboard_link)
+            res = func(*args, **kwargs)
+            client.close()
+            cluster.close()
+            return res
+        return wrapper
+
+    return decorator
