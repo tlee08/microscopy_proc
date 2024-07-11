@@ -103,6 +103,38 @@ def imgs2_f(out_dir):
     add_img_f(viewer, arr_maxima_f, 5)
 
     napari.run()
+    
+def imgs3_f(out_dir):
+    # Filenames
+    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+
+    # Making Dask cluster and client
+    cluster = LocalCluster()
+    client = Client(cluster)
+    print(client.dashboard_link)
+
+    slicer = (
+        slice(None, None, 3),
+        slice(None, None, 12),
+        slice(None, None, 12),
+    )
+    # Reading images
+    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"))[*slicer].compute()
+    # arr_filt_f = da.from_zarr(os.path.join(out_dir, "9_filt_f.zarr"))[*slicer].compute()
+    # arr_maxima_f = da.from_zarr(os.path.join(out_dir, "9_maxima_f.zarr"))[
+    #     *slicer
+    # ].compute()
+
+    client.close()
+    cluster.close()
+
+    # Napari viewer adding images
+    viewer = napari.Viewer()
+    add_img_f(viewer, arr_raw, 10000)
+    # add_img_f(viewer, arr_filt_f, 5)
+    # add_img_f(viewer, arr_maxima_f, 5)
+
+    napari.run()
 
 
 if __name__ == "__main__":
@@ -110,4 +142,4 @@ if __name__ == "__main__":
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     # imgs1_f(out_dir)
-    imgs2_f(out_dir)
+    imgs3_f(out_dir)

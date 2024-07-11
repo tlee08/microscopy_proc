@@ -127,29 +127,30 @@ if __name__ == "__main__":
     in_dir = in_fp = "/home/linux1/Desktop/A-1-1/example"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    cluster = LocalCluster()
-    client = Client(cluster)
-
-    tiffs_to_zarr(
-        [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
-        os.path.join(out_dir, "raw.zarr"),
-        chunks=PROC_CHUNKS,
-    )
-
-    client.close()
-    cluster.close()
 
     # #########################
     # # TIFF TO ZARR
     # #########################
 
-    # tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    # cluster = LocalCluster()
+    # client = Client(cluster)
 
-    # # #########################
-    # # # OVERLAP
-    # # #########################
+    # tiffs_to_zarr(
+    #     [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
+    #     os.path.join(out_dir, "raw.zarr"),
+    #     chunks=PROC_CHUNKS,
+    # )
+    # # tiff_to_zarr(in_fp, os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
 
-    # img_overlap_pipeline(out_dir)
+
+    # client.close()
+    # cluster.close()
+    
+    # #########################
+    # # OVERLAP
+    # #########################
+
+    img_overlap_pipeline(out_dir)
 
     # #########################
     # # HEAVY GPU PROCESSING
