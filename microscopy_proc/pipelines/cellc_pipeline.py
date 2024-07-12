@@ -12,12 +12,21 @@ from microscopy_proc.funcs.io_funcs import tiffs_to_zarr
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-def tiff_to_zarr(in_dir, out_dir):
-    tiffs_to_zarr(
-        [os.path.join(in_dir, f) for f in os.listdir(in_fp)],
-        os.path.join(out_dir, "raw.zarr"),
-        chunks=PROC_CHUNKS,
-    )
+def tiff_to_zarr(in_fp, out_dir):
+    if os.path.isdir(in_fp):
+        btiff_to_zarr(
+            in_fp,
+            os.path.join(out_dir, "raw.zarr"),
+            chunks=PROC_CHUNKS,
+        )
+    elif os.path.isfile(in_fp):
+        tiffs_to_zarr(
+            [in_fp],
+            os.path.join(out_dir, "raw.zarr"),
+            chunks=PROC_CHUNKS,
+        )
+    else:
+        raise ValueError("Input file path does not exist.")
 
 @cluster_proc_dec(lambda: LocalCluster(n_workers=1, threads_per_worker=2))
 def img_overlap_pipeline(out_dir):
@@ -104,10 +113,11 @@ def img_to_coords_pipeline(out_dir):
 
 if __name__ == "__main__":
     # Filenames
-    in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
-    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
+    os.makedirs(out_dir, exist_ok=True)
 
     tiff_to_zarr(in_fp, out_dir)
 
