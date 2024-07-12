@@ -8,20 +8,20 @@ from dask_cuda import LocalCUDACluster
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
 from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim, cluster_proc_dec
-from microscopy_proc.funcs.io_funcs import tiffs_to_zarr
+from microscopy_proc.funcs.io_funcs import tiffs_to_zarr, btiff_to_zarr
 
 
 @cluster_proc_dec(lambda: LocalCluster())
 def tiff_to_zarr(in_fp, out_dir):
     if os.path.isdir(in_fp):
-        btiff_to_zarr(
-            in_fp,
+        tiffs_to_zarr(
+            [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
             os.path.join(out_dir, "raw.zarr"),
             chunks=PROC_CHUNKS,
         )
     elif os.path.isfile(in_fp):
-        tiffs_to_zarr(
-            [in_fp],
+        btiff_to_zarr(
+            in_fp,
             os.path.join(out_dir, "raw.zarr"),
             chunks=PROC_CHUNKS,
         )
@@ -61,8 +61,9 @@ def img_proc_pipeline(out_dir):
         arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
     ).compute()
     print(t_p)
+    t_p = 30
     arr_threshd = arr_adaptv.map_blocks(lambda i: GpuArrFuncs.manual_thresh(i, t_p))
-    arr_threshd = disk_cache(arr_threshd, os.path.join(out_dir, "4_thresh.zarr"))
+    arr_threshd = disk_cache(arr_threshd, os.path.join(out_dir, "4_threshd.zarr"))
 
     # Step 5: Object sizes
     arr_sizes = arr_threshd.map_blocks(GpuArrFuncs.label_with_sizes)
@@ -113,8 +114,8 @@ def img_to_coords_pipeline(out_dir):
 
 if __name__ == "__main__":
     # Filenames
-    # in_fp = "/home/linux1/Desktop/A-1-1/abcd.tif"
-    in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/example"
+    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     os.makedirs(out_dir, exist_ok=True)

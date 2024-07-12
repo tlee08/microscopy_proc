@@ -48,7 +48,6 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
         .values
     )
     coords = coords.compute() if isinstance(coords, da.Array) else coords
-    print(coords)
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
         arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
