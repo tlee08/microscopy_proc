@@ -50,8 +50,8 @@ if __name__ == "__main__":
 
     slicer = (
         slice(500, 550, None), #  slice(None, None, 3),
-        slice(2000, 3000, None), #  slice(None, None, 12),
-        slice(2000, 3000, None), #  slice(None, None, 12),
+        slice(0, 3000, None), #  slice(None, None, 12),
+        slice(0, 3000, None), #  slice(None, None, 12),
     )
 
     imgs_ls = (
@@ -64,10 +64,10 @@ if __name__ == "__main__":
         # ("5_sizes", 10000),
         # ("6_filt", 5),
         # ("7_maxima", 5),
-        # ("9_filt_f", 5),
+        ("9_filt_f", 5),
         ("9_maxima_f", 1), 
         ("points", 5),
-        # ("heatmaps", 20),
+        ("heatmaps", 5),
     )
     fp_ls = [os.path.join(out_dir, f"{i}.zarr") for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

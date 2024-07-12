@@ -222,7 +222,7 @@ class CpuArrFuncs:
         return arr
 
     @classmethod
-    def get_local_maxima(cls, arr: np.ndarray, sigma=10):
+    def get_local_maxima(cls, arr: np.ndarray, sigma=10, mask=None):
         """
         NOTE: there can be multiple maxima per label
         """
@@ -231,6 +231,11 @@ class CpuArrFuncs:
         max_arr = cls.xdimage.maximum_filter(arr, sigma)
         logging.debug("Add 1 (so we separate the max pixel from the max_filter)")
         arr = arr + 1
+        if mask is not None:
+            logging.debug("Mask provided. Maxima will only be found within regions.")
+            mask = cls.xp.asarray(mask) > 0
+            arr = arr * mask
+            max_arr = arr * mask
         logging.debug("Getting local maxima (where arr - max_arr == 1)")
         res = arr - max_arr == 1
         # Returning
