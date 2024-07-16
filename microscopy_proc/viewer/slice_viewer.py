@@ -3,10 +3,23 @@
 import os
 
 import dask.array as da
-import napari
-from dask.distributed import Client, LocalCluster
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-from microscopy_proc.funcs.post_funcs import make_img
+# %%
+
+
+def make_maxima_scatter(df):
+    fig, ax = plt.subplots(figsize=(5, 10))
+    sns.scatterplot(x=df["x"], y=df["y"], marker=".", alpha=0.2, s=10, ax=ax)
+    ax.invert_yaxis()
+
+
+def make_img(arr, **kwargs):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    ax.imshow(arr, cmap="grey", **kwargs)
+    ax.axis("off")
+
 
 # %%
 
@@ -18,8 +31,8 @@ if __name__ == "__main__":
     slicer = (
         # slice(300, 400, None), #  slice(None, None, 3),
         100,
-        slice(0, 5000, None), #  slice(None, None, 12),
-        slice(0, 4000, None), #  slice(None, None, 12),
+        slice(0, 5000, None),  #  slice(None, None, 12),
+        slice(0, 4000, None),  #  slice(None, None, 12),
     )
 
     imgs_ls = (
@@ -33,7 +46,7 @@ if __name__ == "__main__":
         # ("6_filt", 5),
         # ("7_maxima", 5),
         # ("9_filt_f", 5),
-        # ("9_maxima_f", 5), 
+        # ("9_maxima_f", 5),
         # ("points", 5),
         ("heatmaps", 1),
     )
@@ -41,10 +54,9 @@ if __name__ == "__main__":
     fp_ls = [os.path.join(out_dir, f"{i}.zarr") for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]
 
-
     for fp, vmax in zip(fp_ls, vmax_ls):
         arr = da.from_zarr(fp)[*slicer].compute()
         make_img(arr, vmin=0, vmax=vmax)
-        
-        
+
+
 # %%

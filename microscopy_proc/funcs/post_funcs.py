@@ -1,23 +1,9 @@
 import dask.array as da
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import tifffile
 
 from microscopy_proc.utils.io_utils import silentremove
-
-def make_maxima_scatter(df):
-    fig, ax = plt.subplots(figsize=(5, 10))
-    sns.scatterplot(x=df["x"], y=df["y"], marker=".", alpha=0.2, s=10, ax=ax)
-    ax.invert_yaxis()
-
-
-
-def make_img(arr, **kwargs):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(arr, cmap="grey", **kwargs)
-    ax.axis("off")
 
 #####################################################################
 #             Converting coordinates to spatial

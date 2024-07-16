@@ -3,14 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import tifffile
-import dask
-import dask.dataframe as dd
 
-from microscopy_proc.utils.io_utils import silentremove
 from microscopy_proc.constants import PROC_CHUNKS
-from microscopy_proc.utils.dask_utils import disk_cache
-from microscopy_proc.utils.dask_utils import coords_to_block
+from microscopy_proc.utils.dask_utils import coords_to_block, disk_cache
 
 
 def make_scatter(df):
@@ -47,6 +42,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
         )
         .values
     )
+    # Dask to pandas# Dask to pandas
     coords = coords.compute() if isinstance(coords, da.Array) else coords
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
@@ -54,7 +50,10 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
     # Return arr
     return arr
 
-def coords_to_sphere_workers(arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None):
+
+def coords_to_sphere_workers(
+    arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
+):
     shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
@@ -70,8 +69,10 @@ def coords_to_sphere_workers(arr: np.ndarray, coords: pd.DataFrame, r: int, bloc
             f"z > -1*{r} and z < {shape[0]}+{r} and y > -1*{r} and y < {shape[1]}+{r} and x > -1*{r} and x < {shape[2]}+{r}"
         )
     )
+    # Dask to pandas
+    coords = coords.compute() if isinstance(coords, da.Array) else coords
     # Constructing index and sphere mask arrays
-    i = np.arange(-r, r+1)
+    i = np.arange(-r, r + 1)
     z_ind, y_ind, x_ind = np.meshgrid(i, i, i, indexing="ij")
     circ = np.square(z_ind) + np.square(y_ind) + np.square(x_ind) <= np.square(r)
     # Adding coords to image
@@ -86,10 +87,11 @@ def coords_to_sphere_workers(arr: np.ndarray, coords: pd.DataFrame, r: int, bloc
     return arr
 
 
-
 def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
     # Initialising spatial array
-    da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8).to_zarr(arr_out_fp, overwrite=True)
+    da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8).to_zarr(
+        arr_out_fp, overwrite=True
+    )
     return da.from_zarr(arr_out_fp)
 
 
@@ -121,7 +123,9 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
     # Initialising spatial array
     arr = coords_to_points_start(shape, arr_out_fp)
     # Adding coords to image
-    arr = arr.map_blocks(lambda i, block_info=None: coords_to_points_workers(i, coords, block_info))
+    arr = arr.map_blocks(
+        lambda i, block_info=None: coords_to_points_workers(i, coords, block_info)
+    )
     arr.to_zarr(arr_out_fp, overwrite=True)
     # Saving the subsampled array
     # coords_to_points_end(arr, arr_out_fp)
@@ -144,7 +148,9 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     # Initialising spatial array
     arr = coords_to_points_start(shape, arr_out_fp)
     # Adding coords to image
-    arr = arr.map_blocks(lambda i, block_info=None: coords_to_sphere_workers(i, coords, r, block_info))
+    arr = arr.map_blocks(
+        lambda i, block_info=None: coords_to_sphere_workers(i, coords, r, block_info)
+    )
     arr = disk_cache(arr, arr_out_fp)
     # Saving the subsampled array
     # coords_to_points_end(arr, arr_out_fp)

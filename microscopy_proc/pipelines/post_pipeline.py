@@ -23,7 +23,7 @@ if __name__ == "__main__":
         os.path.join(out_dir, "points.zarr"),
     )
 
-    maxima_df = dd.read_parquet(os.path.join(out_dir, "10_maxima.parquet")).compute()
+    maxima_df = dd.read_parquet(os.path.join(out_dir, "10_maxima.parquet"))
     coords_to_heatmaps(
         maxima_df,
         5,
