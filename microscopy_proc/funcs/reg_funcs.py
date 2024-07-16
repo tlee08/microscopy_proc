@@ -1,6 +1,8 @@
 import cupy as cp
 import numpy as np
-from cupyx.scipy import ndimage
+
+# from cupyx.scipy import ndimage
+from scipy import ndimage
 
 from microscopy_proc.utils.cp_utils import clear_cuda_mem_dec
 
@@ -18,9 +20,11 @@ def downsmpl_rough_arr(arr: np.ndarray, z_scale, y_scale, x_scale) -> np.ndarray
 
 @clear_cuda_mem_dec
 def downsmpl_fine_arr(arr: np.ndarray, z_scale, y_scale, x_scale) -> np.ndarray:
-    arr = xp.asarray(arr)
-    res = ndimage.zoom(arr, (z_scale, y_scale, x_scale))
-    return np.asarray(res)
+    # arr = xp.asarray(arr)
+    # res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
+    # return res.get()
+    res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
+    return res
 
 
 def reorient_arr(arr, orient_ls):

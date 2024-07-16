@@ -2,31 +2,18 @@ import os
 
 import dask.array as da
 import numpy as np
-from dask.distributed import Client, LocalCluster
+from dask.distributed import LocalCluster
 from dask_cuda import LocalCUDACluster
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-from microscopy_proc.utils.dask_utils import block_to_coords, disk_cache, my_trim, cluster_proc_dec
-from microscopy_proc.funcs.io_funcs import tiffs_to_zarr, btiff_to_zarr
+from microscopy_proc.utils.dask_utils import (
+    block_to_coords,
+    cluster_proc_dec,
+    disk_cache,
+    my_trim,
+)
 
-
-@cluster_proc_dec(lambda: LocalCluster())
-def tiff_to_zarr(in_fp, out_dir):
-    if os.path.isdir(in_fp):
-        tiffs_to_zarr(
-            [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
-            os.path.join(out_dir, "raw.zarr"),
-            chunks=PROC_CHUNKS,
-        )
-    elif os.path.isfile(in_fp):
-        btiff_to_zarr(
-            in_fp,
-            os.path.join(out_dir, "raw.zarr"),
-            chunks=PROC_CHUNKS,
-        )
-    else:
-        raise ValueError("Input file path does not exist.")
 
 @cluster_proc_dec(lambda: LocalCluster(n_workers=1, threads_per_worker=2))
 def img_overlap_pipeline(out_dir):
@@ -114,13 +101,10 @@ def img_to_coords_pipeline(out_dir):
 
 if __name__ == "__main__":
     # Filenames
-    in_fp = "/home/linux1/Desktop/A-1-1/example"
-    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/large_cellcount/raw.zarr"
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     os.makedirs(out_dir, exist_ok=True)
-
-    tiff_to_zarr(in_fp, out_dir)
 
     img_overlap_pipeline(out_dir)
 

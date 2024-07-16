@@ -45,13 +45,17 @@ if __name__ == "__main__":
     out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     slicer = (
-        slice(400, 450, None),  #  slice(None, None, 3),
-        slice(1000, None, None),  #  slice(None, None, 12),
-        slice(1000, 5000, None),  #  slice(None, None, 12),
+        slice(None, None, None),  #  slice(None, None, 3),
+        slice(None, None, None),  #  slice(None, None, 12),
+        slice(None, None, None),  #  slice(None, None, 12),
     )
 
     imgs_ls = (
-        ("raw", 10000),
+        # RAW
+        # ("raw", 10000),
+        # REG
+        ("downsmpl_1", 10000),
+        # CELLC
         # ("0_overlap", 10000),
         # ("1_bgrm", 2000),
         # ("2_dog", 100),
@@ -60,10 +64,11 @@ if __name__ == "__main__":
         # ("5_sizes", 10000),
         # ("6_filt", 5),
         # ("7_maxima", 5),
-        ("9_filt_f", 5),
-        ("9_maxima_f", 1),
+        # ("9_filt_f", 5),
+        # ("9_maxima_f", 1),
+        # POST
         # ("points", 5),
-        ("heatmaps", 5),
+        # ("heatmaps", 5),
     )
     fp_ls = [os.path.join(out_dir, f"{i}.zarr") for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

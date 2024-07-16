@@ -11,7 +11,7 @@ from microscopy_proc.funcs.reg_funcs import downsmpl_fine_arr, downsmpl_rough_ar
 if __name__ == "__main__":
     # Filenames
     in_fp = "/home/linux1/Desktop/A-1-1/large_cellcount/raw.zarr"
-    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount/registration"
 
     # Defining params
     # Rough scale
@@ -26,8 +26,6 @@ if __name__ == "__main__":
     z_trim = slice(None, None)
     y_trim = slice(None, None)
     x_trim = slice(None, None)
-
-    os.makedirs(out_dir, exist_ok=True)
 
     # Making Dask cluster and client
     # cluster = LocalCluster(n_workers=8, threads_per_worker=2)
@@ -48,6 +46,17 @@ if __name__ == "__main__":
     # Trim
     arr_trimmed = arr_downsmpl2[z_trim, y_trim, x_trim]
     tifffile.imwrite(os.path.join(out_dir, "trimmed.tif"), arr_trimmed)
+
+    # Getting atlas and transformation files
+
+    # Registration
+    registration(
+        fixed_img_fp=for_registration_fp,
+        moving_img_fp=ref_fp,
+        output_img_fp=registration_result_fp,
+        affine_fp=affine_fp,
+        bspline_fp=bspline_fp,
+    )
 
     # Closing client
     client.close()
