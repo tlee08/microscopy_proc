@@ -1,5 +1,3 @@
-import os
-
 import dask.array as da
 import numpy as np
 from dask.distributed import LocalCluster
@@ -23,7 +21,7 @@ def img_overlap_pipeline(proj_fp_dict):
 
     # Make overlapping blocks
     arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
-    arr_overlap = disk_cache(arr_overlap, os.path.join(proj_fp_dict, "0_overlap.zarr"))
+    arr_overlap = disk_cache(arr_overlap, proj_fp_dict["overlap"])
 
 
 @cluster_proc_dec(lambda: LocalCUDACluster())
@@ -91,7 +89,7 @@ def img_proc_pipeline(
 
     # Step 8: Watershed segmentation
     # arr_watershed = da.map_blocks(watershed_segm, arr_overlap, arr_maxima, arr_filt)
-    # arr_watershed = disk_cache(arr_watershed, os.path.join(proj_fp_dict, "8_watershed.zarr"))
+    # arr_watershed = disk_cache(arr_watershed, proj_fp_dict["watershed"])
 
 
 @cluster_proc_dec(lambda: LocalCluster())
