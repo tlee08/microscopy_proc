@@ -125,7 +125,7 @@ if __name__ == "__main__":
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
-    make_proj_dirs(proj_fp_dict)
+    make_proj_dirs(proj_dir)
 
     img_overlap_pipeline(proj_fp_dict)
 
