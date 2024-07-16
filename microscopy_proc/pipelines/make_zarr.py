@@ -4,9 +4,7 @@ from dask.distributed import LocalCluster
 
 from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.funcs.io_funcs import btiff_to_zarr, tiffs_to_zarr
-from microscopy_proc.utils.dask_utils import (
-    cluster_proc_dec,
-)
+from microscopy_proc.utils.dask_utils import cluster_proc_dec
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 
 

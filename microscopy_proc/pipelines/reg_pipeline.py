@@ -2,12 +2,14 @@ import shutil
 
 import dask.array as da
 import tifffile
+from dask.distributed import LocalCluster
 
 from microscopy_proc.funcs.reg_funcs import (
     downsmpl_fine_arr,
     downsmpl_rough_arr,
     reorient_arr,
 )
+from microscopy_proc.utils.dask_utils import cluster_proc_dec
 from microscopy_proc.utils.elastix_utils import registration
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -37,6 +39,7 @@ def prepare_ref(ref_fp_dict, proj_fp_dict, orient_ls, z_trim, y_trim, x_trim):
     shutil.copyfile(ref_fp_dict["bspline"], proj_fp_dict["bspline"])
 
 
+@cluster_proc_dec(lambda: LocalCluster())
 def prepare_img_rough(proj_fp_dict, z_rough, y_rough, x_rough):
     arr_raw = da.from_zarr(proj_fp_dict["raw"])
     # Rough downsample
@@ -44,6 +47,7 @@ def prepare_img_rough(proj_fp_dict, z_rough, y_rough, x_rough):
     tifffile.imwrite(proj_fp_dict["downsmpl1"], arr_downsmpl1)
 
 
+@cluster_proc_dec(lambda: LocalCluster())
 def prepare_img_fine(proj_fp_dict, z_fine, y_fine, x_fine):
     arr_downsmpl1 = tifffile.imread(proj_fp_dict["downsmpl1"])
     # Fine downsample
@@ -51,6 +55,7 @@ def prepare_img_fine(proj_fp_dict, z_fine, y_fine, x_fine):
     tifffile.imwrite(proj_fp_dict["downsmpl2"], arr_downsmpl2)
 
 
+@cluster_proc_dec(lambda: LocalCluster())
 def prepare_img_trim(proj_fp_dict, z_trim, y_trim, x_trim):
     arr_downsmpl2 = tifffile.imread(proj_fp_dict["downsmpl2"])
     # Trim
@@ -58,6 +63,7 @@ def prepare_img_trim(proj_fp_dict, z_trim, y_trim, x_trim):
     tifffile.imwrite(proj_fp_dict["trimmed"], arr_trimmed)
 
 
+@cluster_proc_dec(lambda: LocalCluster())
 def prepare_img(
     proj_fp_dict,
     z_rough,

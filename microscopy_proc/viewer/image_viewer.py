@@ -4,7 +4,9 @@ import os
 
 import dask.array as da
 import napari
-from dask.distributed import Client, LocalCluster
+from dask.distributed import LocalCluster
+
+from microscopy_proc.utils.dask_utils import cluster_proc_dec
 
 # %%
 
@@ -18,19 +20,10 @@ def add_img(viewer, arr, vmax):
     )
 
 
+@cluster_proc_dec(lambda: LocalCluster())
 def view_imgs(fp_ls, vmax_ls, slicer):
-    # Filenames
-    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-
-    # Making Dask cluster and client
-    cluster = LocalCluster()
-    client = Client(cluster)
-    print(client.dashboard_link)
-
+    # Reading arrays
     arr_ls = [da.from_zarr(i)[*slicer].compute() for i in fp_ls]
-
-    client.close()
-    cluster.close()
 
     # Napari viewer adding images
     viewer = napari.Viewer()
