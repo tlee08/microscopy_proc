@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import SimpleITK as sitk
 
+from microscopy_proc.utils.io_utils import silentremove
+
 
 def registration(
     fixed_img_fp,
