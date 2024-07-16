@@ -18,7 +18,6 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 def img_overlap_pipeline(proj_fp_dict):
     # Read raw arr
     arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=PROC_CHUNKS)
-
     # Make overlapping blocks
     arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
     arr_overlap = disk_cache(arr_overlap, proj_fp_dict["overlap"])
@@ -45,7 +44,7 @@ def img_proc_pipeline(
     )
     arr_bgrm = disk_cache(arr_bgrm, proj_fp_dict["bgrm"])
 
-    # # Step 2: Difference of Gaussians (edge detection)
+    # Step 2: Difference of Gaussians (edge detection)
     arr_dog = arr_bgrm.map_blocks(
         lambda i: GpuArrFuncs.dog_filt(i, dog_sigma1, dog_sigma2)
     )
