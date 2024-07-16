@@ -13,103 +13,124 @@ from microscopy_proc.utils.dask_utils import (
     disk_cache,
     my_trim,
 )
+from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 
 
 @cluster_proc_dec(lambda: LocalCluster(n_workers=1, threads_per_worker=2))
-def img_overlap_pipeline(out_dir):
+def img_overlap_pipeline(proj_fp_dict):
     # Read raw arr
-    arr_raw = da.from_zarr(os.path.join(out_dir, "raw.zarr"), chunks=PROC_CHUNKS)
+    arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=PROC_CHUNKS)
 
     # Make overlapping blocks
     arr_overlap = da.overlap.overlap(arr_raw, depth=S_DEPTH, boundary="reflect")
-    arr_overlap = disk_cache(arr_overlap, os.path.join(out_dir, "0_overlap.zarr"))
+    arr_overlap = disk_cache(arr_overlap, os.path.join(proj_fp_dict, "0_overlap.zarr"))
 
 
 @cluster_proc_dec(lambda: LocalCUDACluster())
-def img_proc_pipeline(out_dir):
+def img_proc_pipeline(
+    proj_fp_dict,
+    tophat_sigma=10,
+    dog_sigma1=2,
+    dog_sigma2=5,
+    gauss_sigma=101,
+    thresh_p=30,
+    min_size=None,
+    max_size=3000,
+    maxima_sigma=10,
+):
     # Step 0: Read overlapped image
-    arr_overlap = da.from_zarr(os.path.join(out_dir, "0_overlap.zarr"))
+    arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
 
     # Step 1: Top-hat filter (background subtraction)
-    arr_bgrm = arr_overlap.map_blocks(lambda i: GpuArrFuncs.tophat_filt(i, 10))
-    arr_bgrm = disk_cache(arr_bgrm, os.path.join(out_dir, "1_bgrm.zarr"))
+    arr_bgrm = arr_overlap.map_blocks(
+        lambda i: GpuArrFuncs.tophat_filt(i, tophat_sigma)
+    )
+    arr_bgrm = disk_cache(arr_bgrm, proj_fp_dict["bgrm"])
 
     # # Step 2: Difference of Gaussians (edge detection)
-    arr_dog = arr_bgrm.map_blocks(lambda i: GpuArrFuncs.dog_filt(i, 2, 5))
-    arr_dog = disk_cache(arr_dog, os.path.join(out_dir, "2_dog.zarr"))
+    arr_dog = arr_bgrm.map_blocks(
+        lambda i: GpuArrFuncs.dog_filt(i, dog_sigma1, dog_sigma2)
+    )
+    arr_dog = disk_cache(arr_dog, proj_fp_dict["dog"])
 
     # Step 3: Gaussian subtraction with large sigma for adaptive thresholding
-    arr_adaptv = arr_dog.map_blocks(lambda i: GpuArrFuncs.gauss_subt_filt(i, 101))
-    arr_adaptv = disk_cache(arr_adaptv, os.path.join(out_dir, "3_adaptv.zarr"))
+    arr_adaptv = arr_dog.map_blocks(
+        lambda i: GpuArrFuncs.gauss_subt_filt(i, gauss_sigma)
+    )
+    arr_adaptv = disk_cache(arr_adaptv, proj_fp_dict["adaptv"])
 
     # Step 4: Mean thresholding with standard deviation offset
-    # NOTE: visually inspect sd offset
+    # Visually inspect sd offset
     t_p = (
         arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
     ).compute()
     print(t_p)
-    t_p = 30
-    arr_threshd = arr_adaptv.map_blocks(lambda i: GpuArrFuncs.manual_thresh(i, t_p))
-    arr_threshd = disk_cache(arr_threshd, os.path.join(out_dir, "4_threshd.zarr"))
+    arr_threshd = arr_adaptv.map_blocks(
+        lambda i: GpuArrFuncs.manual_thresh(i, thresh_p)
+    )
+    arr_threshd = disk_cache(arr_threshd, proj_fp_dict["threshd"])
 
     # Step 5: Object sizes
     arr_sizes = arr_threshd.map_blocks(GpuArrFuncs.label_with_sizes)
-    arr_sizes = disk_cache(arr_sizes, os.path.join(out_dir, "5_sizes.zarr"))
+    arr_sizes = disk_cache(arr_sizes, proj_fp_dict["sizes"])
 
     # Step 6: Filter out large objects (likely outlines, not cells)
     # TODO: Need to manually set min_size and max_size
-    arr_filt = arr_sizes.map_blocks(lambda i: GpuArrFuncs.filt_by_size(i, None, 3000))
+    arr_filt = arr_sizes.map_blocks(
+        lambda i: GpuArrFuncs.filt_by_size(i, min_size, max_size)
+    )
     arr_filt = arr_filt.map_blocks(lambda i: GpuArrFuncs.manual_thresh(i, 1))
-    arr_filt = disk_cache(arr_filt, os.path.join(out_dir, "6_filt.zarr"))
+    arr_filt = disk_cache(arr_filt, proj_fp_dict["filt"])
 
     # Step 7: Get maxima of image masked by labels
-    arr_maxima = arr_overlap.map_blocks(lambda i: GpuArrFuncs.get_local_maxima(i, 10))
+    arr_maxima = arr_overlap.map_blocks(
+        lambda i: GpuArrFuncs.get_local_maxima(i, maxima_sigma)
+    )
     arr_maxima = da.map_blocks(GpuArrFuncs.mask, arr_maxima, arr_filt)
-    arr_maxima = disk_cache(arr_maxima, os.path.join(out_dir, "7_maxima.zarr"))
+    arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
     # Step 8: Watershed segmentation
     # arr_watershed = da.map_blocks(watershed_segm, arr_overlap, arr_maxima, arr_filt)
-    # arr_watershed = disk_cache(arr_watershed, os.path.join(out_dir, "8_watershed.zarr"))
+    # arr_watershed = disk_cache(arr_watershed, os.path.join(proj_fp_dict, "8_watershed.zarr"))
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-def img_trim_pipeline(out_dir):
-    arr_filt = da.from_zarr(os.path.join(out_dir, "6_filt.zarr"))
-    arr_maxima = da.from_zarr(os.path.join(out_dir, "7_maxima.zarr"))
-
-    # Step 9a: trimming overlaps
+def img_trim_pipeline(proj_fp_dict):
+    # Read overlapped filtered and maxima images
+    arr_filt = da.from_zarr(proj_fp_dict["filt"])
+    arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
+    # Step 9a: trimming filtered regions overlaps
     arr_filt_f = my_trim(arr_filt)
-    arr_filt_f = disk_cache(arr_filt_f, os.path.join(out_dir, "9_filt_f.zarr"))
-
-    # Step 9a: trimming overlaps
+    arr_filt_f = disk_cache(arr_filt_f, proj_fp_dict["filt_final"])
+    # Step 9a: trimming maxima points overlaps
     arr_maxima_f = my_trim(arr_maxima)
-    arr_maxima_f = disk_cache(arr_maxima_f, os.path.join(out_dir, "9_maxima_f.zarr"))
+    arr_maxima_f = disk_cache(arr_maxima_f, proj_fp_dict["maxima_final"])
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-def img_to_coords_pipeline(out_dir):
-    arr_filt_f = da.from_zarr(os.path.join(out_dir, "9_filt_f.zarr"))
-    arr_maxima_f = da.from_zarr(os.path.join(out_dir, "9_maxima_f.zarr"))
-
+def img_to_coords_pipeline(proj_fp_dict):
+    # Read filtered and maxima images (trimmed - orig space)
+    arr_filt_f = da.from_zarr(proj_fp_dict["filt_final"])
+    arr_maxima_f = da.from_zarr(proj_fp_dict["maxima_final"])
     # Step 10b: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_filt_f)
-    cell_coords.to_parquet(os.path.join(out_dir, "10_region.parquet"))
+    cell_coords.to_parquet(proj_fp_dict["region_df"])
     # Step 10a: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_maxima_f)
-    cell_coords.to_parquet(os.path.join(out_dir, "10_maxima.parquet"))
+    cell_coords.to_parquet(proj_fp_dict["maxima_df"])
 
 
 if __name__ == "__main__":
     # Filenames
-    in_fp = "/home/linux1/Desktop/A-1-1/large_cellcount/raw.zarr"
-    out_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    os.makedirs(out_dir, exist_ok=True)
+    proj_fp_dict = get_proj_fp_dict(proj_dir)
+    make_proj_dirs(proj_fp_dict)
 
-    img_overlap_pipeline(out_dir)
+    img_overlap_pipeline(proj_fp_dict)
 
-    img_proc_pipeline(out_dir)
+    img_proc_pipeline(proj_fp_dict)
 
-    img_trim_pipeline(out_dir)
+    img_trim_pipeline(proj_fp_dict)
 
-    img_to_coords_pipeline(out_dir)
+    img_to_coords_pipeline(proj_fp_dict)

@@ -42,7 +42,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
         )
         .values
     )
-    # Dask to pandas# Dask to pandas
+    # Dask to pandas
     coords = coords.compute() if isinstance(coords, da.Array) else coords
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
