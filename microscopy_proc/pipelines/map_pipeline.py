@@ -65,7 +65,7 @@ def get_cell_mappings(proj_fp_dict: dict):
     # Getting the annotation ID for every cell (zyx coord)
     # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
     s = annot_arr.shape
-    trfm_loc = cells_df[["z_trfm", "y_trfm", "x_trfm"]].round(0).astype(int)
+    trfm_loc = cells_df[["z_trfm", "y_trfm", "x_trfm"]].round(0).astype(np.int32)
     trfm_loc = trfm_loc.query(
         f"z_trfm >= 0 & z_trfm < {s[0]} & y_trfm >= 0 & y_trfm < {s[1]} & x_trfm >= 0 & x_trfm < {s[2]}"
     )

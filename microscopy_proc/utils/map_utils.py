@@ -23,16 +23,16 @@ def nested_tree_dict_to_df(data_dict):
     """
     # Column names
     names = [
-        ("id", np.float32),
-        ("atlas_id", np.float32),
-        ("ontology_id", np.float32),
+        ("id", np.float64),
+        ("atlas_id", np.float64),
+        ("ontology_id", np.float64),
         ("acronym", str),
         ("name", str),
         ("color_hex_triplet", str),
-        ("graph_order", np.float32),
-        ("st_level", np.float32),
-        ("hemisphere_id", np.float32),
-        ("parent_structure_id", np.float32),
+        ("graph_order", np.float64),
+        ("st_level", np.float64),
+        ("hemisphere_id", np.float64),
+        ("parent_structure_id", np.float64),
     ]
     # Making regions ID dataframe
     df = pd.DataFrame(columns=[i[0] for i in names])
