@@ -54,9 +54,16 @@ def get_proj_fp_dict(proj_dir):
         # CELL COUNTING DF FILES
         "region_df": os.path.join(proj_dir, "analysis", "10_region.parquet"),
         "maxima_df": os.path.join(proj_dir, "analysis", "10_maxima.parquet"),
-        # POST PROC FILES
-        "points_check": os.path.join(proj_dir, "analysis", "points_check.zarr"),
-        "heatmap_check": os.path.join(proj_dir, "analysis", "heatmap_check.zarr"),
+        "region_trfm_df": os.path.join(proj_dir, "analysis", "11_region_trfm.parquet"),
+        "maxima_trfm_df": os.path.join(proj_dir, "analysis", "11_maxima_trfm.parquet"),
+        "cells_df": os.path.join(proj_dir, "analysis", "12_cells.parquet"),
+        # VISUAL CHECK FROM CELL DF FILES
+        "points_check": os.path.join(proj_dir, "visual_check", "points.zarr"),
+        "heatmap_check": os.path.join(proj_dir, "visual_check", "heatmap.zarr"),
+        "points_trfm_check": os.path.join(proj_dir, "visual_check", "points_trfm.zarr"),
+        "heatmap_trfm_check": os.path.join(
+            proj_dir, "visual_check", "heatmap_trfm.zarr"
+        ),
     }
 
 
@@ -64,3 +71,4 @@ def make_proj_dirs(proj_dir):
     os.makedirs(os.path.join(proj_dir, "registration"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "cellcount"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "analysis"), exist_ok=True)
+    os.makedirs(os.path.join(proj_dir, "visual_check"), exist_ok=True)

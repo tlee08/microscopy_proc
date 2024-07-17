@@ -10,16 +10,23 @@ xp = cp
 xdimage = ndimage
 
 
-def downsmpl_rough_arr(arr: np.ndarray, z_scale, y_scale, x_scale) -> np.ndarray:
-    z_scale = int(np.round(1 / z_scale))
-    y_scale = int(np.round(1 / y_scale))
-    x_scale = int(np.round(1 / x_scale))
+def downsmpl_rough_arr(
+    arr: np.ndarray, z_scale: int, y_scale: int, x_scale: int
+) -> np.ndarray:
+    """
+    Expects scales to be ints
+    """
     res = arr[::z_scale, ::y_scale, ::x_scale]
     return res
 
 
 @clear_cuda_mem_dec
-def downsmpl_fine_arr(arr: np.ndarray, z_scale, y_scale, x_scale) -> np.ndarray:
+def downsmpl_fine_arr(
+    arr: np.ndarray, z_scale: float, y_scale: float, x_scale: float
+) -> np.ndarray:
+    """
+    Expects scales to be floats
+    """
     # arr = xp.asarray(arr)
     # res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
     # return res.get()
@@ -27,7 +34,7 @@ def downsmpl_fine_arr(arr: np.ndarray, z_scale, y_scale, x_scale) -> np.ndarray:
     return res
 
 
-def reorient_arr(arr, orient_ls):
+def reorient_arr(arr: np.ndarray, orient_ls: list):
     """
     Order of orient_ls is the axis order.
     Negative of an element in orient_ls means that axis is flipped
@@ -51,20 +58,3 @@ def reorient_arr(arr, orient_ls):
     arr = arr.transpose(orient_ls)
     # Returning
     return arr
-
-
-def slice_arr(arr_in_fp, arr_out_fp, slices):
-    """
-    Assumes `slices` is given in `(x, y, z)` format.
-    Assumes the array is stored in `(z, y, x)` format.
-    Also stores the output array in `(z, y, x)` format.
-    """
-    # Setting up variables
-    x_slice, y_slice, z_slice = slices
-    # Loading stitched numpy array (entire image)
-    arr = np.load(arr_in_fp, mmap_mode="r")
-    # Slicing array (subsampling)
-    s_arr = arr[z_slice, y_slice, x_slice]
-    # Saving the subsampled array
-    np.save(arr_out_fp, s_arr)
-    return np.load(arr_out_fp, mmap_mode="r")

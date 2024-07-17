@@ -1,4 +1,5 @@
 import dask.array as da
+import dask.dataframe as dd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -42,7 +43,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
         )
         .values
     )
-    # Dask to pandas
+    # Dask to numpy
     coords = coords.compute() if isinstance(coords, da.Array) else coords
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
@@ -70,7 +71,7 @@ def coords_to_sphere_workers(
         )
     )
     # Dask to pandas
-    coords = coords.compute() if isinstance(coords, da.Array) else coords
+    coords = coords.compute() if isinstance(coords, dd.DataFrame) else coords
     # Constructing index and sphere mask arrays
     i = np.arange(-r, r + 1)
     z_ind, y_ind, x_ind = np.meshgrid(i, i, i, indexing="ij")

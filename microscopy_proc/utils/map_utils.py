@@ -2,15 +2,15 @@ import numpy as np
 import pandas as pd
 
 
-def get_coord_voxel(arr, x_val, y_val, z_val):
+def get_coord_voxel(arr, z_val, y_val, x_val):
     """
     Given a 3d array (i.d. 3d image), and `(x, y, z)` coordinates that may be floats,
     returns the value of the nearest pixel in the 3d array.
     If the given coordinates are out of the 3d array range, then returns -1.
     """
-    x = np.round(x_val, 0).astype(np.int64)
-    y = np.round(y_val, 0).astype(np.int64)
-    z = np.round(z_val, 0).astype(np.int64)
+    z = np.round(z_val, 0).astype(np.int32)
+    y = np.round(y_val, 0).astype(np.int32)
+    x = np.round(x_val, 0).astype(np.int32)
     if np.all((np.array([z, y, x]) >= 0) & (np.array([z, y, x]) < arr.shape)):
         return arr[z, y, x]
     else:
@@ -23,24 +23,24 @@ def nested_tree_dict_to_df(data_dict):
     """
     # Column names
     names = [
-        "id",
-        "atlas_id",
-        "ontology_id",
-        "acronym",
-        "name",
-        "color_hex_triplet",
-        "graph_order",
-        "st_level",
-        "hemisphere_id",
-        "parent_structure_id",
+        ("id", np.float32),
+        ("atlas_id", np.float32),
+        ("ontology_id", np.float32),
+        ("acronym", str),
+        ("name", str),
+        ("color_hex_triplet", str),
+        ("graph_order", np.float32),
+        ("st_level", np.float32),
+        ("hemisphere_id", np.float32),
+        ("parent_structure_id", np.float32),
     ]
     # Making regions ID dataframe
-    df = pd.DataFrame(columns=names)
+    df = pd.DataFrame(columns=[i[0] for i in names])
     # Adding current region info to df
     df = pd.concat(
         [
             df,
-            pd.DataFrame([data_dict[i] for i in names], index=df.columns).T,
+            pd.DataFrame([data_dict[i[0]] for i in names], index=df.columns).T,
         ],
         axis=0,
         ignore_index=True,
@@ -55,5 +55,8 @@ def nested_tree_dict_to_df(data_dict):
             axis=0,
             ignore_index=True,
         )
+    # Casting columns to given types
+    for i in names:
+        df[i[0]] = df[i[0]].astype(i[1])
     # Returning the region info df
     return df
