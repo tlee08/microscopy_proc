@@ -47,7 +47,7 @@ if __name__ == "__main__":
         # RAW
         # ("raw", 10000),
         # REG
-        ("downsmpl_1", 10000),
+        # ("downsmpl_1", 10000),
         # CELLC
         # ("0_overlap", 10000),
         # ("1_bgrm", 2000),
@@ -60,8 +60,8 @@ if __name__ == "__main__":
         # ("9_filt_f", 5),
         # ("9_maxima_f", 1),
         # POST
-        # ("points", 5),
-        # ("heatmaps", 5),
+        ("points", 5),
+        ("heatmaps", 5),
     )
     fp_ls = [os.path.join(out_dir, f"{i}.zarr") for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

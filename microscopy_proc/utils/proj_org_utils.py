@@ -39,7 +39,7 @@ def get_proj_fp_dict(proj_dir):
         "downsmpl2": os.path.join(proj_dir, "registration", "2_downsmpl2.tif"),
         "trimmed": os.path.join(proj_dir, "registration", "3_trimmed.tif"),
         "regresult": os.path.join(proj_dir, "registration", "4_regresult.tif"),
-        # CELL COUNTING FILES
+        # CELL COUNTING ARR FILES
         "overlap": os.path.join(proj_dir, "cellcount", "0_overlap.zarr"),
         "bgrm": os.path.join(proj_dir, "cellcount", "1_bgrm.zarr"),
         "dog": os.path.join(proj_dir, "cellcount", "2_dog.zarr"),
@@ -51,9 +51,12 @@ def get_proj_fp_dict(proj_dir):
         "watershed": os.path.join(proj_dir, "cellcount", "8_watershed.zarr"),
         "filt_final": os.path.join(proj_dir, "cellcount", "9_filt_f.zarr"),
         "maxima_final": os.path.join(proj_dir, "cellcount", "9_maxima_f.zarr"),
-        # POST PROC FILES
+        # CELL COUNTING DF FILES
         "region_df": os.path.join(proj_dir, "analysis", "10_region.parquet"),
         "maxima_df": os.path.join(proj_dir, "analysis", "10_maxima.parquet"),
+        # POST PROC FILES
+        "points_check": os.path.join(proj_dir, "analysis", "points_check.zarr"),
+        "heatmap_check": os.path.join(proj_dir, "analysis", "heatmap_check.zarr"),
     }
 
 
