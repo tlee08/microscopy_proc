@@ -21,6 +21,13 @@ def make_img(arr, **kwargs):
     ax.axis("off")
 
 
+def cell_counts_plot(df):
+    id_counts = df["id"].value_counts()
+    id_counts = id_counts.compute() if isinstance(id_counts, dd.Series) else id_counts
+    id_counts = id_counts.sort_values()
+    sns.scatterplot(id_counts.values)
+
+
 #####################################################################
 #             Converting coordinates to spatial
 #####################################################################
@@ -67,7 +74,7 @@ def coords_to_sphere_workers(
         .round(0)
         .astype(np.int16)
         .query(
-            f"z > -1*{r} and z < {shape[0]}+{r} and y > -1*{r} and y < {shape[1]}+{r} and x > -1*{r} and x < {shape[2]}+{r}"
+            f"z > {-1*r} and z < {shape[0] + r} and y > {-1*r} and y < {shape[1]}+{r} and x > -1*{r} and x < {shape[2]}+{r}"
         )
     )
     # Dask to pandas
@@ -88,20 +95,12 @@ def coords_to_sphere_workers(
     return arr
 
 
-def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
-    # Initialising spatial array
-    da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8).to_zarr(
-        arr_out_fp, overwrite=True
-    )
-    return da.from_zarr(arr_out_fp)
-
-
-def coords_to_points_end(arr, arr_out_fp):
-    # # # Saving the subsampled array
-    # tifffile.imwrite(arr_out_fp, arr)
-    # # Removing temporary memmap
-    # silentremove("temp.dat")
-    pass
+# def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
+#     # Initialising spatial array
+#     da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8).to_zarr(
+#         arr_out_fp, overwrite=True
+#     )
+#     return da.from_zarr(arr_out_fp)
 
 
 #####################################################################
@@ -122,14 +121,13 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
         The output image array
     """
     # Initialising spatial array
-    arr = coords_to_points_start(shape, arr_out_fp)
+    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
     arr = arr.map_blocks(
         lambda i, block_info=None: coords_to_points_workers(i, coords, block_info)
     )
+    # Computing and saving
     arr.to_zarr(arr_out_fp, overwrite=True)
-    # Saving the subsampled array
-    # coords_to_points_end(arr, arr_out_fp)
 
 
 def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
@@ -147,14 +145,13 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
         The output image array
     """
     # Initialising spatial array
-    arr = coords_to_points_start(shape, arr_out_fp)
+    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
     arr = arr.map_blocks(
         lambda i, block_info=None: coords_to_sphere_workers(i, coords, r, block_info)
     )
+    # Computing and saving
     arr = disk_cache(arr, arr_out_fp)
-    # Saving the subsampled array
-    # coords_to_points_end(arr, arr_out_fp)
 
 
 def coords_to_regions(coords, shape, arr_out_fp):
@@ -170,7 +167,7 @@ def coords_to_regions(coords, shape, arr_out_fp):
         The output image array
     """
     # Initialising spatial array
-    arr = coords_to_points_start(shape)
+    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
 
     # Adding coords to image with np.apply_along_axis
     def f(coord):
@@ -183,6 +180,3 @@ def coords_to_regions(coords, shape, arr_out_fp):
     coords = coords[["z", "y", "x", "id"]].round(0).astype(np.int16)
     if coords.shape[0] > 0:
         np.apply_along_axis(f, 1, coords)
-
-    # Saving the subsampled array
-    coords_to_points_end(arr, arr_out_fp)
