@@ -2,6 +2,7 @@ import dask.array as da
 import numpy as np
 from dask.distributed import LocalCluster
 from dask_cuda import LocalCUDACluster
+from prefect import flow
 
 from microscopy_proc.constants import PROC_CHUNKS, S_DEPTH
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
@@ -15,6 +16,7 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 
 
 @cluster_proc_dec(lambda: LocalCluster(n_workers=1, threads_per_worker=2))
+@flow
 def img_overlap_pipeline(proj_fp_dict):
     # Read raw arr
     arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=PROC_CHUNKS)
@@ -24,6 +26,7 @@ def img_overlap_pipeline(proj_fp_dict):
 
 
 @cluster_proc_dec(lambda: LocalCUDACluster())
+@flow
 def img_proc_pipeline(
     proj_fp_dict,
     tophat_sigma=10,
@@ -92,6 +95,7 @@ def img_proc_pipeline(
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def img_trim_pipeline(proj_fp_dict):
     # Read overlapped filtered and maxima images
     arr_filt = da.from_zarr(proj_fp_dict["filt"])
@@ -105,6 +109,7 @@ def img_trim_pipeline(proj_fp_dict):
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def img_to_coords_pipeline(proj_fp_dict):
     # Read filtered and maxima images (trimmed - orig space)
     arr_filt_f = da.from_zarr(proj_fp_dict["filt_final"])

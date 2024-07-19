@@ -3,6 +3,7 @@ import shutil
 import dask.array as da
 import tifffile
 from dask.distributed import LocalCluster
+from prefect import flow
 
 from microscopy_proc.funcs.reg_funcs import (
     downsmpl_fine_arr,
@@ -20,6 +21,7 @@ from microscopy_proc.utils.proj_org_utils import (
 # logging.basicConfig(level=logging.DEBUG)
 
 
+@flow
 def prepare_ref(
     ref_fp_dict: dict,
     proj_fp_dict: dict,
@@ -49,6 +51,7 @@ def prepare_ref(
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def prepare_img_rough(proj_fp_dict: dict, z_rough: int, y_rough: int, x_rough: int):
     # Reading
     arr_raw = da.from_zarr(proj_fp_dict["raw"])
@@ -59,6 +62,7 @@ def prepare_img_rough(proj_fp_dict: dict, z_rough: int, y_rough: int, x_rough: i
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def prepare_img_fine(proj_fp_dict: dict, z_fine: float, y_fine: float, x_fine: float):
     # Reading
     arr_downsmpl1 = tifffile.imread(proj_fp_dict["downsmpl1"])
@@ -69,6 +73,7 @@ def prepare_img_fine(proj_fp_dict: dict, z_fine: float, y_fine: float, x_fine: f
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def prepare_img_trim(proj_fp_dict: dict, z_trim: slice, y_trim: slice, x_trim: slice):
     # Reading
     arr_downsmpl2 = tifffile.imread(proj_fp_dict["downsmpl2"])
@@ -79,6 +84,7 @@ def prepare_img_trim(proj_fp_dict: dict, z_trim: slice, y_trim: slice, x_trim: s
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def prepare_img(
     proj_fp_dict: dict,
     z_rough: int,

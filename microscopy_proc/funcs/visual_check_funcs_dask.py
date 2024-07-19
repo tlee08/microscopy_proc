@@ -4,23 +4,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from prefect import flow, task
 
 from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.utils.dask_utils import coords_to_block
 
 
+@task
 def make_scatter(df):
     fig, ax = plt.subplots(figsize=(5, 10))
     sns.scatterplot(x=df["x"], y=df["y"], marker=".", alpha=0.2, s=10, ax=ax)
     ax.invert_yaxis()
 
 
+@task
 def make_img(arr, **kwargs):
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.imshow(arr, cmap="grey", **kwargs)
     ax.axis("off")
 
 
+@task
 def cell_counts_plot(df):
     id_counts = df["id"].value_counts()
     id_counts = id_counts.compute() if isinstance(id_counts, dd.Series) else id_counts
@@ -33,6 +37,7 @@ def cell_counts_plot(df):
 #####################################################################
 
 
+@task
 def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
     arr = arr.copy()
     shape = arr.shape  # noqa: F841
@@ -60,6 +65,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
     return arr
 
 
+@task
 def coords_to_sphere_workers(
     arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
 ):
@@ -101,6 +107,7 @@ def coords_to_sphere_workers(
 #####################################################################
 
 
+@flow
 def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: str):
     """
     Converts list of coordinates to spatial array single points.
@@ -123,6 +130,7 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
     arr.to_zarr(arr_out_fp, overwrite=True)
 
 
+@flow
 def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     """
     Converts list of coordinates to spatial array as voxels.
@@ -147,6 +155,7 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     arr.to_zarr(arr_out_fp, overwrite=True)
 
 
+@flow
 def coords_to_regions(coords, shape, arr_out_fp):
     """
     Converts list of coordinates to spatial array.

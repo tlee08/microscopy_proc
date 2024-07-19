@@ -4,11 +4,13 @@ import numpy as np
 import tifffile
 import zarr
 from natsort import natsorted
+from prefect import task
 
 from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.utils.io_utils import silentremove
 
 
+@task
 def read_tiff(fp):
     arr = tifffile.imread(fp)
     for i in np.arange(len(arr.shape)):
@@ -16,6 +18,7 @@ def read_tiff(fp):
     return arr
 
 
+@task
 def btiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     # To intermediate tiff
     arr_mmap = tifffile.memmap(in_fp)
@@ -34,6 +37,7 @@ def btiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     silentremove(f"{out_fp}_tmp.zarr")
 
 
+@task
 def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
     # Natsorting in_fp_ls
     in_fp_ls = natsorted(in_fp_ls)

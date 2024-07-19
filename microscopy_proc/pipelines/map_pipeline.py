@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
+from prefect import flow
 
 from microscopy_proc.utils.dask_utils import (
     cluster_proc_dec,
@@ -15,6 +16,7 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def transform_coords(
     proj_fp_dict: dict,
     z_rough: int,
@@ -49,6 +51,7 @@ def transform_coords(
     dd.from_pandas(coords).to_parquet(proj_fp_dict["maxima_trfm_df"])
 
 
+@flow
 def get_cell_mappings(proj_fp_dict: dict):
     # Reading cells dataframe
     cells_df = dd.read_parquet(proj_fp_dict["maxima_df"]).compute()
@@ -90,6 +93,7 @@ def get_cell_mappings(proj_fp_dict: dict):
     dd.from_pandas(cells_df).to_parquet(proj_fp_dict["cells_df"])
 
 
+@flow
 def get_cell_mappings_names(cells_df, annot_df):
     # Left-joining the cells dataframe with the annotation mappings dataframe
     cells_df = pd.merge(

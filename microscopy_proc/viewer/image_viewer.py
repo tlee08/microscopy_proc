@@ -5,6 +5,7 @@ import dask.array as da
 import napari
 import tifffile
 from dask.distributed import LocalCluster
+from prefect import flow, task
 
 from microscopy_proc.utils.dask_utils import cluster_proc_dec
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
@@ -12,6 +13,7 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
 # %%
 
 
+@task
 def add_img(viewer, arr, vmax):
     viewer.add_image(
         arr,
@@ -22,6 +24,7 @@ def add_img(viewer, arr, vmax):
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+@flow
 def view_imgs(fp_ls, vmax_ls, slicer):
     # Reading arrays
     arr_ls = []
