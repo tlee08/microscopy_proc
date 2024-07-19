@@ -1,4 +1,5 @@
 # import dask.array as da
+import dask.array as da
 import dask.dataframe as dd
 import tifffile
 from dask.distributed import Client, LocalCluster
@@ -25,13 +26,13 @@ if __name__ == "__main__":
     #     proj_fp_dict["points_check"],
     # )
 
-    # maxima_df = dd.read_parquet(proj_fp_dict["maxima_df"])
-    # coords_to_heatmaps(
-    #     maxima_df,
-    #     5,
-    #     da.from_zarr(proj_fp_dict["raw"]).shape,
-    #     proj_fp_dict["heatmap_check"],
-    # )
+    maxima_df = dd.read_parquet(proj_fp_dict["maxima_df"])
+    coords_to_heatmaps(
+        maxima_df,
+        5,
+        da.from_zarr(proj_fp_dict["raw"]).shape,
+        proj_fp_dict["heatmap_check"],
+    )
 
     maxima_df = dd.read_parquet(proj_fp_dict["maxima_trfm_df"])
     coords_to_heatmaps(

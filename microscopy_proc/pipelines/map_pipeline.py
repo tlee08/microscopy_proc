@@ -15,7 +15,7 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-def transform_cell_space(
+def transform_coords(
     proj_fp_dict: dict,
     z_rough: int,
     y_rough: int,
@@ -65,11 +65,16 @@ def get_cell_mappings(proj_fp_dict: dict):
     # Getting the annotation ID for every cell (zyx coord)
     # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
     s = annot_arr.shape
-    trfm_loc = cells_df[["z_trfm", "y_trfm", "x_trfm"]].round(0).astype(np.int32)
-    trfm_loc = trfm_loc.query(
-        f"z_trfm >= 0 & z_trfm < {s[0]} & y_trfm >= 0 & y_trfm < {s[1]} & x_trfm >= 0 & x_trfm < {s[2]}"
+    trfm_loc = (
+        cells_df[["z_trfm", "y_trfm", "x_trfm"]]
+        .round(0)
+        .astype(np.int32)
+        .query(
+            f"z_trfm >= 0 & z_trfm < {s[0]} & y_trfm >= 0 & y_trfm < {s[1]} & x_trfm >= 0 & x_trfm < {s[2]}"
+        )
     )
-    # Getting the pixel values of each valid transformed coords. Invalids are set to -1
+    # Getting the pixel values of each valid transformed coord (hence the specified index).
+    # Invalids are set to -1
     cells_df["id"] = pd.Series(
         annot_arr[*trfm_loc.values.T].astype(np.uint32),
         index=trfm_loc.index,
@@ -110,17 +115,17 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Converting from raw space to refernce atlas space
-    # transform_cell_space(
-    #     proj_fp_dict=proj_fp_dict,
-    #     z_rough=8,
-    #     y_rough=10,
-    #     x_rough=10,
-    #     z_fine=0.8,
-    #     y_fine=0.8,
-    #     x_fine=0.8,
-    #     z_trim=slice(None, -5),
-    #     y_trim=slice(60, -50),
-    #     x_trim=slice(None, None),
-    # )
+    transform_coords(
+        proj_fp_dict=proj_fp_dict,
+        z_rough=8,
+        y_rough=10,
+        x_rough=10,
+        z_fine=0.8,
+        y_fine=0.8,
+        x_fine=0.8,
+        z_trim=slice(None, -5),
+        y_trim=slice(60, -50),
+        x_trim=slice(None, None),
+    )
 
     get_cell_mappings(proj_fp_dict)

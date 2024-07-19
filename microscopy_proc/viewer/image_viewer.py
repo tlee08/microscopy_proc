@@ -52,32 +52,31 @@ if __name__ == "__main__":
     )
 
     imgs_ls = (
-        # REF (TODO: allow tiff)
-        ("ref", 10000),
+        # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        # ("raw", 10000),
+        ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
         # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
-        # ("0_overlap", 10000),
-        # ("1_bgrm", 2000),
-        # ("2_dog", 100),
-        # ("3_adaptv", 100),
-        # ("4_threshd", 5),
-        # ("5_sizes", 10000),
-        # ("6_filt", 5),
-        # ("7_maxima", 5),
-        # ("9_filt_f", 5),
-        # ("9_maxima_f", 1),
+        # ("overlap", 10000),
+        # ("bgrm", 2000),
+        # ("dog", 100),
+        # ("adaptv", 100),
+        # ("threshd", 5),
+        # ("sizes", 10000),
+        # ("filt", 5),
+        # ("maxima", 5),
+        ("filt_final", 5),
+        ("maxima_final", 1),
         # POST
         # ("point_check", 5),
         # ("heatmap_check", 5),
         # ("point_trfm_check", 5),
-        ("heatmap_trfm_check", 100),
+        # ("heatmap_trfm_check", 100),
     )
     fp_ls = [proj_fp_dict[i] for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

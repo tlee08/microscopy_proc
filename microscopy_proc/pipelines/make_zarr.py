@@ -1,4 +1,5 @@
 import os
+from time import time
 
 from dask.distributed import LocalCluster
 
@@ -35,4 +36,10 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
+    t0 = time()
+
     tiff_to_zarr(in_fp, proj_fp_dict["raw"])
+
+    t1 = time()
+
+    print(f"Time elapsed: {t1 - t0:.2f} s")
