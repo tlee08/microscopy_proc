@@ -10,7 +10,6 @@ from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.utils.io_utils import silentremove
 
 
-@task
 def read_tiff(fp):
     arr = tifffile.imread(fp)
     for i in np.arange(len(arr.shape)):
