@@ -5,7 +5,7 @@ import tifffile
 from dask.distributed import Client, LocalCluster
 
 # from microscopy_proc.funcs.post_funcs import coords_to_heatmaps, coords_to_points
-from microscopy_proc.funcs.post_funcs_dask import coords_to_heatmaps
+from microscopy_proc.funcs.visual_check_funcs_dask import coords_to_heatmaps
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
 
 if __name__ == "__main__":

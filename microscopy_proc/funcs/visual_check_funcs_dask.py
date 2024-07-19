@@ -34,6 +34,7 @@ def cell_counts_plot(df):
 
 
 def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
+    arr = arr.copy()
     shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:

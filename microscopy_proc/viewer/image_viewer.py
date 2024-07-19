@@ -46,9 +46,9 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
     slicer = (
-        slice(None, None, None),  #  slice(None, None, 3),
-        slice(None, None, None),  #  slice(None, None, 12),
-        slice(None, None, None),  #  slice(None, None, 12),
+        slice(400, 500, None),  #  slice(None, None, 3),
+        slice(1000, 5000, None),  #  slice(None, None, 12),
+        slice(1000, None, None),  #  slice(None, None, 12),
     )
 
     imgs_ls = (
