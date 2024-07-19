@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 
 from microscopy_proc.constants import PROC_CHUNKS
-from microscopy_proc.utils.dask_utils import coords_to_block, disk_cache
+from microscopy_proc.utils.dask_utils import coords_to_block
 
 
 def make_scatter(df):
@@ -144,7 +144,7 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
         lambda i, block_info=None: coords_to_sphere_workers(i, coords, r, block_info)
     )
     # Computing and saving
-    arr = disk_cache(arr, arr_out_fp)
+    arr.to_zarr(arr_out_fp, overwrite=True)
 
 
 def coords_to_regions(coords, shape, arr_out_fp):
