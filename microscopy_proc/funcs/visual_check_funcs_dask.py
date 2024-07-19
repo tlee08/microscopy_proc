@@ -96,14 +96,6 @@ def coords_to_sphere_workers(
     return arr
 
 
-# def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
-#     # Initialising spatial array
-#     da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8).to_zarr(
-#         arr_out_fp, overwrite=True
-#     )
-#     return da.from_zarr(arr_out_fp)
-
-
 #####################################################################
 #             Converting coordinates to spatial
 #####################################################################
