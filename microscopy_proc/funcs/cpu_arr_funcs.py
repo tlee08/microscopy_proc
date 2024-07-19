@@ -209,7 +209,7 @@ class CpuArrFuncs:
     @classmethod
     def filt_by_size(cls, arr: np.ndarray, smin=None, smax=None):
         """
-        Assumes
+        Assumes `arr` is array of objects labelled with their size.
         """
         arr = cls.xp.asarray(arr)
         logging.debug("Getting filter of small and large object to filter out")

@@ -47,31 +47,31 @@ if __name__ == "__main__":
 
     slicer = (
         slice(400, 500, None),  #  slice(None, None, 3),
-        slice(1000, 5000, None),  #  slice(None, None, 12),
-        slice(1000, None, None),  #  slice(None, None, 12),
+        slice(1000, 3000, None),  #  slice(None, None, 12),
+        slice(1000, 3000, None),  #  slice(None, None, 12),
     )
 
     imgs_ls = (
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        ("raw", 10000),
+        # ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
         # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
-        # ("overlap", 10000),
-        # ("bgrm", 2000),
-        # ("dog", 100),
-        # ("adaptv", 100),
-        # ("threshd", 5),
-        # ("sizes", 10000),
-        # ("filt", 5),
-        # ("maxima", 5),
-        ("filt_final", 5),
-        ("maxima_final", 1),
+        ("overlap", 10000),
+        ("bgrm", 2000),
+        ("dog", 100),
+        ("adaptv", 100),
+        ("threshd", 5),
+        ("sizes", 10000),
+        ("filt", 5),
+        ("maxima", 5),
+        # ("filt_final", 5),
+        # ("maxima_final", 1),
         # POST
         # ("point_check", 5),
         # ("heatmap_check", 5),
