@@ -5,7 +5,6 @@ import dask.array as da
 import napari
 import tifffile
 from dask.distributed import LocalCluster
-from prefect import flow, task
 
 from microscopy_proc.utils.dask_utils import cluster_proc_dec
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
@@ -13,7 +12,7 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
 # %%
 
 
-@task
+# @task
 def add_img(viewer, arr, vmax):
     viewer.add_image(
         arr,
@@ -24,7 +23,7 @@ def add_img(viewer, arr, vmax):
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-@flow
+# @flow
 def view_imgs(fp_ls, vmax_ls, slicer):
     # Reading arrays
     arr_ls = []
@@ -49,13 +48,13 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
     slicer = (
-        slice(400, 500, None),  #  slice(None, None, 3),
-        slice(1000, 3000, None),  #  slice(None, None, 12),
-        slice(1000, 3000, None),  #  slice(None, None, 12),
+        slice(None, None, None),  #  slice(None, None, 3),
+        slice(None, None, None),  #  slice(None, None, 12),
+        slice(None, None, None),  #  slice(None, None, 12),
     )
 
     imgs_ls = (
-        # ("ref", 10000),
+        ("ref", 10000),
         # ("annot", 10000),
         # RAW
         # ("raw", 10000),
@@ -65,21 +64,21 @@ if __name__ == "__main__":
         # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
-        ("overlap", 10000),
-        ("bgrm", 2000),
-        ("dog", 100),
-        ("adaptv", 100),
-        ("threshd", 5),
-        ("sizes", 10000),
-        ("filt", 5),
-        ("maxima", 5),
+        # ("overlap", 10000),
+        # ("bgrm", 2000),
+        # ("dog", 100),
+        # ("adaptv", 100),
+        # ("threshd", 5),
+        # ("sizes", 10000),
+        # ("filt", 5),
+        # ("maxima", 5),
         # ("filt_final", 5),
         # ("maxima_final", 1),
         # POST
         # ("point_check", 5),
-        # ("heatmap_check", 5),
-        # ("point_trfm_check", 5),
-        # ("heatmap_trfm_check", 100),
+        # ("heatmap_check", 20),
+        ("point_trfm_check", 5),
+        ("heatmap_trfm_check", 20),
     )
     fp_ls = [proj_fp_dict[i] for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]
