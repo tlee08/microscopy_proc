@@ -4,6 +4,8 @@ import dask.array as da
 import tifffile
 from dask.distributed import LocalCluster
 
+from microscopy_proc.funcs.elastix_funcs import registration
+
 # from prefect import flow0
 from microscopy_proc.funcs.reg_funcs import (
     downsmpl_fine_arr,
@@ -11,7 +13,6 @@ from microscopy_proc.funcs.reg_funcs import (
     reorient_arr,
 )
 from microscopy_proc.utils.dask_utils import cluster_proc_dec
-from microscopy_proc.utils.elastix_utils import registration
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     get_ref_fp_dict,

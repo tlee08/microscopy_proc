@@ -54,13 +54,14 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
         .query(
             f"z >= 0 and z < {shape[0]} and y >= 0 and y < {shape[1]} and x >= 0 and x < {shape[2]}"
         )
-        .values
     )
     # Dask to numpy
-    coords = coords.compute() if isinstance(coords, da.Array) else coords
+    coords = coords.compute() if isinstance(coords, dd.DataFrame) else coords
+    # Groupby and counts, so we don't drop duplicates
+    coords = coords.groupby(["z", "y", "x"]).size().reset_index(name="counts")
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
-        arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
+        arr[coords["z"], coords["y"], coords["x"]] += coords["counts"]
     # Return arr
     return arr
 

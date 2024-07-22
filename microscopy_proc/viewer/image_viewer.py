@@ -48,20 +48,23 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
     slicer = (
-        slice(None, None, None),  #  slice(None, None, 3),
-        slice(None, None, None),  #  slice(None, None, 12),
-        slice(None, None, None),  #  slice(None, None, 12),
+        # slice(400, 500, None),  #  slice(None, None, 3),
+        # slice(1000, 3000, None),  #  slice(None, None, 12),
+        # slice(1000, 3000, None),  #  slice(None, None, 12),
+        slice(None, None, None),
+        slice(None, None, None),
+        slice(None, None, None),
     )
 
     imgs_ls = (
-        ("ref", 10000),
+        # ("ref", 10000),
         # ("annot", 10000),
         # RAW
         # ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
-        # ("trimmed", 10000),
+        ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
         # ("overlap", 10000),
@@ -75,10 +78,10 @@ if __name__ == "__main__":
         # ("filt_final", 5),
         # ("maxima_final", 1),
         # POST
-        # ("point_check", 5),
+        # ("points_check", 5),
         # ("heatmap_check", 20),
-        ("point_trfm_check", 5),
-        ("heatmap_trfm_check", 20),
+        ("points_trfm_check", 5),
+        ("heatmap_trfm_check", 100),
     )
     fp_ls = [proj_fp_dict[i] for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

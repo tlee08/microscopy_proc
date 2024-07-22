@@ -6,11 +6,14 @@ import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
 
+# from microscopy_proc.funcs.elastix_funcs import (
+#     # transformation_coords,
+#     transformation_img,
+# )
 # from prefect import flow
 from microscopy_proc.utils.dask_utils import (
     cluster_proc_dec,
 )
-from microscopy_proc.utils.elastix_utils import transformation_coords
 from microscopy_proc.utils.map_utils import nested_tree_dict_to_df
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 
@@ -44,9 +47,9 @@ def transform_coords(
     # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
     # NOTE: does not work with dask yet
     coords = coords.compute()
-    coords = transformation_coords(
-        coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
-    )
+    # coords = transformation_coords(
+    #     coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+    # )
     # Saving to disk
     dd.from_pandas(coords).to_parquet(proj_fp_dict["maxima_trfm_df"])
 
@@ -132,4 +135,10 @@ if __name__ == "__main__":
         x_trim=slice(None, None),
     )
 
-    get_cell_mappings(proj_fp_dict)
+    # a = transformation_img(
+    #     proj_fp_dict["ref"],
+    #     proj_fp_dict["regresult"],
+    # )
+    # tifffile.imwrite(f'{proj_fp_dict["heatmap_check"]}.tiff', a)
+
+    # get_cell_mappings(proj_fp_dict)

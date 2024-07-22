@@ -198,4 +198,4 @@ def transformation_img(
     # silentremove(os.path.join(output_img_dir, "outputpoints.txt"))
     # # Returning transformed coords
     # return coords_transformed
-    return transformix_img_filt.GetResultImage()
+    return sitk.GetArrayFromImage(transformix_img_filt.GetResultImage())
