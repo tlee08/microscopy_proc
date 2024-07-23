@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from prefect import task
+
+# from prefect import task
 from scipy import ndimage as sc_ndimage
 from skimage.segmentation import watershed
 
@@ -14,7 +15,7 @@ class CpuArrFuncs:
     xdimage = sc_ndimage
 
     @classmethod
-    @task
+    # @task
     def tophat_filt(cls, arr: np.ndarray, sigma: int = 10) -> np.ndarray:
         """
         Top hat is calculated as:
@@ -33,7 +34,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    @task
+    # @task
     def dog_filt(cls, arr: np.ndarray, sigma1=1, sigma2=2) -> np.ndarray:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Making gaussian blur 1")
@@ -48,7 +49,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    @task
+    # @task
     def gauss_subt_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Calculate local Gaussian blur")
@@ -61,7 +62,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    @task
+    # @task
     def intensity_cutoff(cls, arr: np.ndarray, min_=None, max_=None) -> np.ndarray:
         """
         Performing cutoffs on a 3D tensor.
@@ -77,7 +78,7 @@ class CpuArrFuncs:
         return res
 
     @classmethod
-    @task
+    # @task
     def otsu_thresh(cls, arr: np.ndarray) -> np.ndarray:
         """
         Perform Otsu's thresholding on a 3D tensor.
@@ -108,7 +109,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    @task
+    # @task
     def mean_thresh(cls, arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
         """
         Perform adaptive thresholding on a 3D tensor on GPU.
@@ -124,7 +125,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    @task
+    # @task
     def manual_thresh(cls, arr: np.ndarray, val: int):
         """
         Perform manual thresholding on a tensor.
@@ -136,7 +137,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    @task
+    # @task
     def label_with_ids(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
@@ -148,7 +149,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint32)
 
     @classmethod
-    @task
+    # @task
     def label_with_sizes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
@@ -166,7 +167,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    @task
+    # @task
     def get_sizes(cls, arr: np.ndarray) -> pd.Series:
         """
         Get statistics from a labeled 3D tensor.
@@ -184,7 +185,7 @@ class CpuArrFuncs:
         )
 
     @classmethod
-    @task
+    # @task
     def labels_map(cls, arr: np.ndarray, vect: pd.Series) -> np.ndarray:
         """
         NOTE: assumes the `vect` index is incrementing from 1
@@ -200,7 +201,7 @@ class CpuArrFuncs:
         return res
 
     @classmethod
-    @task
+    # @task
     def visualise_stats(cls, arr: np.ndarray):
         """
         Visualise statistics.
@@ -220,7 +221,7 @@ class CpuArrFuncs:
         return fig
 
     @classmethod
-    @task
+    # @task
     def filt_by_size(cls, arr: np.ndarray, smin=None, smax=None):
         """
         Assumes `arr` is array of objects labelled with their size.
@@ -236,7 +237,7 @@ class CpuArrFuncs:
         return arr
 
     @classmethod
-    @task
+    # @task
     def get_local_maxima(cls, arr: np.ndarray, sigma=10, mask=None):
         """
         NOTE: there can be multiple maxima per label
@@ -257,7 +258,7 @@ class CpuArrFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    @task
+    # @task
     def mask(cls, arr: np.ndarray, arr_mask: np.ndarray):
         arr = cls.xp.asarray(arr)
         arr_mask = cls.xp.asarray(arr_mask).astype(cls.xp.uint8)
@@ -267,7 +268,7 @@ class CpuArrFuncs:
         return res
 
     @classmethod
-    @task
+    # @task
     def watershed_segm(
         cls, arr_raw: np.ndarray, arr_maxima: np.ndarray, arr_mask: np.ndarray
     ):
@@ -296,7 +297,7 @@ class CpuArrFuncs:
         return res
 
     @classmethod
-    @task
+    # @task
     def region_to_coords(cls, arr: np.ndarray):
         """
         Get coordinates of regions in 3D tensor.
@@ -320,7 +321,7 @@ class CpuArrFuncs:
         return df
 
     @classmethod
-    @task
+    # @task
     def maxima_to_coords(cls, arr: np.ndarray):
         """
         Get coordinates of maxima in 3D tensor.

@@ -46,7 +46,7 @@ if __name__ == "__main__":
     maxima_df = dd.read_parquet(proj_fp_dict["maxima_trfm_df"])
     coords_to_heatmaps(
         maxima_df,
-        2,
+        3,
         tifffile.imread(proj_fp_dict["ref"]).shape,
         proj_fp_dict["heatmap_trfm_check"],
     )

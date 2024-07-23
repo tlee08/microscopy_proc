@@ -84,30 +84,23 @@ def prepare_img_trim(proj_fp_dict: dict, z_trim: slice, y_trim: slice, x_trim: s
     tifffile.imwrite(proj_fp_dict["trimmed"], arr_trimmed)
 
 
-@cluster_proc_dec(lambda: LocalCluster())
-# @flow
-def prepare_img(
-    proj_fp_dict: dict,
-    z_rough: int,
-    y_rough: int,
-    x_rough: int,
-    z_fine: float,
-    y_fine: float,
-    x_fine: float,
-    z_trim: slice,
-    y_trim: slice,
-    x_trim: slice,
-):
-    # Reading
-    arr_raw = da.from_zarr(proj_fp_dict["raw"])
-    # Rough downsample
-    arr_downsmpl1 = downsmpl_rough_arr(arr_raw, z_rough, y_rough, x_rough).compute()
-    # Fine downsample
-    arr_downsmpl2 = downsmpl_fine_arr(arr_downsmpl1, z_fine, y_fine, x_fine)
-    # Trim
-    arr_trimmed = arr_downsmpl2[z_trim, y_trim, x_trim]
-    # Saving
-    tifffile.imwrite(proj_fp_dict["trimmed"], arr_trimmed)
+# @cluster_proc_dec(lambda: LocalCluster())
+# # @flow
+# def prepare_img(
+#     proj_fp_dict: dict,
+#     z_rough: int,
+#     y_rough: int,
+#     x_rough: int,
+#     z_fine: float,
+#     y_fine: float,
+#     x_fine: float,
+#     z_trim: slice,
+#     y_trim: slice,
+#     x_trim: slice,
+# ):
+#     prepare_img_rough(proj_fp_dict, z_rough, y_rough, x_rough)
+#     prepare_img_fine(proj_fp_dict, z_fine, y_fine, x_fine)
+#     prepare_img_trim(proj_fp_dict, z_trim, y_trim, x_trim)
 
 
 if __name__ == "__main__":
@@ -131,16 +124,22 @@ if __name__ == "__main__":
     )
 
     # Preparing image itself
-    prepare_img(
-        proj_fp_dict=proj_fp_dict,
-        z_rough=8,
-        y_rough=10,
-        x_rough=10,
-        z_fine=0.8,
-        y_fine=0.8,
-        x_fine=0.8,
+    prepare_img_rough(
+        proj_fp_dict,
+        z_rough=3,
+        y_rough=6,
+        x_rough=6,
+    )
+    prepare_img_fine(
+        proj_fp_dict,
+        z_fine=1,
+        y_fine=0.6,
+        x_fine=0.6,
+    )
+    prepare_img_trim(
+        proj_fp_dict,
         z_trim=slice(None, -5),
-        y_trim=slice(60, -50),
+        y_trim=slice(80, -75),
         x_trim=slice(None, None),
     )
 

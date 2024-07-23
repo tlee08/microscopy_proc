@@ -51,20 +51,23 @@ if __name__ == "__main__":
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        slice(None, None, None),
-        slice(None, None, None),
-        slice(None, None, None),
+        # slice(900, None, None),
+        # slice(500, 5000, None),
+        # slice(500, 2500, None),
+        slice(900, None, None),
+        slice(500, 4500, None),
+        slice(500, 2500, None),
     )
 
     imgs_ls = (
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        # ("raw", 10000),
+        ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
-        ("trimmed", 10000),
+        # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
         # ("overlap", 10000),
@@ -75,13 +78,13 @@ if __name__ == "__main__":
         # ("sizes", 10000),
         # ("filt", 5),
         # ("maxima", 5),
-        # ("filt_final", 5),
-        # ("maxima_final", 1),
+        ("filt_final", 5),
+        ("maxima_final", 1),
         # POST
         # ("points_check", 5),
         # ("heatmap_check", 20),
-        ("points_trfm_check", 5),
-        ("heatmap_trfm_check", 100),
+        # ("points_trfm_check", 5),
+        # ("heatmap_trfm_check", 100),
     )
     fp_ls = [proj_fp_dict[i] for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]

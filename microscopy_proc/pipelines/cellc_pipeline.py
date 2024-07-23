@@ -129,20 +129,20 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    img_overlap_pipeline(proj_fp_dict)
+    # img_overlap_pipeline(proj_fp_dict)
 
-    img_proc_pipeline(
-        proj_fp_dict=proj_fp_dict,
-        tophat_sigma=10,
-        dog_sigma1=1,
-        dog_sigma2=4,
-        gauss_sigma=101,
-        thresh_p=30,
-        min_size=None,
-        max_size=3000,
-        maxima_sigma=10,
-    )
+    # img_proc_pipeline(
+    #     proj_fp_dict=proj_fp_dict,
+    #     tophat_sigma=10,
+    #     dog_sigma1=1,
+    #     dog_sigma2=4,
+    #     gauss_sigma=101,
+    #     thresh_p=32,
+    #     min_size=10,
+    #     max_size=10000,
+    #     maxima_sigma=10,
+    # )
 
     # img_trim_pipeline(proj_fp_dict)
 
-    # img_to_coords_pipeline(proj_fp_dict)
+    img_to_coords_pipeline(proj_fp_dict)

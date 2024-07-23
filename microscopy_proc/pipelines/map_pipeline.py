@@ -6,10 +6,11 @@ import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
 
-# from microscopy_proc.funcs.elastix_funcs import (
-#     # transformation_coords,
-#     transformation_img,
-# )
+from microscopy_proc.funcs.elastix_funcs import (
+    # transformation_img,
+    transformation_coords,
+)
+
 # from prefect import flow
 from microscopy_proc.utils.dask_utils import (
     cluster_proc_dec,
@@ -47,9 +48,9 @@ def transform_coords(
     # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
     # NOTE: does not work with dask yet
     coords = coords.compute()
-    # coords = transformation_coords(
-    #     coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
-    # )
+    coords = transformation_coords(
+        coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+    )
     # Saving to disk
     dd.from_pandas(coords).to_parquet(proj_fp_dict["maxima_trfm_df"])
 
@@ -124,14 +125,14 @@ if __name__ == "__main__":
     # Converting from raw space to refernce atlas space
     transform_coords(
         proj_fp_dict=proj_fp_dict,
-        z_rough=8,
-        y_rough=10,
-        x_rough=10,
-        z_fine=0.8,
-        y_fine=0.8,
-        x_fine=0.8,
+        z_rough=3,
+        y_rough=6,
+        x_rough=6,
+        z_fine=1,
+        y_fine=0.6,
+        x_fine=0.6,
         z_trim=slice(None, -5),
-        y_trim=slice(60, -50),
+        y_trim=slice(80, -75),
         x_trim=slice(None, None),
     )
 

@@ -60,7 +60,7 @@ def registration(
         if re.search(r"^IterationInfo.(\d+).R(\d+).txt$", i):
             silentremove(os.path.join(output_img_dir, i))
     # Returning the moved image (output_img) array
-    return elastix_img_filt.GetResultImage()
+    return sitk.GetArrayFromImage(elastix_img_filt.GetResultImage())
 
 
 def transformation_coords(
