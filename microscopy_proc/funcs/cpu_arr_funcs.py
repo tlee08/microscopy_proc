@@ -360,50 +360,30 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def maxima_to_coords(cls, arr: np.ndarray):
-        """
-        Get coordinates of maxima in 3D tensor.
-
-        Expects `arr_maxima` to have unique labels for each maxima.
-
-        Keeps only the first row (i.e cell) for each label.
-        """
-        df = cls.region_to_coords(arr)
-        logging.debug(
-            "Keeping only first row per label (some maxima may be contiguous)"
-        )
-        df = df.groupby("label").first()
-        # Returning
-        return df
-
-    @classmethod
-    # @task
-    def get_cells(cls, arr_maxima_labels, arr_watershed, d=S_DEPTH):
+    def get_cells(cls, arr_raw, arr_maxima_labels, arr_watershed, d=S_DEPTH):
         """
         Get the cells from the maxima labels and the watershed segmentation.
         """
-        logging.debug("Getting coordinates of regions")
+        logging.debug("Making DataFrame of coordinates (maxima)")
         z, y, x = np.where(arr_maxima_labels)
         ids_m = arr_maxima_labels[z, y, x]
-        logging.debug("Getting sizes of each region")
-        ids_w, counts = cls.xp.unique(
-            arr_watershed[arr_watershed > 0], return_counts=True
-        )
-        logging.debug("Making DataFrame")
         df = pd.DataFrame(
             {
-                "z": z.astype(np.uint16),
-                "y": y.astype(np.uint16),
-                "x": x.astype(np.uint16),
+                "z": z.astype(np.uint16) - d,
+                "y": y.astype(np.uint16) - d,
+                "x": x.astype(np.uint16) - d,
             },
             index=pd.Index(ids_m.astype(np.uint32), name="label"),
         )
-        sizes_series = pd.Series(counts, index=pd.Index(ids_w, name="label"))
-        df["size"] = sizes_series
-        logging.debug("Filtering out cells outside of padding")
-        shape = arr_maxima_labels.shape
+        logging.debug("Making vector of region sizes (corresponding to maxima)")
+        ids_w, counts = cls.xp.unique(
+            arr_watershed[arr_watershed > 0], return_counts=True
+        )
+        df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))
+        logging.debug("Filtering out cells outside of `arr_raw`")
+        shape = arr_raw.shape
         df = df.query(
-            f"z >= {d} & z < {shape[0] - d} & y >= {d} & y < {shape[1] - d} & x >= {d} & x < {shape[2] - d}"
+            f"z >= 0 & z < {shape[0]} & y >= 0 & y < {shape[1]} & x >= 0 & x < {shape[2]}"
         )
         # Returning
         return df

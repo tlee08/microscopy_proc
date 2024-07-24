@@ -113,18 +113,6 @@ def img_get_cell_sizes(proj_fp_dict):
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-def mk_cell_df(proj_fp_dict):
-    # Loading in arrs
-    arr_maxima_labels = da.from_zarr(proj_fp_dict["maxima_labels"])
-    arr_watershed = da.from_zarr(proj_fp_dict["watershed"])
-    # Getting anything inside boundary
-    cell_coords = block_to_coords(
-        CpuArrFuncs.get_cells, [arr_maxima_labels, arr_watershed]
-    )
-    cell_coords.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
-
-
-@cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def img_trim_pipeline(proj_fp_dict):
     # Read overlapped filtered and maxima images
@@ -143,16 +131,29 @@ def img_trim_pipeline(proj_fp_dict):
 
 
 @cluster_proc_dec(lambda: LocalCluster())
+def mk_cell_df(proj_fp_dict):
+    # Loading in arrs
+    arr_raw = da.from_zarr(proj_fp_dict["raw"])
+    arr_maxima_labels = da.from_zarr(proj_fp_dict["maxima_labels"])
+    arr_watershed = da.from_zarr(proj_fp_dict["watershed"])
+    # Getting anything inside boundary
+    cell_coords = block_to_coords(
+        CpuArrFuncs.get_cells, [arr_raw, arr_maxima_labels, arr_watershed]
+    )
+    cell_coords.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
+
+
+@cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def img_to_coords_pipeline(proj_fp_dict):
     # Read filtered and maxima images (trimmed - orig space)
     arr_filt_f = da.from_zarr(proj_fp_dict["filt_final"])
     arr_maxima_f = da.from_zarr(proj_fp_dict["maxima_final"])
     # Step 10b: Get coords of maxima and get corresponding sizes from watershed
-    cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_filt_f)
+    cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, [arr_filt_f])
     cell_coords.to_parquet(proj_fp_dict["region_df"], overwrite=True)
     # Step 10a: Get coords of maxima and get corresponding sizes from watershed
-    cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_maxima_f)
+    cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, [arr_maxima_f])
     cell_coords.to_parquet(proj_fp_dict["maxima_df"], overwrite=True)
 
 
