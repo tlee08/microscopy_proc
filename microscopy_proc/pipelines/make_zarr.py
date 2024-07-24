@@ -30,9 +30,10 @@ def tiff_to_zarr(in_fp, out_fp):
 
 if __name__ == "__main__":
     # Filenames
-    # in_fp = "/home/linux1/Desktop/A-1-1/example"
-    in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
-    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
+    in_fp = "/home/linux1/Desktop/A-1-1/example"
+    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)

@@ -159,8 +159,8 @@ def img_to_coords_pipeline(proj_fp_dict):
 
 if __name__ == "__main__":
     # Filenames
-    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
