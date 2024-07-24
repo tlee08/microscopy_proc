@@ -83,7 +83,7 @@ if __name__ == "__main__":
         # ("filt", 5),
         # ("maxima", 5),
         ("filt_final", 5),
-        ("maxima_final", 1),
+        ("maxima_final", 2),
         # POST
         ("points_check", 5),
         # ("heatmap_check", 20),

@@ -158,18 +158,7 @@ class CpuArrFuncs:
         """
         arr = cls.label_with_ids(arr)
         res = cls.label_ids_to_sizes(arr)
-        return res
-        # arr = cls.xp.asarray(arr).astype(cls.xp.uint8)
-        # logging.debug("Labelling contiguous objects uniquely")
-        # arr, _ = cls.xdimage.label(arr)
-        # logging.debug("Getting vector of ids and sizes (not incl. 0)")
-        # ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
-        # # NOTE: assumes ids is perfectly incrementing from 1
-        # counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
-        # logging.debug("Converting arr intensity to sizes")
-        # res = counts[arr]
-        # logging.debug("Returning")
-        # return res.astype(cls.xp.uint16)
+        return cls.xp.asarray(res)
 
     @classmethod
     # @task

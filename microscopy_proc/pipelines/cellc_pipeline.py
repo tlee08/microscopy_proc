@@ -68,7 +68,7 @@ def img_proc_pipeline(
     arr_threshd = disk_cache(arr_threshd, proj_fp_dict["threshd"])
 
     # Step 5: Object sizes
-    arr_sizes = da.map_blocks(GpuArrFuncs.label_with_sizes)
+    arr_sizes = da.map_blocks(GpuArrFuncs.label_with_sizes, arr_threshd)
     arr_sizes = disk_cache(arr_sizes, proj_fp_dict["sizes"])
 
     # Step 6: Filter out large objects (likely outlines, not cells)
@@ -83,7 +83,7 @@ def img_proc_pipeline(
     arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
     # Converting maxima to unique labels
-    arr_maxima_labels = arr_maxima.map_blocks(GpuArrFuncs.label_with_ids)
+    arr_maxima_labels = da.map_blocks(GpuArrFuncs.label_with_ids, arr_maxima)
     arr_maxima_labels = disk_cache(arr_maxima_labels, proj_fp_dict["maxima_labels"])
 
     # Step 8: Watershed segmentation
@@ -116,22 +116,26 @@ def img_get_cell_sizes(proj_fp_dict):
 # @flow
 def img_trim_pipeline(proj_fp_dict):
     # Read overlapped filtered and maxima images
-    arr_filt = da.from_zarr(proj_fp_dict["filt"])
-    arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
-    arr_watershed = da.from_zarr(proj_fp_dict["watershed"])
     # Step 9a: trimming filtered regions overlaps
+    arr_filt = da.from_zarr(proj_fp_dict["filt"])
     arr_filt_f = my_trim(arr_filt)
-    arr_filt_f = disk_cache(arr_filt_f, proj_fp_dict["filt_final"])
-    # Step 9a: trimming maxima points overlaps
+    disk_cache(arr_filt_f, proj_fp_dict["filt_final"])
+    # Step 9b: trimming maxima points overlaps
+    arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
     arr_maxima_f = my_trim(arr_maxima)
-    arr_maxima_f = disk_cache(arr_maxima_f, proj_fp_dict["maxima_final"])
-    # Step 9a: trimming watershed points overlaps
+    disk_cache(arr_maxima_f, proj_fp_dict["maxima_final"])
+    # Step 9c: trimming watershed points overlaps
+    arr_watershed = da.from_zarr(proj_fp_dict["watershed"])
     arr_watershed_f = my_trim(arr_watershed)
-    arr_watershed_f = disk_cache(arr_watershed_f, proj_fp_dict["watershed_final"])
+    disk_cache(arr_watershed_f, proj_fp_dict["watershed_final"])
 
 
 @cluster_proc_dec(lambda: LocalCluster())
-def mk_cell_df(proj_fp_dict):
+def img_to_cells_pipeline(proj_fp_dict):
+    """
+    Uses the overlapped images to get cell coords and corresponding sizes.
+    Only considers cells within the boundary.
+    """
     # Loading in arrs
     arr_raw = da.from_zarr(proj_fp_dict["raw"])
     arr_maxima_labels = da.from_zarr(proj_fp_dict["maxima_labels"])
@@ -140,18 +144,14 @@ def mk_cell_df(proj_fp_dict):
     cell_coords = block_to_coords(
         CpuArrFuncs.get_cells, [arr_raw, arr_maxima_labels, arr_watershed]
     )
-    cell_coords.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
+    cell_coords.to_parquet(proj_fp_dict["cells_raw_df"], overwrite=True)
 
 
 @cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def img_to_coords_pipeline(proj_fp_dict):
     # Read filtered and maxima images (trimmed - orig space)
-    arr_filt_f = da.from_zarr(proj_fp_dict["filt_final"])
     arr_maxima_f = da.from_zarr(proj_fp_dict["maxima_final"])
-    # Step 10b: Get coords of maxima and get corresponding sizes from watershed
-    cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, [arr_filt_f])
-    cell_coords.to_parquet(proj_fp_dict["region_df"], overwrite=True)
     # Step 10a: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, [arr_maxima_f])
     cell_coords.to_parquet(proj_fp_dict["maxima_df"], overwrite=True)
@@ -165,41 +165,22 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    # img_overlap_pipeline(proj_fp_dict)
+    img_overlap_pipeline(proj_fp_dict)
 
-    # img_proc_pipeline(
-    #     proj_fp_dict=proj_fp_dict,
-    #     tophat_sigma=10,
-    #     dog_sigma1=1,
-    #     dog_sigma2=4,
-    #     gauss_sigma=101,
-    #     thresh_p=32,
-    #     min_size=100,
-    #     max_size=10000,
-    #     maxima_sigma=10,
-    # )
+    img_proc_pipeline(
+        proj_fp_dict=proj_fp_dict,
+        tophat_sigma=10,
+        dog_sigma1=1,
+        dog_sigma2=4,
+        gauss_sigma=101,
+        thresh_p=32,
+        min_size=100,
+        max_size=10000,
+        maxima_sigma=10,
+    )
 
-    # img_get_cell_sizes(proj_fp_dict)
-
-    # cluster = LocalCUDACluster()
-    # client = Client(cluster)
-
-    # arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
-    # arr_sizes = da.from_zarr(proj_fp_dict["sizes"])
-    # arr_filt = da.from_zarr(proj_fp_dict["filt"])
-    # maxima_sigma = 10
-
-    # # Step 7: Get maxima of image masked by labels
-    # arr_maxima = da.map_blocks(
-    #     GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
-    # )
-    # arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
-
-    # client.close()
-    # cluster.close()
-
-    mk_cell_df(proj_fp_dict)
+    img_get_cell_sizes(proj_fp_dict)
 
     img_trim_pipeline(proj_fp_dict)
 
-    # img_to_coords_pipeline(proj_fp_dict)
+    img_to_cells_pipeline(proj_fp_dict)

@@ -57,11 +57,9 @@ def get_proj_fp_dict(proj_dir):
         "maxima_final": os.path.join(proj_dir, "cellcount", "9_maxima_f.zarr"),
         "watershed_final": os.path.join(proj_dir, "cellcount", "9_watershed_f.zarr"),
         # CELL COUNTING DF FILES
-        "region_df": os.path.join(proj_dir, "analysis", "10_region.parquet"),
         "maxima_df": os.path.join(proj_dir, "analysis", "10_maxima.parquet"),
-        "sizes_df": os.path.join(proj_dir, "analysis", "10_sizes.parquet"),
-        "region_trfm_df": os.path.join(proj_dir, "analysis", "11_region_trfm.parquet"),
-        "maxima_trfm_df": os.path.join(proj_dir, "analysis", "11_maxima_trfm.parquet"),
+        "cells_raw_df": os.path.join(proj_dir, "analysis", "10_cells_raw.parquet"),
+        "cells_trfm_df": os.path.join(proj_dir, "analysis", "11_cells_trfm.parquet"),
         "cells_df": os.path.join(proj_dir, "analysis", "12_cells.parquet"),
         # VISUAL CHECK FROM CELL DF FILES
         "points_check": os.path.join(proj_dir, "visual_check", "points.zarr"),
