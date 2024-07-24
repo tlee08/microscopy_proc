@@ -6,7 +6,6 @@ import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
 
-from microscopy_proc.constants import ROWSPERPART
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 
 # from prefect import flow
@@ -59,9 +58,9 @@ def transform_coords(
     # ]
     # coords_c_ls = dask.compute(i for i in coords_d_ls)
     # coords = dd.from_delayed(coords_c_ls)
-    coords = coords.repartition(
-        npartitions=int(np.ceil(coords.shape[0].compute() / ROWSPERPART))
-    )
+    # coords = coords.repartition(
+    #     npartitions=int(np.ceil(coords.shape[0].compute() / ROWSPERPART))
+    # )
     coords = coords.map_partitions(
         transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
     )
@@ -76,17 +75,17 @@ def transform_coords(
 # @flow
 def get_cell_mappings(proj_fp_dict: dict):
     # Reading cells dataframe
-    cells_df = dd.read_parquet(proj_fp_dict["maxima_df"]).compute()
-    coords_trfm = dd.read_parquet(proj_fp_dict["maxima_trfm_df"]).compute()
+    cells_df = dd.read_parquet(proj_fp_dict["maxima_df"])
+    coords_trfm = dd.read_parquet(proj_fp_dict["maxima_trfm_df"])
     # Making unique index
     cells_df = cells_df.reset_index(drop=True)
     # Setting the transformed coords
     cells_df["z_trfm"] = coords_trfm["z"].values
     cells_df["y_trfm"] = coords_trfm["y"].values
     cells_df["x_trfm"] = coords_trfm["x"].values
+
     # Reading annotation image
     annot_arr = tifffile.imread(proj_fp_dict["annot"])
-
     # Getting the annotation ID for every cell (zyx coord)
     # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
     s = annot_arr.shape
@@ -111,7 +110,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
     # Getting the annotation name for every cell (zyx coord)
     # Left-joining the cells dataframe with the annotation mappings dataframe
-    cells_df = pd.merge(
+    cells_df = dd.merge(
         left=cells_df,
         right=annot_df,
         how="left",

@@ -9,6 +9,8 @@ import seaborn as sns
 from scipy import ndimage as sc_ndimage
 from skimage.segmentation import watershed
 
+from microscopy_proc.constants import S_DEPTH
+
 
 class CpuArrFuncs:
     xp = np
@@ -154,9 +156,29 @@ class CpuArrFuncs:
         """
         Label objects in a 3D tensor.
         """
-        arr = cls.xp.asarray(arr).astype(cls.xp.uint8)
-        logging.debug("Labelling contiguous objects uniquely")
-        arr, _ = cls.xdimage.label(arr)
+        arr = cls.label_with_ids(arr)
+        res = cls.label_ids_to_sizes(arr)
+        return res
+        # arr = cls.xp.asarray(arr).astype(cls.xp.uint8)
+        # logging.debug("Labelling contiguous objects uniquely")
+        # arr, _ = cls.xdimage.label(arr)
+        # logging.debug("Getting vector of ids and sizes (not incl. 0)")
+        # ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
+        # # NOTE: assumes ids is perfectly incrementing from 1
+        # counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
+        # logging.debug("Converting arr intensity to sizes")
+        # res = counts[arr]
+        # logging.debug("Returning")
+        # return res.astype(cls.xp.uint16)
+
+    @classmethod
+    # @task
+    def label_ids_to_sizes(cls, arr: np.ndarray) -> np.ndarray:
+        """
+        Label objects in a 3D tensor.
+
+        Assumes `arr` already has unique labels for each object.
+        """
         logging.debug("Getting vector of ids and sizes (not incl. 0)")
         ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
         # NOTE: assumes ids is perfectly incrementing from 1
@@ -238,7 +260,7 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def get_local_maxima(cls, arr: np.ndarray, sigma=10, mask=None):
+    def get_local_maxima(cls, arr: np.ndarray, sigma=10, arr_mask=None):
         """
         NOTE: there can be multiple maxima per label
         """
@@ -247,15 +269,31 @@ class CpuArrFuncs:
         max_arr = cls.xdimage.maximum_filter(arr, sigma)
         logging.debug("Add 1 (so we separate the max pixel from the max_filter)")
         arr = arr + 1
-        if mask is not None:
-            logging.debug("Mask provided. Maxima will only be found within regions.")
-            mask = cls.xp.asarray(mask) > 0
-            arr = arr * mask
-            max_arr = arr * mask
         logging.debug("Getting local maxima (where arr - max_arr == 1)")
         res = arr - max_arr == 1
+        # If a mask is given, then only keep maxima within the mask
+        if arr_mask is not None:
+            logging.debug("Mask provided. Maxima will only be found within regions.")
+            arr_mask = (cls.xp.asarray(arr_mask) > 0).astype(cls.xp.uint8)
+            res = res * arr_mask
+        # Some maxima may be contiguous (i.e. have same maxima value and touching)
+        # We only need one of these points so will take the centroid
+        logging.debug("Getting centre of mass coords for each label")
+        labels, _ = cls.xdimage.label(res)
+        ids = cls.xp.unique(labels[labels > 0])
+        # Getting centre of mass coords for each label
+        coords = cls.xdimage.center_of_mass(
+            input=res.astype(cls.xp.int32),
+            labels=labels.astype(cls.xp.int32),
+            index=ids.astype(cls.xp.int32),
+        )
+        coords = cls.xp.asarray(coords).round().astype(cls.xp.uint16)
+        # Converting coords to spatial
+        logging.debug("Converting coords to spatial")
+        res = cls.xp.zeros(arr.shape, dtype=cls.xp.uint16)
+        res[*coords.T] = 1
         # Returning
-        return res.astype(cls.xp.uint8)
+        return res
 
     @classmethod
     # @task
@@ -277,22 +315,22 @@ class CpuArrFuncs:
 
         Expects `arr_maxima` to have unique labels for each maxima.
         """
-        logging.debug("Labelling maxima objects")
-        arr_maxima, _ = cls.xdimage.label(arr_maxima)
-        logging.debug("Padding everything with a 1 pixel empty border")
-        arr_raw = cls.xp.pad(arr_raw, pad_width=1, mode="constant", constant_values=0)
-        arr_maxima = cls.xp.pad(
-            arr_maxima, pad_width=1, mode="constant", constant_values=0
-        )
-        arr_mask = cls.xp.pad(arr_mask, pad_width=1, mode="constant", constant_values=0)
+        # logging.debug("Labelling maxima objects")
+        # arr_maxima, _ = cls.xdimage.label(arr_maxima)
+        # logging.debug("Padding everything with a 1 pixel empty border")
+        # arr_raw = cls.xp.pad(arr_raw, pad_width=1, mode="constant", constant_values=0)
+        # arr_maxima = cls.xp.pad(
+        #     arr_maxima, pad_width=1, mode="constant", constant_values=0
+        # )
+        # arr_mask = cls.xp.pad(arr_mask, pad_width=1, mode="constant", constant_values=0)
         logging.debug("Watershed segmentation")
         res = watershed(
             image=-arr_raw,
             markers=arr_maxima,
             mask=arr_mask > 0,
         )
-        logging.debug("Unpadding")
-        res = res[1:-1, 1:-1, 1:-1].astype(np.uint32)
+        # logging.debug("Unpadding")
+        # res = res[1:-1, 1:-1, 1:-1].astype(np.uint32)
         # Returning
         return res
 
@@ -335,5 +373,37 @@ class CpuArrFuncs:
             "Keeping only first row per label (some maxima may be contiguous)"
         )
         df = df.groupby("label").first()
+        # Returning
+        return df
+
+    @classmethod
+    # @task
+    def get_cells(cls, arr_maxima_labels, arr_watershed, d=S_DEPTH):
+        """
+        Get the cells from the maxima labels and the watershed segmentation.
+        """
+        logging.debug("Getting coordinates of regions")
+        z, y, x = np.where(arr_maxima_labels)
+        ids_m = arr_maxima_labels[z, y, x]
+        logging.debug("Getting sizes of each region")
+        ids_w, counts = cls.xp.unique(
+            arr_watershed[arr_watershed > 0], return_counts=True
+        )
+        logging.debug("Making DataFrame")
+        df = pd.DataFrame(
+            {
+                "z": z.astype(np.uint16),
+                "y": y.astype(np.uint16),
+                "x": x.astype(np.uint16),
+            },
+            index=pd.Index(ids_m.astype(np.uint32), name="label"),
+        )
+        sizes_series = pd.Series(counts, index=pd.Index(ids_w, name="label"))
+        df["size"] = sizes_series
+        logging.debug("Filtering out cells outside of padding")
+        shape = arr_maxima_labels.shape
+        df = df.query(
+            f"z >= {d} & z < {shape[0] - d} & y >= {d} & y < {shape[1] - d} & x >= {d} & x < {shape[2] - d}"
+        )
         # Returning
         return df

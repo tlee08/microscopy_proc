@@ -48,12 +48,18 @@ def get_proj_fp_dict(proj_dir):
         "sizes": os.path.join(proj_dir, "cellcount", "5_sizes.zarr"),
         "filt": os.path.join(proj_dir, "cellcount", "6_filt.zarr"),
         "maxima": os.path.join(proj_dir, "cellcount", "7_maxima.zarr"),
+        "maxima_labels": os.path.join(proj_dir, "cellcount", "7_maxima_labels.zarr"),
         "watershed": os.path.join(proj_dir, "cellcount", "8_watershed.zarr"),
+        "watershed_sizes": os.path.join(
+            proj_dir, "cellcount", "8_watershed_sizes.zarr"
+        ),
         "filt_final": os.path.join(proj_dir, "cellcount", "9_filt_f.zarr"),
         "maxima_final": os.path.join(proj_dir, "cellcount", "9_maxima_f.zarr"),
+        "watershed_final": os.path.join(proj_dir, "cellcount", "9_watershed_f.zarr"),
         # CELL COUNTING DF FILES
         "region_df": os.path.join(proj_dir, "analysis", "10_region.parquet"),
         "maxima_df": os.path.join(proj_dir, "analysis", "10_maxima.parquet"),
+        "sizes_df": os.path.join(proj_dir, "analysis", "10_sizes.parquet"),
         "region_trfm_df": os.path.join(proj_dir, "analysis", "11_region_trfm.parquet"),
         "maxima_trfm_df": os.path.join(proj_dir, "analysis", "11_maxima_trfm.parquet"),
         "cells_df": os.path.join(proj_dir, "analysis", "12_cells.parquet"),

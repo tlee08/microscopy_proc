@@ -8,28 +8,31 @@ from dask.distributed import Client
 from microscopy_proc.constants import S_DEPTH
 
 
-def block_to_coords(func, arr: da.Array) -> dd.DataFrame:
+def block_to_coords(func, arr_ls: list[da.Array]) -> dd.DataFrame:
     """
     Applies the `func` to `arr`.
     Expects `func` to convert `arr` to coords df (of sorts).
 
     Importantly, this offsets the coords in each block.
     """
-    inds = np.meshgrid(*[np.cumsum([0, *i[:-1]]) for i in arr.chunks], indexing="ij")
 
     @dask.delayed
-    def func_offsetted(block, z_offset, y_offset, x_offset):
-        df = func(block)
-        df["z"] = df["z"] + z_offset if "z" in df.columns else z_offset
-        df["y"] = df["y"] + y_offset if "y" in df.columns else y_offset
-        df["x"] = df["x"] + x_offset if "x" in df.columns else x_offset
+    def func_offsetted(block_ls, z_offset, y_offset, x_offset):
+        df = func(*block_ls)
+        df.loc[:, "z"] = df["z"] + z_offset if "z" in df.columns else z_offset
+        df.loc[:, "y"] = df["y"] + y_offset if "y" in df.columns else y_offset
+        df.loc[:, "x"] = df["x"] + x_offset if "x" in df.columns else x_offset
         return df
 
+    # NOTE: assumes all arrays have the same chunks
+    inds = np.meshgrid(
+        *[np.cumsum([0, *i[:-1]]) for i in arr_ls[0].chunks], indexing="ij"
+    )
     return dd.from_delayed(
         [
-            func_offsetted(block, i, j, k)
-            for block, i, j, k in zip(
-                arr.to_delayed().ravel(),
+            func_offsetted(block_ls, i, j, k)
+            for *block_ls, i, j, k in zip(
+                *[i.to_delayed().ravel() for i in arr_ls],
                 inds[0].ravel(),
                 inds[1].ravel(),
                 inds[2].ravel(),
@@ -62,7 +65,7 @@ def disk_cache(arr: da.Array, fp):
 def my_trim(arr, d=S_DEPTH):
     return arr.map_blocks(
         lambda x: x[d:-d, d:-d, d:-d],
-        chunks=[tuple(np.array(i) - d*2) for i in arr.chunks],
+        chunks=[tuple(np.array(i) - d * 2) for i in arr.chunks],
     )
 
 
@@ -77,16 +80,18 @@ def my_configs():
         }
     )
 
+
 def cluster_proc_dec(cluster_factory):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            cluster =cluster_factory()
+            cluster = cluster_factory()
             client = Client(cluster)
             print(client.dashboard_link)
             res = func(*args, **kwargs)
             client.close()
             cluster.close()
             return res
+
         return wrapper
 
     return decorator

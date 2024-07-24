@@ -57,6 +57,11 @@ class GpuArrFuncs(CpuArrFuncs):
 
     @classmethod
     # @task
+    def label_ids_to_sizes(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().label_ids_to_sizes)(*args, **kwargs).get()
+
+    @classmethod
+    # @task
     def get_sizes(cls, *args, **kwargs):
         return clear_cuda_mem_dec(super().get_sizes)(*args, **kwargs)
 

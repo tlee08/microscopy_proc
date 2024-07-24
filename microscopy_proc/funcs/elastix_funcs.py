@@ -1,6 +1,5 @@
 import os
 import re
-from time import sleep
 
 import dask.dataframe as dd
 import numpy as np
@@ -110,11 +109,9 @@ def transformation_coords(
     )
     # Setting feedback and logging settings
     transformix_img_filt.LogToFileOff()
-    transformix_img_filt.LogToConsoleOff()
+    # transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
     transformix_img_filt.Execute()
-    # Waiting to generate file
-    sleep(0.5)
     # Converting transformix output to df
     coords_transformed = transformix_file_to_coords(
         os.path.join(out_dir, "outputpoints.txt")
