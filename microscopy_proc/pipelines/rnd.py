@@ -39,7 +39,7 @@ arr_sizes = GpuArrFuncs.label_with_sizes(arr_threshd)
 tifffile.imwrite("6_sizes.tif", arr_sizes)
 # Step 6b: Making sizes on arr (for checking)
 df_sizes = GpuArrFuncs.get_sizes(arr_labels)
-df_sizes.to_parquet("6_sizes.parquet")
+df_sizes.to_parquet("6_sizes.parquet", overwrite=True)
 # Step 6c: Visualise statistics (for checking)
 GpuArrFuncs.visualise_stats(df_sizes)
 
@@ -59,4 +59,4 @@ tifffile.imwrite("10_watershed.tif", arr_watershed)
 
 # Step 11: Get coords of maxima and get corresponding sizes from watershed
 df_cells = GpuArrFuncs.region_to_coords(arr_watershed)
-df_cells.to_parquet("11_cells.parquet")
+df_cells.to_parquet("11_cells.parquet", overwrite=True)

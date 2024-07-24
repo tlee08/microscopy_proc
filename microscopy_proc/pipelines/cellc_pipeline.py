@@ -116,10 +116,10 @@ def img_to_coords_pipeline(proj_fp_dict):
     arr_maxima_f = da.from_zarr(proj_fp_dict["maxima_final"])
     # Step 10b: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_filt_f)
-    cell_coords.to_parquet(proj_fp_dict["region_df"])
+    cell_coords.to_parquet(proj_fp_dict["region_df"], overwrite=True)
     # Step 10a: Get coords of maxima and get corresponding sizes from watershed
     cell_coords = block_to_coords(GpuArrFuncs.region_to_coords, arr_maxima_f)
-    cell_coords.to_parquet(proj_fp_dict["maxima_df"])
+    cell_coords.to_parquet(proj_fp_dict["maxima_df"], overwrite=True)
 
 
 if __name__ == "__main__":
@@ -131,17 +131,17 @@ if __name__ == "__main__":
 
     # img_overlap_pipeline(proj_fp_dict)
 
-    # img_proc_pipeline(
-    #     proj_fp_dict=proj_fp_dict,
-    #     tophat_sigma=10,
-    #     dog_sigma1=1,
-    #     dog_sigma2=4,
-    #     gauss_sigma=101,
-    #     thresh_p=32,
-    #     min_size=10,
-    #     max_size=10000,
-    #     maxima_sigma=10,
-    # )
+    img_proc_pipeline(
+        proj_fp_dict=proj_fp_dict,
+        tophat_sigma=10,
+        dog_sigma1=1,
+        dog_sigma2=4,
+        gauss_sigma=101,
+        thresh_p=32,
+        min_size=100,
+        max_size=10000,
+        maxima_sigma=10,
+    )
 
     # img_trim_pipeline(proj_fp_dict)
 

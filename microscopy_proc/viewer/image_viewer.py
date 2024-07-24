@@ -1,6 +1,8 @@
 # %%
 
 
+import logging
+
 import dask.array as da
 import napari
 import tifffile
@@ -28,6 +30,7 @@ def view_imgs(fp_ls, vmax_ls, slicer):
     # Reading arrays
     arr_ls = []
     for i in fp_ls:
+        logging.info(i)
         if ".zarr" in i:
             arr_ls.append(da.from_zarr(i)[*slicer].compute())
         elif ".tif" in i:
@@ -51,35 +54,35 @@ if __name__ == "__main__":
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        # slice(900, None, None),
-        # slice(500, 5000, None),
-        # slice(500, 2500, None),
-        slice(900, None, None),
-        slice(500, 4500, None),
-        slice(500, 2500, None),
+        slice(200, 400, None),
+        slice(1000, 4000, None),
+        slice(2000, None, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
     )
 
     imgs_ls = (
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        ("raw", 10000),
+        # ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
         # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
-        # ("overlap", 10000),
-        # ("bgrm", 2000),
-        # ("dog", 100),
-        # ("adaptv", 100),
+        ("overlap", 10000),
+        ("bgrm", 2000),
+        ("dog", 100),
+        ("adaptv", 100),
         # ("threshd", 5),
-        # ("sizes", 10000),
-        # ("filt", 5),
-        # ("maxima", 5),
-        ("filt_final", 5),
-        ("maxima_final", 1),
+        ("sizes", 10000),
+        ("filt", 5),
+        ("maxima", 5),
+        # ("filt_final", 5),
+        # ("maxima_final", 1),
         # POST
         # ("points_check", 5),
         # ("heatmap_check", 20),

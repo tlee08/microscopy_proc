@@ -1,5 +1,6 @@
 import os
 import re
+from time import sleep
 
 import dask.dataframe as dd
 import numpy as np
@@ -7,6 +8,7 @@ import pandas as pd
 import SimpleITK as sitk
 
 from microscopy_proc.utils.io_utils import silentremove
+from microscopy_proc.utils.multiproc_utils import get_cpid
 
 
 def registration(
@@ -29,7 +31,6 @@ def registration(
     elastix_img_filt.SetFixedImage(sitk.ReadImage(fixed_img_fp))
     elastix_img_filt.SetMovingImage(sitk.ReadImage(moving_img_fp))
     elastix_img_filt.SetOutputDirectory(output_img_dir)
-
     # Parameter maps: translation, affine, bspline
     # Translation
     # parameter_map_translation = sitk.GetDefaultParameterMap("translation")
@@ -46,7 +47,6 @@ def registration(
     else:
         params_bspline = sitk.GetDefaultParameterMap("bspline")
     elastix_img_filt.AddParameterMap(params_bspline)
-
     # Setting feedback and logging settings
     elastix_img_filt.LogToFileOff()
     elastix_img_filt.LogToConsoleOn()
@@ -80,40 +80,49 @@ def transformation_coords(
     Returns:
         A pd.DataFrame of the transformed coordinated from the fixed image space to the moving image space.
     """
-    output_img_dir = os.path.split(output_img_fp)[0]
+    # Getting the child pid of the process
+    cpid = get_cpid()
+    print(cpid)
+    # Loading coords into memory
+    coords = coords.compute() if hasattr(coords, "compute") else coords
+    # coords = coords.compute() if isinstance(coords, Delayed) else coords
+    # Getting the output image directory
+    reg_dir = os.path.dirname(output_img_fp)
+    out_dir = os.path.join(reg_dir, f"transformed_coords_{cpid}")
+    os.makedirs(out_dir, exist_ok=True)
     # Setting up Transformix object
     transformix_img_filt = sitk.TransformixImageFilter()
     # Setting the fixed points and moving and output image filepaths
     # Converting cells array to a fixed_points file
     # NOTE: xyz, NOT zyx
     make_fixed_points_file(
-        coords[["x", "y", "z"]].values, os.path.join(output_img_dir, "temp.dat")
+        coords[["x", "y", "z"]].values, os.path.join(out_dir, "temp.dat")
     )
-    transformix_img_filt.SetFixedPointSetFileName(
-        os.path.join(output_img_dir, "temp.dat")
-    )
+    transformix_img_filt.SetFixedPointSetFileName(os.path.join(out_dir, "temp.dat"))
     transformix_img_filt.SetMovingImage(sitk.ReadImage(moving_img_fp))
-    transformix_img_filt.SetOutputDirectory(output_img_dir)
+    transformix_img_filt.SetOutputDirectory(out_dir)
     # Transform parameter maps: from registration - affine, bspline
     transformix_img_filt.SetTransformParameterMap(
-        sitk.ReadParameterFile(
-            os.path.join(output_img_dir, "TransformParameters.0.txt")
-        )
+        sitk.ReadParameterFile(os.path.join(reg_dir, "TransformParameters.0.txt"))
     )
     transformix_img_filt.AddTransformParameterMap(
-        sitk.ReadParameterFile(
-            os.path.join(output_img_dir, "TransformParameters.1.txt")
-        )
+        sitk.ReadParameterFile(os.path.join(reg_dir, "TransformParameters.1.txt"))
     )
+    # Setting feedback and logging settings
+    transformix_img_filt.LogToFileOff()
+    transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
     transformix_img_filt.Execute()
+    # Waiting to generate file
+    sleep(0.5)
     # Converting transformix output to df
     coords_transformed = transformix_file_to_coords(
-        os.path.join(output_img_dir, "outputpoints.txt")
+        os.path.join(out_dir, "outputpoints.txt")
     )
     # Removing temporary and unecessary transformix files
-    silentremove(os.path.join(output_img_dir, "temp.dat"))
-    silentremove(os.path.join(output_img_dir, "outputpoints.txt"))
+    # silentremove(os.path.join(out_dir, "temp.dat"))
+    # silentremove(os.path.join(out_dir, "outputpoints.txt"))
+    silentremove(out_dir)
     # Returning transformed coords
     return coords_transformed
 
@@ -141,13 +150,18 @@ def transformix_file_to_coords(output_points_fp):
     Returns:
         pd.DataFrame of points with the columns `x`, `y`, and `z`.
     """
-    df = pd.read_csv(output_points_fp, header=None, sep=";")
+    try:
+        df = pd.read_csv(output_points_fp, header=None, sep=";")
+    except pd.errors.EmptyDataError:
+        # If there are no points, then return empty df
+        print(open(output_points_fp).read())
+        return pd.DataFrame(columns=["z", "y", "x"])
     df.columns = df.loc[0].str.strip().str.split(r"\s").str[0]
     # Try either "OutputIndexFixed" or "OutputPoint"
     df = df["OutputPoint"].apply(
         lambda x: [float(i) for i in x.replace(" ]", "").split("[ ")[1].split()]
     )
-    return pd.DataFrame(df.values.tolist(), columns=["x", "y", "z"])
+    return pd.DataFrame(df.values.tolist(), columns=["x", "y", "z"])[["z", "y", "x"]]
 
 
 def transformation_img(

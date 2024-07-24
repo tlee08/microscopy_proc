@@ -6,10 +6,8 @@ import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
 
-from microscopy_proc.funcs.elastix_funcs import (
-    # transformation_img,
-    transformation_coords,
-)
+from microscopy_proc.constants import ROWSPERPART
+from microscopy_proc.funcs.elastix_funcs import transformation_coords
 
 # from prefect import flow
 from microscopy_proc.utils.dask_utils import (
@@ -19,10 +17,11 @@ from microscopy_proc.utils.map_utils import nested_tree_dict_to_df
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 
 
-@cluster_proc_dec(lambda: LocalCluster())
+@cluster_proc_dec(lambda: LocalCluster(n_workers=4, threads_per_worker=1))
 # @flow
 def transform_coords(
     proj_fp_dict: dict,
+    in_id: str,
     z_rough: int,
     y_rough: int,
     x_rough: int,
@@ -33,8 +32,13 @@ def transform_coords(
     y_trim: slice,
     x_trim: slice,
 ):
+    """
+    `in_id` and `out_id` are either maxima or region
+    """
+    # Setting output key (in the form "<maxima/region>_trfm_df")
+    out_id = f"{in_id.split('_')[0]}_trfm_df"
     # Getting cell coords
-    coords = dd.read_parquet(proj_fp_dict["maxima_df"])
+    coords = dd.read_parquet(proj_fp_dict[in_id])
     coords = coords[["z", "y", "x"]]
     # Scaling to resampled rough space
     # NOTE: this downsampling uses slicing so must be computed differently
@@ -47,12 +51,26 @@ def transform_coords(
     )
     # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
     # NOTE: does not work with dask yet
-    coords = coords.compute()
-    coords = transformation_coords(
-        coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+    # coords = coords.compute()
+    # coords_d_ls = coords.to_delayed()
+    # coords_d_ls = [
+    #     transformation_coords(i, proj_fp_dict["ref"], proj_fp_dict["regresult"])
+    #     for i in coords_d_ls
+    # ]
+    # coords_c_ls = dask.compute(i for i in coords_d_ls)
+    # coords = dd.from_delayed(coords_c_ls)
+    coords = coords.repartition(
+        npartitions=int(np.ceil(coords.shape[0].compute() / ROWSPERPART))
     )
-    # Saving to disk
-    dd.from_pandas(coords).to_parquet(proj_fp_dict["maxima_trfm_df"])
+    coords = coords.map_partitions(
+        transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+    )
+    coords.to_parquet(proj_fp_dict[out_id], overwrite=True)
+    # coords = transformation_coords(
+    #     coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+    # )
+    # # Saving to disk
+    # dd.from_pandas(coords).to_parquet(proj_fp_dict[out_id], overwrite=True)
 
 
 # @flow
@@ -92,13 +110,6 @@ def get_cell_mappings(proj_fp_dict: dict):
     with open(proj_fp_dict["map"], "r") as f:
         annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
     # Getting the annotation name for every cell (zyx coord)
-    cells_df = get_cell_mappings_names(cells_df, annot_df)
-    # Saving to disk
-    dd.from_pandas(cells_df).to_parquet(proj_fp_dict["cells_df"])
-
-
-# @flow
-def get_cell_mappings_names(cells_df, annot_df):
     # Left-joining the cells dataframe with the annotation mappings dataframe
     cells_df = pd.merge(
         left=cells_df,
@@ -112,7 +123,8 @@ def get_cell_mappings_names(cells_df, annot_df):
     cells_df.loc[cells_df["id"] == 0, "name"] = "universe"
     # Setting points with no region map name (but have a positive ID value) as "no label" label
     cells_df.loc[cells_df["name"].isna(), "name"] = "no label"
-    return cells_df
+    # Saving to disk
+    dd.from_pandas(cells_df).to_parquet(proj_fp_dict["cells_df"], overwrite=True)
 
 
 if __name__ == "__main__":
@@ -122,9 +134,25 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    # Converting from raw space to refernce atlas space
+    # # Converting maxima from raw space to refernce atlas space
+    # transform_coords(
+    #     proj_fp_dict=proj_fp_dict,
+    #     in_id="maxima_df",
+    #     z_rough=3,
+    #     y_rough=6,
+    #     x_rough=6,
+    #     z_fine=1,
+    #     y_fine=0.6,
+    #     x_fine=0.6,
+    #     z_trim=slice(None, -5),
+    #     y_trim=slice(80, -75),
+    #     x_trim=slice(None, None),
+    # )
+
+    # Converting regions from raw space to refernce atlas space
     transform_coords(
         proj_fp_dict=proj_fp_dict,
+        in_id="region_df",
         z_rough=3,
         y_rough=6,
         x_rough=6,
@@ -136,10 +164,5 @@ if __name__ == "__main__":
         x_trim=slice(None, None),
     )
 
-    # a = transformation_img(
-    #     proj_fp_dict["ref"],
-    #     proj_fp_dict["regresult"],
-    # )
-    # tifffile.imwrite(f'{proj_fp_dict["heatmap_check"]}.tiff', a)
-
+    # get_cell_mappings(proj_fp_dict)
     # get_cell_mappings(proj_fp_dict)
