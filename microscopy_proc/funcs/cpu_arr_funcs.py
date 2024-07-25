@@ -148,7 +148,7 @@ class CpuArrFuncs:
         logging.debug("Labelling contiguous objects uniquely")
         res, _ = cls.xdimage.label(arr)
         logging.debug("Returning")
-        return res.astype(cls.xp.uint32)
+        return res.astype(cls.xp.uint32)  # uint32
 
     @classmethod
     # @task
@@ -176,40 +176,6 @@ class CpuArrFuncs:
         res = counts[arr]
         logging.debug("Returning")
         return res.astype(cls.xp.uint16)
-
-    @classmethod
-    # @task
-    def get_sizes(cls, arr: np.ndarray) -> pd.Series:
-        """
-        Get statistics from a labeled 3D tensor.
-
-        `arr` is a 3D tensor of labels.
-        """
-        logging.debug("Getting sizes of labels")
-        arr = cls.xp.asarray(arr)
-        ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
-        # Returning
-        return pd.Series(
-            counts.astype(np.uint32),
-            index=pd.Index(ids.astype(np.uint32), name="label"),
-            name="size",
-        )
-
-    @classmethod
-    # @task
-    def labels_map(cls, arr: np.ndarray, vect: pd.Series) -> np.ndarray:
-        """
-        NOTE: assumes the `vect` index is incrementing from 1
-        """
-        arr = cls.xp.asarray(arr)
-        logging.debug("Get vector of sizes (including 0)")
-        vect_sizes = cls.xp.concatenate(
-            [cls.xp.asarray([0]), cls.xp.asarray(vect.values)]
-        ).astype(cls.xp.uint32)
-        logging.debug("Convert arr of labels to arr of sizes")
-        res = vect_sizes[arr]
-        # Returning
-        return res
 
     @classmethod
     # @task
@@ -268,8 +234,9 @@ class CpuArrFuncs:
         # Some maxima may be contiguous (i.e. have same maxima value and touching)
         # We only need one of these points so will take the centroid
         logging.debug("Getting centre of mass coords for each label")
-        labels, _ = cls.xdimage.label(res)
-        ids = cls.xp.unique(labels[labels > 0])
+        labels, max_lab_val = cls.xdimage.label(res)
+        ids = cls.xp.arange(1, max_lab_val + 1)
+        # ids = cls.xp.unique(labels[labels > 0])
         # Getting centre of mass coords for each label
         coords = cls.xdimage.center_of_mass(
             input=res.astype(cls.xp.int32),

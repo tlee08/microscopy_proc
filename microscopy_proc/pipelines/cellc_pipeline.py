@@ -78,8 +78,10 @@ def img_proc_pipeline(
     arr_filt = disk_cache(arr_filt, proj_fp_dict["filt"])
 
     # Step 7: Get maxima of image masked by labels
-    arr_maxima = da.map_blocks(GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma)
-    arr_maxima = da.map_blocks(GpuArrFuncs.mask, arr_maxima, arr_filt)
+    arr_maxima = da.map_blocks(
+        GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
+    )
+    # arr_maxima = da.map_blocks(GpuArrFuncs.mask, arr_maxima, arr_filt)
     arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
     # Converting maxima to unique labels
@@ -159,8 +161,8 @@ def img_to_coords_pipeline(proj_fp_dict):
 
 if __name__ == "__main__":
     # Filenames
-    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
@@ -178,6 +180,25 @@ if __name__ == "__main__":
         max_size=10000,
         maxima_sigma=10,
     )
+
+    # cluster = LocalCUDACluster()
+    # client = Client(cluster)
+
+    # # Step 7: Get maxima of image masked by labels
+    # arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
+    # maxima_sigma = 10
+    # arr_filt = da.from_zarr(proj_fp_dict["filt"])
+    # # Step 7: Get maxima of image masked by labels
+    # arr_maxima = da.map_blocks(
+    #     GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
+    # )
+    # # arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
+    # # Step 7: Get maxima of image masked by labels
+    # arr_maxima_labels = da.map_blocks(GpuArrFuncs.label_with_ids, arr_maxima)
+    # arr_maxima_labels = disk_cache(arr_maxima_labels, proj_fp_dict["maxima_labels"])
+
+    # client.close()
+    # cluster.close()
 
     img_get_cell_sizes(proj_fp_dict)
 
