@@ -12,7 +12,7 @@ from microscopy_proc.funcs.reg_funcs import (
     downsmpl_rough_arr,
     reorient_arr,
 )
-from microscopy_proc.utils.dask_utils import cluster_proc_dec
+from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     get_ref_fp_dict,
@@ -51,18 +51,17 @@ def prepare_ref(
     shutil.copyfile(ref_fp_dict["bspline"], proj_fp_dict["bspline"])
 
 
-@cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def prepare_img_rough(proj_fp_dict: dict, z_rough: int, y_rough: int, x_rough: int):
-    # Reading
-    arr_raw = da.from_zarr(proj_fp_dict["raw"])
-    # Rough downsample
-    arr_downsmpl1 = downsmpl_rough_arr(arr_raw, z_rough, y_rough, x_rough).compute()
-    # Saving
-    tifffile.imwrite(proj_fp_dict["downsmpl1"], arr_downsmpl1)
+    with cluster_proc_contxt(LocalCluster()):
+        # Reading
+        arr_raw = da.from_zarr(proj_fp_dict["raw"])
+        # Rough downsample
+        arr_downsmpl1 = downsmpl_rough_arr(arr_raw, z_rough, y_rough, x_rough).compute()
+        # Saving
+        tifffile.imwrite(proj_fp_dict["downsmpl1"], arr_downsmpl1)
 
 
-@cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def prepare_img_fine(proj_fp_dict: dict, z_fine: float, y_fine: float, x_fine: float):
     # Reading
@@ -73,7 +72,6 @@ def prepare_img_fine(proj_fp_dict: dict, z_fine: float, y_fine: float, x_fine: f
     tifffile.imwrite(proj_fp_dict["downsmpl2"], arr_downsmpl2)
 
 
-@cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def prepare_img_trim(proj_fp_dict: dict, z_trim: slice, y_trim: slice, x_trim: slice):
     # Reading
@@ -82,25 +80,6 @@ def prepare_img_trim(proj_fp_dict: dict, z_trim: slice, y_trim: slice, x_trim: s
     arr_trimmed = arr_downsmpl2[z_trim, y_trim, x_trim]
     # Saving
     tifffile.imwrite(proj_fp_dict["trimmed"], arr_trimmed)
-
-
-# @cluster_proc_dec(lambda: LocalCluster())
-# # @flow
-# def prepare_img(
-#     proj_fp_dict: dict,
-#     z_rough: int,
-#     y_rough: int,
-#     x_rough: int,
-#     z_fine: float,
-#     y_fine: float,
-#     x_fine: float,
-#     z_trim: slice,
-#     y_trim: slice,
-#     x_trim: slice,
-# ):
-#     prepare_img_rough(proj_fp_dict, z_rough, y_rough, x_rough)
-#     prepare_img_fine(proj_fp_dict, z_fine, y_fine, x_fine)
-#     prepare_img_trim(proj_fp_dict, z_trim, y_trim, x_trim)
 
 
 if __name__ == "__main__":

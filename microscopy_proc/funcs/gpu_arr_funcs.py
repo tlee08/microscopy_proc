@@ -87,10 +87,10 @@ class GpuArrFuncs(CpuArrFuncs):
 
     @classmethod
     # @task
-    def region_to_coords(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().region_to_coords)(*args, **kwargs)
+    def get_coords(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().get_coords)(*args, **kwargs)
 
     @classmethod
     # @task
-    def maxima_to_coords(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().maxima_to_coords)(*args, **kwargs)
+    def get_cells(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().get_cells)(*args, **kwargs)

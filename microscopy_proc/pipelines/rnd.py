@@ -58,5 +58,5 @@ arr_watershed = GpuArrFuncs.watershed_segm(arr_raw, arr_maxima, arr_labels_filt)
 tifffile.imwrite("10_watershed.tif", arr_watershed)
 
 # Step 11: Get coords of maxima and get corresponding sizes from watershed
-df_cells = GpuArrFuncs.region_to_coords(arr_watershed)
+df_cells = GpuArrFuncs.get_coords(arr_watershed)
 df_cells.to_parquet("11_cells.parquet", overwrite=True)

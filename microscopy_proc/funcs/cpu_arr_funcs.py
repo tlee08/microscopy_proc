@@ -292,7 +292,7 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def region_to_coords(cls, arr: np.ndarray):
+    def get_coords(cls, arr: np.ndarray):
         """
         Get coordinates of regions in 3D tensor.
 
@@ -316,30 +316,41 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def get_cells(cls, arr_raw, arr_maxima_labels, arr_watershed, d=S_DEPTH):
+    def get_cells(
+        cls,
+        # arr_raw: np.ndarray,
+        arr_maxima_labels: np.ndarray,
+        arr_watershed: np.ndarray,
+        d: int = S_DEPTH,
+    ):
         """
-        Get the cells from the maxima labels and the watershed segmentation.
+        Get the cells from the maxima labels and the watershed segmentation
+        (with corresponding labels).
         """
+        logging.debug("Trimming maxima labels array to raw array dimensions")
+        if d > 0:
+            arr_maxima_labels_t = arr_maxima_labels[d:-d, d:-d, d:-d]
+        else:
+            arr_maxima_labels_t = arr_maxima_labels
         logging.debug("Making DataFrame of coordinates (maxima)")
-        z, y, x = np.where(arr_maxima_labels)
-        ids_m = arr_maxima_labels[z, y, x]
+        z, y, x = np.where(arr_maxima_labels_t)
+        ids_m = arr_maxima_labels_t[z, y, x]
         df = pd.DataFrame(
             {
-                "z": z.astype(np.uint16) - d,
-                "y": y.astype(np.uint16) - d,
-                "x": x.astype(np.uint16) - d,
+                "z": z.astype(np.uint16),
+                "y": y.astype(np.uint16),
+                "x": x.astype(np.uint16),
             },
             index=pd.Index(ids_m.astype(np.uint32), name="label"),
         )
-        logging.debug("Making vector of region sizes (corresponding to maxima)")
-        ids_w, counts = cls.xp.unique(
-            arr_watershed[arr_watershed > 0], return_counts=True
-        )
-        df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))
-        logging.debug("Filtering out cells outside of `arr_raw`")
-        shape = arr_raw.shape
-        df = df.query(
-            f"z >= 0 & z < {shape[0]} & y >= 0 & y < {shape[1]} & x >= 0 & x < {shape[2]}"
-        )
+        print("d:", d, "\nsize:", df.shape, "\n*************************************")
+        # logging.debug("Making vector of region sizes (corresponding to maxima)")
+        # ids_w, counts = np.unique(arr_watershed[arr_watershed > 0], return_counts=True)
+        # df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))
+        # logging.debug("Filtering out cells outside of `arr_raw`")
+        # shape = np.array(arr_maxima_labels.shape)
+        # # df = df.query(
+        # #     f"z >= 0 & z < {shape[0]} & y >= 0 & y < {shape[1]} & x >= 0 & x < {shape[2]}"
+        # # )
         # Returning
         return df

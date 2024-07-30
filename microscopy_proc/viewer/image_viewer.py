@@ -8,7 +8,7 @@ import napari
 import tifffile
 from dask.distributed import LocalCluster
 
-from microscopy_proc.utils.dask_utils import cluster_proc_dec
+from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
 
 # %%
@@ -24,30 +24,29 @@ def add_img(viewer, arr, vmax):
     )
 
 
-@cluster_proc_dec(lambda: LocalCluster())
 # @flow
 def view_imgs(fp_ls, vmax_ls, slicer):
-    # Reading arrays
-    arr_ls = []
-    for i in fp_ls:
-        logging.info(i)
-        if ".zarr" in i:
-            arr_ls.append(da.from_zarr(i)[*slicer].compute())
-        elif ".tif" in i:
-            arr_ls.append(tifffile.imread(i)[*slicer])
-
-    # Napari viewer adding images
-    viewer = napari.Viewer()
-    for i, j in zip(arr_ls, vmax_ls):
-        add_img(viewer, i, j)
-
+    with cluster_proc_contxt(LocalCluster()):
+        # Reading arrays
+        arr_ls = []
+        for i in fp_ls:
+            logging.info(i)
+            if ".zarr" in i:
+                arr_ls.append(da.from_zarr(i)[*slicer].compute())
+            elif ".tif" in i:
+                arr_ls.append(tifffile.imread(i)[*slicer])
+        # Napari viewer adding images
+        viewer = napari.Viewer()
+        for i, j in zip(arr_ls, vmax_ls):
+            add_img(viewer, i, j)
+    # Running viewer
     napari.run()
 
 
 if __name__ == "__main__":
     # Filenames
-    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         slice(200, 400, None),
         slice(1000, 4000, None),
-        slice(2000, None, None),
+        slice(2000, 5000, None),
         # slice(None, None, None),
         # slice(None, None, None),
         # slice(None, None, None),
@@ -67,23 +66,26 @@ if __name__ == "__main__":
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        ("raw", 10000),
+        # ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
         # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
-        # ("overlap", 10000),
+        ("overlap", 10000),
         # ("bgrm", 2000),
         # ("dog", 100),
         # ("adaptv", 100),
         # ("threshd", 5),
         # ("sizes", 10000),
         # ("filt", 5),
-        # ("maxima", 5),
+        ("maxima", 5),
+        ("watershed", 5),
+        # CELLC FINAL
         # ("filt_final", 5),
         # ("maxima_final", 2),
+        # ("watershed_final", 5),
         # POST
         # ("points_check", 5),
         # ("heatmap_check", 20),

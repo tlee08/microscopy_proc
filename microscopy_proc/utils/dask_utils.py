@@ -1,3 +1,6 @@
+import contextlib
+from typing import Optional
+
 import dask
 import dask.array
 import dask.array as da
@@ -8,17 +11,24 @@ from dask.distributed import Client
 from microscopy_proc.constants import S_DEPTH
 
 
-def block_to_coords(func, arr_ls: list[da.Array]) -> dd.DataFrame:
+def block_to_coords(
+    func, arr_ls: list[da.Array], args_ls: Optional[list] = []
+) -> dd.DataFrame:
     """
     Applies the `func` to `arr`.
     Expects `func` to convert `arr` to coords df (of sorts).
 
     Importantly, this offsets the coords in each block.
+
+    Process is:
+        - Convert dask arrays to delayed object blocks
+        - Perform `func([arr1_blocki, arr2_blocki, ...], *args)` for each block
+        - At each block, offset the coords by the block's location in the entire array.
     """
 
     @dask.delayed
-    def func_offsetted(block_ls, z_offset, y_offset, x_offset):
-        df = func(*block_ls)
+    def func_offsetted(block_ls, args, z_offset, y_offset, x_offset):
+        df = func(*block_ls, *args)
         df.loc[:, "z"] = df["z"] + z_offset if "z" in df.columns else z_offset
         df.loc[:, "y"] = df["y"] + y_offset if "y" in df.columns else y_offset
         df.loc[:, "x"] = df["x"] + x_offset if "x" in df.columns else x_offset
@@ -30,7 +40,7 @@ def block_to_coords(func, arr_ls: list[da.Array]) -> dd.DataFrame:
     )
     return dd.from_delayed(
         [
-            func_offsetted(block_ls, i, j, k)
+            func_offsetted(block_ls, args_ls, i, j, k)
             for *block_ls, i, j, k in zip(
                 *[i.to_delayed().ravel() for i in arr_ls],
                 inds[0].ravel(),
@@ -82,6 +92,12 @@ def my_configs():
 
 
 def cluster_proc_dec(cluster_factory):
+    """
+    `cluster_factory` is a function that returns a cluster.
+    Makes a Dask cluster and client, runs the function,
+    then closes the client and cluster.
+    """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             cluster = cluster_factory()
@@ -95,3 +111,18 @@ def cluster_proc_dec(cluster_factory):
         return wrapper
 
     return decorator
+
+
+@contextlib.contextmanager
+def cluster_proc_contxt(cluster):
+    """
+    Makes a Dask cluster and client, runs the body in the context manager,
+    then closes the client and cluster.
+    """
+    client = Client(cluster)
+    print(client.dashboard_link)
+    try:
+        yield
+    finally:
+        client.close()
+        cluster.close()
