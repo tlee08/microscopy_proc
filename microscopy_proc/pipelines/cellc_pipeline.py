@@ -56,44 +56,47 @@ def img_proc_pipeline(
         arr_adaptv = da.map_blocks(GpuArrFuncs.gauss_subt_filt, arr_dog, gauss_sigma)
         arr_adaptv = disk_cache(arr_adaptv, proj_fp_dict["adaptv"])
 
+    with cluster_proc_contxt(LocalCluster()):
         # Step 4: Mean thresholding with standard deviation offset
         # Visually inspect sd offset
         t_p = (
             arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
         ).compute()
         print(t_p)
-        arr_threshd = da.map_blocks(GpuArrFuncs.manual_thresh, arr_adaptv, thresh_p)
+        arr_threshd = da.map_blocks(CpuArrFuncs.manual_thresh, arr_adaptv, thresh_p)
         arr_threshd = disk_cache(arr_threshd, proj_fp_dict["threshd"])
 
+    with cluster_proc_contxt(LocalCUDACluster()):
         # Step 5: Object sizes
         arr_sizes = da.map_blocks(GpuArrFuncs.label_with_sizes, arr_threshd)
         arr_sizes = disk_cache(arr_sizes, proj_fp_dict["sizes"])
 
+    with cluster_proc_contxt(LocalCluster()):
         # Step 6: Filter out large objects (likely outlines, not cells)
         # TODO: Need to manually set min_size and max_size
         arr_filt = da.map_blocks(
-            GpuArrFuncs.filt_by_size, arr_sizes, min_size, max_size
+            CpuArrFuncs.filt_by_size, arr_sizes, min_size, max_size
         )
-        arr_filt = da.map_blocks(GpuArrFuncs.manual_thresh, arr_filt, 1)
+        arr_filt = da.map_blocks(CpuArrFuncs.manual_thresh, arr_filt, 1)
         arr_filt = disk_cache(arr_filt, proj_fp_dict["filt"])
 
+    with cluster_proc_contxt(LocalCUDACluster()):
         # Step 7: Get maxima of image masked by labels
         arr_maxima = da.map_blocks(
             GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
         )
-        # arr_maxima = da.map_blocks(GpuArrFuncs.mask, arr_maxima, arr_filt)
         arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
-        # Converting maxima to unique labels
-        arr_maxima_labels = da.map_blocks(GpuArrFuncs.label_with_ids, arr_maxima)
-        arr_maxima_labels = disk_cache(arr_maxima_labels, proj_fp_dict["maxima_labels"])
+    #     # Converting maxima to unique labels
+    #     arr_maxima_labels = da.map_blocks(GpuArrFuncs.label_with_ids, arr_maxima)
+    #     arr_maxima_labels = disk_cache(arr_maxima_labels, proj_fp_dict["maxima_labels"])
 
-    with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
-        # Step 8: Watershed segmentation
-        arr_watershed = da.map_blocks(
-            CpuArrFuncs.watershed_segm, arr_overlap, arr_maxima_labels, arr_filt
-        )
-        arr_watershed = disk_cache(arr_watershed, proj_fp_dict["watershed"])
+    # with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+    #     # Step 8: Watershed segmentation
+    #     arr_watershed = da.map_blocks(
+    #         CpuArrFuncs.watershed_segm, arr_overlap, arr_maxima_labels, arr_filt
+    #     )
+    #     arr_watershed = disk_cache(arr_watershed, proj_fp_dict["watershed"])
 
 
 def img_get_cell_sizes(proj_fp_dict):
@@ -171,19 +174,36 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    img_overlap_pipeline(proj_fp_dict)
+    # img_overlap_pipeline(proj_fp_dict)
 
-    img_proc_pipeline(
-        proj_fp_dict=proj_fp_dict,
-        tophat_sigma=10,
-        dog_sigma1=1,
-        dog_sigma2=4,
-        gauss_sigma=101,
-        thresh_p=32,
-        min_size=100,
-        max_size=10000,
-        maxima_sigma=10,
-    )
+    # img_proc_pipeline(
+    #     proj_fp_dict=proj_fp_dict,
+    #     tophat_sigma=10,
+    #     dog_sigma1=1,
+    #     dog_sigma2=4,
+    #     gauss_sigma=101,
+    #     thresh_p=32,
+    #     min_size=100,
+    #     max_size=10000,
+    #     maxima_sigma=10,
+    # )
+
+    # arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
+    # arr_filt = da.from_zarr(proj_fp_dict["filt"])
+    # with cluster_proc_contxt(LocalCUDACluster()):
+    #     # Step 7: Get maxima of image masked by labels
+    #     arr_maxima = da.map_blocks(CpuArrFuncs.block_inf, arr_overlap, arr_filt)
+    #     arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
+
+    arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
+    arr_filt = da.from_zarr(proj_fp_dict["filt"])
+    maxima_sigma = 10
+    with cluster_proc_contxt(LocalCUDACluster()):
+        # Step 7: Get maxima of image masked by labels
+        arr_maxima = da.map_blocks(
+            GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
+        )
+        arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
     # img_get_cell_sizes(proj_fp_dict)
 

@@ -215,9 +215,18 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def get_local_maxima(cls, arr: np.ndarray, sigma=10, arr_mask=None):
+    def get_local_maxima(
+        cls,
+        arr: np.ndarray,
+        sigma: int = 10,
+        arr_mask: np.ndarray = None,
+        block_info=None,
+    ):
         """
-        NOTE: there can be multiple maxima per label
+        Getting local maxima (no connectivity) in a 3D tensor.
+        If there is a connected region of maxima, then only the centre point is kept.
+
+        If `arr_mask` is provided, then only maxima within the mask are kept.
         """
         arr = cls.xp.asarray(arr)
         logging.debug("Making max filter for raw arr (holds the maximum in given area)")
@@ -226,28 +235,27 @@ class CpuArrFuncs:
         arr = arr + 1
         logging.debug("Getting local maxima (where arr - max_arr == 1)")
         res = arr - max_arr == 1
-        # If a mask is given, then only keep maxima within the mask
+        # If a mask is given, then keep only the maxima within the mask
         if arr_mask is not None:
             logging.debug("Mask provided. Maxima will only be found within regions.")
             arr_mask = (cls.xp.asarray(arr_mask) > 0).astype(cls.xp.uint8)
             res = res * arr_mask
-        # Some maxima may be contiguous (i.e. have same maxima value and touching)
-        # We only need one of these points so will take the centroid
-        logging.debug("Getting centre of mass coords for each label")
-        labels, max_lab_val = cls.xdimage.label(res)
-        ids = cls.xp.arange(1, max_lab_val + 1)
-        # ids = cls.xp.unique(labels[labels > 0])
-        # Getting centre of mass coords for each label
-        coords = cls.xdimage.center_of_mass(
-            input=res.astype(cls.xp.int32),
-            labels=labels.astype(cls.xp.int32),
-            index=ids.astype(cls.xp.int32),
-        )
-        coords = cls.xp.asarray(coords).round().astype(cls.xp.uint16)
-        # Converting coords to spatial
-        logging.debug("Converting coords to spatial")
-        res = cls.xp.zeros(arr.shape, dtype=cls.xp.uint16)
-        res[*coords.T] = 1
+
+        # # Some maxima may be contiguous (i.e. have same maxima value and touching)
+        # # We only need one of these points so will take the centroid
+        # labels, max_lab_val = cls.xdimage.label(res)
+        # ids, counts = cls.xp.unique(labels[labels > 0], return_counts=True)
+        # # Getting centre of mass coords for each label
+        # coords = cls.xdimage.center_of_mass(
+        #     input=res.astype(cls.xp.int32),
+        #     labels=labels.astype(cls.xp.int32),
+        #     index=ids.astype(cls.xp.int32),
+        # ).round().astype(cls.xp.uint16)
+        # # Converting coords to spatial
+        # res = cls.xp.zeros(arr.shape, dtype=cls.xp.uint16)
+        # if coords.shape[0] > 0:
+        #     res[*coords.T] = 1
+
         # Returning
         return res
 
@@ -343,7 +351,7 @@ class CpuArrFuncs:
             },
             index=pd.Index(ids_m.astype(np.uint32), name="label"),
         )
-        print("d:", d, "\nsize:", df.shape, "\n*************************************")
+        # print("d:", d, "\nsize:", df.shape, "\n*************************************")
         # logging.debug("Making vector of region sizes (corresponding to maxima)")
         # ids_w, counts = np.unique(arr_watershed[arr_watershed > 0], return_counts=True)
         # df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))

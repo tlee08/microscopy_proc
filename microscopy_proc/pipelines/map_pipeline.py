@@ -46,20 +46,22 @@ def transform_coords(
         coords = coords - np.array(
             [s.start if s.start else 0 for s in (z_trim, y_trim, x_trim)]
         )
-        # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
-        # NOTE: does not work with dask yet
-        # coords = coords.repartition(
-        #     npartitions=int(np.ceil(coords.shape[0].compute() / ROWSPERPART))
-        # )
-        coords = coords.map_partitions(
-            transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+
+        nparts = coords.npartitions
+        coords = coords.compute()
+        coords = transformation_coords(
+            coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
         )
-        coords.to_parquet(proj_fp_dict[out_id], overwrite=True)
-        # coords = transformation_coords(
-        #     coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+        coords = dd.from_pandas(coords, npartitions=nparts)
+        # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
+        # # NOTE: does not work with dask yet
+        # coords = coords.repartition(
+        #     npartitions=int(np.ceil(coords.shape[0].compute() / ROWSPPART))
         # )
-        # # Saving to disk
-        # dd.from_pandas(coords).to_parquet(proj_fp_dict[out_id], overwrite=True)
+        # coords = coords.map_partitions(
+        #     transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+        # )
+        coords.to_parquet(proj_fp_dict[out_id], overwrite=True)
 
 
 # @flow
@@ -70,8 +72,8 @@ def get_cell_mappings(proj_fp_dict: dict):
     """
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells dataframe
-        cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"])
-        coords_trfm = dd.read_parquet(proj_fp_dict["cells_trfm_df"])
+        cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        coords_trfm = dd.read_parquet(proj_fp_dict["cells_trfm_df"]).compute()
         # Making unique index
         cells_df = cells_df.reset_index(drop=True)
         # Setting the transformed coords
@@ -105,7 +107,7 @@ def get_cell_mappings(proj_fp_dict: dict):
             annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
         # Getting the annotation name for every cell (zyx coord)
         # Left-joining the cells dataframe with the annotation mappings dataframe
-        cells_df = dd.merge(
+        cells_df = pd.merge(
             left=cells_df,
             right=annot_df,
             how="left",
@@ -132,7 +134,7 @@ def grouping_cells(proj_fp_dict: dict):
         # Grouping cells by region name
         cells_grouped = cells_df.groupby("name").agg(
             {
-                "size": "sum",
+                # "size": "sum",
                 "id": "count",
             }
         )
@@ -148,19 +150,19 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(
-        proj_fp_dict=proj_fp_dict,
-        in_id="cells_raw_df",
-        z_rough=3,
-        y_rough=6,
-        x_rough=6,
-        z_fine=1,
-        y_fine=0.6,
-        x_fine=0.6,
-        z_trim=slice(None, -5),
-        y_trim=slice(80, -75),
-        x_trim=slice(None, None),
-    )
+    # transform_coords(
+    #     proj_fp_dict=proj_fp_dict,
+    #     in_id="cells_raw_df",
+    #     z_rough=3,
+    #     y_rough=6,
+    #     x_rough=6,
+    #     z_fine=1,
+    #     y_fine=0.6,
+    #     x_fine=0.6,
+    #     z_trim=slice(None, -5),
+    #     y_trim=slice(80, -75),
+    #     x_trim=slice(None, None),
+    # )
 
     get_cell_mappings(proj_fp_dict)
 

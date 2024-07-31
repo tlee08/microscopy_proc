@@ -45,8 +45,8 @@ def view_imgs(fp_ls, vmax_ls, slicer):
 
 if __name__ == "__main__":
     # Filenames
-    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
@@ -54,9 +54,9 @@ if __name__ == "__main__":
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        slice(200, 400, None),
+        slice(300, 400, None),
         slice(1000, 4000, None),
-        slice(2000, 5000, None),
+        slice(1000, 5000, None),
         # slice(None, None, None),
         # slice(None, None, None),
         # slice(None, None, None),
@@ -74,14 +74,14 @@ if __name__ == "__main__":
         # ("regresult", 10000),
         # CELLC
         ("overlap", 10000),
-        # ("bgrm", 2000),
-        # ("dog", 100),
-        # ("adaptv", 100),
-        # ("threshd", 5),
-        # ("sizes", 10000),
-        # ("filt", 5),
-        ("maxima", 5),
-        ("watershed", 5),
+        ("bgrm", 2000),
+        ("dog", 100),
+        ("adaptv", 100),
+        ("threshd", 5),
+        ("sizes", 10000),
+        ("filt", 5),
+        # ("maxima", 5),
+        # ("watershed", 5),
         # CELLC FINAL
         # ("filt_final", 5),
         # ("maxima_final", 2),
