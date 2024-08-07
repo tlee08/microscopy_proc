@@ -7,7 +7,7 @@ import dask.dataframe as dd
 import numpy as np
 from dask.distributed import Client
 
-from microscopy_proc.constants import S_DEPTH
+from microscopy_proc.constants import DEPTH
 
 
 def block_to_coords(func, *args: list) -> dd.DataFrame:
@@ -80,7 +80,7 @@ def disk_cache(arr: da.Array, fp):
     return da.from_zarr(fp)
 
 
-def my_trim(arr, d=S_DEPTH):
+def my_trim(arr, d=DEPTH):
     return arr.map_blocks(
         lambda x: x[d:-d, d:-d, d:-d],
         chunks=[tuple(np.array(i) - d * 2) for i in arr.chunks],

@@ -1,9 +1,7 @@
 from microscopy_proc.pipelines.cellc_pipeline import (
-    img_get_cell_sizes,
     img_overlap_pipeline,
     img_proc_pipeline,
     img_to_cells_pipeline,
-    img_trim_pipeline,
 )
 from microscopy_proc.pipelines.make_zarr import tiff_to_zarr
 from microscopy_proc.pipelines.reg_pipeline import (
@@ -32,9 +30,6 @@ if __name__ == "__main__":
     atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
 
     ref_fp_dict = get_ref_fp_dict(atlas_rsc_dir)
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
-    make_proj_dirs(proj_dir)
-
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
@@ -93,9 +88,5 @@ if __name__ == "__main__":
         max_size=10000,
         maxima_sigma=10,
     )
-
-    img_get_cell_sizes(proj_fp_dict)
-
-    img_trim_pipeline(proj_fp_dict)
 
     img_to_cells_pipeline(proj_fp_dict)

@@ -20,15 +20,15 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
     with cluster_proc_contxt(LocalCluster()):
-        df = dd.read_parquet(proj_fp_dict["cells_raw_df"])
-        coords_to_heatmaps(
-            df,
-            5,
-            da.from_zarr(proj_fp_dict["raw"]).shape,
-            proj_fp_dict["heatmap_check"],
-        )
+        # df = dd.read_parquet(proj_fp_dict["cells_raw_df"])
+        # coords_to_heatmaps(
+        #     df,
+        #     5,
+        #     da.from_zarr(proj_fp_dict["raw"]).shape,
+        #     proj_fp_dict["heatmap_check"],
+        # )
 
-        df = dd.read_parquet(proj_fp_dict["cells_raw_df"])
+        df = dd.read_parquet(proj_fp_dict["cells_df"])
         coords_to_points(
             df,
             da.from_zarr(proj_fp_dict["raw"]).shape,
