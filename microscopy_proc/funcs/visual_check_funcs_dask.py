@@ -124,9 +124,10 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
     # Initialising spatial array
     arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
-    arr = arr.map_blocks(
-        lambda i, block_info=None: coords_to_points_workers(i, coords, block_info)
-    )
+    # arr = arr.map_blocks(
+    #     lambda i, block_info=None: coords_to_points_workers(i, coords, block_info)
+    # )
+    arr = da.map_blocks(coords_to_points_workers, arr, coords)
     # Computing and saving
     arr.to_zarr(arr_out_fp, overwrite=True)
 

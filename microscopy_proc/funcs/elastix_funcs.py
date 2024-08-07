@@ -80,14 +80,12 @@ def transformation_coords(
         A pd.DataFrame of the transformed coordinated from the fixed image space to the moving image space.
     """
     # Getting the child pid of the process
-    cpid = get_cpid()
-    print(cpid)
     # Loading coords into memory
     coords = coords.compute() if hasattr(coords, "compute") else coords
     # coords = coords.compute() if isinstance(coords, Delayed) else coords
     # Getting the output image directory
     reg_dir = os.path.dirname(output_img_fp)
-    out_dir = os.path.join(reg_dir, f"transformed_coords_{cpid}")
+    out_dir = os.path.join(reg_dir, f"transformed_coords_{get_cpid()}")
     os.makedirs(out_dir, exist_ok=True)
     # Setting up Transformix object
     transformix_img_filt = sitk.TransformixImageFilter()

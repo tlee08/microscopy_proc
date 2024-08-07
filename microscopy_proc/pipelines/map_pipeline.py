@@ -6,9 +6,8 @@ import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
 
-from microscopy_proc.funcs.elastix_funcs import transformation_coords
-
 # from prefect import flow
+from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.map_utils import nested_tree_dict_to_df
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
@@ -17,7 +16,6 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 # @flow
 def transform_coords(
     proj_fp_dict: dict,
-    in_id: str,
     z_rough: int,
     y_rough: int,
     x_rough: int,
@@ -33,33 +31,32 @@ def transform_coords(
     """
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # Setting output key (in the form "<maxima/region>_trfm_df")
-        out_id = f"{in_id.split('_')[0]}_trfm_df"
         # Getting cell coords
-        coords = dd.read_parquet(proj_fp_dict[in_id]).compute()
-        coords = coords[["z", "y", "x"]]
+        cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        cells_df = cells_df[["z", "y", "x"]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
-        coords = coords / np.array((z_rough, y_rough, x_rough))
+        cells_df = cells_df / np.array((z_rough, y_rough, x_rough))
         # Scaling to resampled space
-        coords = coords * np.array((z_fine, y_fine, x_fine))
+        cells_df = cells_df * np.array((z_fine, y_fine, x_fine))
         # Trimming/offsetting to sliced space
-        coords = coords - np.array(
+        cells_df = cells_df - np.array(
             [s.start if s.start else 0 for s in (z_trim, y_trim, x_trim)]
         )
 
-        coords = transformation_coords(
-            coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+        cells_df = transformation_coords(
+            cells_df, proj_fp_dict["ref"], proj_fp_dict["regresult"]
         )
-        coords = dd.from_pandas(coords, npartitions=1)
+        cells_df = dd.from_pandas(cells_df, npartitions=1)
         # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
-        # # NOTE: does not work with dask yet
-        # coords = coords.repartition(
-        #     npartitions=int(np.ceil(coords.shape[0].compute() / ROWSPPART))
+        # NOTE: does not work with dask yet
+        # cells_df = cells_df.repartition(
+        #     npartitions=int(np.ceil(cells_df.shape[0].compute() / ROWSPPART))
         # )
-        # coords = coords.map_partitions(
+        # cells_df = cells_df.map_partitions(
         #     transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
         # )
-        coords.to_parquet(proj_fp_dict[out_id], overwrite=True)
+        cells_df.to_parquet(proj_fp_dict["cells_trfm_df"], overwrite=True)
 
 
 # @flow
@@ -97,8 +94,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         cells_df["id"] = pd.Series(
             annot_arr[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
-        )
-        cells_df["id"] = cells_df["id"].fillna(-1)
+        ).fillna(-1)
 
         # Reading annotation mappings dataframe
         with open(proj_fp_dict["map"], "r") as f:
@@ -118,7 +114,8 @@ def get_cell_mappings(proj_fp_dict: dict):
         # Setting points with no region map name (but have a positive ID value) as "no label" label
         cells_df.loc[cells_df["name"].isna(), "name"] = "no label"
         # Saving to disk
-        dd.from_pandas(cells_df).to_parquet(proj_fp_dict["cells_df"], overwrite=True)
+        cells_df = dd.from_pandas(cells_df)
+        cells_df.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
 
 
 def grouping_cells(proj_fp_dict: dict):
@@ -150,7 +147,6 @@ if __name__ == "__main__":
     # Converting maxima from raw space to refernce atlas space
     transform_coords(
         proj_fp_dict=proj_fp_dict,
-        in_id="cells_raw_df",
         z_rough=3,
         y_rough=6,
         x_rough=6,
