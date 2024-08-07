@@ -54,7 +54,7 @@ arr_maxima = GpuArrFuncs.mask(arr_maxima, arr_labels_filt)
 tifffile.imwrite("8_maxima.tif", arr_maxima)
 
 # Step 9: Making labels from maxima (i.e different ID for each maxima)
-arr_watershed = GpuArrFuncs.watershed_segm(arr_raw, arr_maxima, arr_labels_filt)
+arr_watershed = GpuArrFuncs.wshed_segm(arr_raw, arr_maxima, arr_labels_filt)
 tifffile.imwrite("10_watershed.tif", arr_watershed)
 
 # Step 11: Get coords of maxima and get corresponding sizes from watershed

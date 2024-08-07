@@ -148,7 +148,23 @@ class CpuArrFuncs:
         logging.debug("Labelling contiguous objects uniquely")
         res, _ = cls.xdimage.label(arr)
         logging.debug("Returning")
-        return res.astype(cls.xp.uint32)  # uint32
+        return res.astype(cls.xp.uint32)
+
+    @classmethod
+    # @task
+    def ids_to_sizes(cls, arr: np.ndarray) -> np.ndarray:
+        """
+        Convert labels to sizes.
+        """
+        arr = cls.xp.asarray(arr)
+        logging.debug("Getting vector of ids and sizes (not incl. 0)")
+        ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
+        # NOTE: assumes ids are incrementing from 1
+        counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
+        logging.debug("Converting arr intensity to sizes")
+        res = counts[arr]
+        logging.debug("Returning")
+        return res.astype(cls.xp.uint16)
 
     @classmethod
     # @task
@@ -157,25 +173,8 @@ class CpuArrFuncs:
         Label objects in a 3D tensor.
         """
         arr = cls.label_with_ids(arr)
-        res = cls.label_ids_to_sizes(arr)
-        return cls.xp.asarray(res)
-
-    @classmethod
-    # @task
-    def label_ids_to_sizes(cls, arr: np.ndarray) -> np.ndarray:
-        """
-        Label objects in a 3D tensor.
-
-        Assumes `arr` already has unique labels for each object.
-        """
-        logging.debug("Getting vector of ids and sizes (not incl. 0)")
-        ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
-        # NOTE: assumes ids is perfectly incrementing from 1
-        counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
-        logging.debug("Converting arr intensity to sizes")
-        res = counts[arr]
-        logging.debug("Returning")
-        return res.astype(cls.xp.uint16)
+        res = cls.ids_to_sizes(arr)
+        return res
 
     @classmethod
     # @task
@@ -240,22 +239,6 @@ class CpuArrFuncs:
             logging.debug("Mask provided. Maxima will only be found within regions.")
             arr_mask = (cls.xp.asarray(arr_mask) > 0).astype(cls.xp.uint8)
             res = res * arr_mask
-
-        # # Some maxima may be contiguous (i.e. have same maxima value and touching)
-        # # We only need one of these points so will take the centroid
-        # labels, max_lab_val = cls.xdimage.label(res)
-        # ids, counts = cls.xp.unique(labels[labels > 0], return_counts=True)
-        # # Getting centre of mass coords for each label
-        # coords = cls.xdimage.center_of_mass(
-        #     input=res.astype(cls.xp.int32),
-        #     labels=labels.astype(cls.xp.int32),
-        #     index=ids.astype(cls.xp.int32),
-        # ).round().astype(cls.xp.uint16)
-        # # Converting coords to spatial
-        # res = cls.xp.zeros(arr.shape, dtype=cls.xp.uint16)
-        # if coords.shape[0] > 0:
-        #     res[*coords.T] = 1
-
         # Returning
         return res
 
@@ -271,7 +254,7 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def watershed_segm(
+    def wshed_segm(
         cls, arr_raw: np.ndarray, arr_maxima: np.ndarray, arr_mask: np.ndarray
     ):
         """
@@ -279,22 +262,29 @@ class CpuArrFuncs:
 
         Expects `arr_maxima` to have unique labels for each maxima.
         """
-        # logging.debug("Labelling maxima objects")
-        # arr_maxima, _ = cls.xdimage.label(arr_maxima)
-        # logging.debug("Padding everything with a 1 pixel empty border")
-        # arr_raw = cls.xp.pad(arr_raw, pad_width=1, mode="constant", constant_values=0)
-        # arr_maxima = cls.xp.pad(
-        #     arr_maxima, pad_width=1, mode="constant", constant_values=0
-        # )
-        # arr_mask = cls.xp.pad(arr_mask, pad_width=1, mode="constant", constant_values=0)
         logging.debug("Watershed segmentation")
         res = watershed(
             image=-arr_raw,
             markers=arr_maxima,
             mask=arr_mask > 0,
         )
-        # logging.debug("Unpadding")
-        # res = res[1:-1, 1:-1, 1:-1].astype(np.uint32)
+        # Returning
+        return res
+
+    @classmethod
+    # @task
+    def wshed_segm_sizes(
+        cls, arr_raw: np.ndarray, arr_maxima: np.ndarray, arr_mask: np.ndarray
+    ):
+        """
+        NOTE: NOT GPU accelerated
+        """
+        # Labelling contiguous maxima with unique labels
+        arr_maxima = cls.label_with_ids(arr_maxima)
+        # Watershed segmentation
+        arr_wshed = cls.wshed_segm(arr_raw, arr_maxima, arr_mask)
+        # Getting sizes of watershed regions
+        res = cls.ids_to_sizes(arr_wshed)
         # Returning
         return res
 
@@ -325,89 +315,6 @@ class CpuArrFuncs:
     @classmethod
     # @task
     def get_cells(
-        cls,
-        # arr_raw: np.ndarray,
-        arr_maxima_labels: np.ndarray,
-        arr_wshed: np.ndarray,
-        d: int = S_DEPTH,
-    ):
-        """
-        Get the cells from the maxima labels and the watershed segmentation
-        (with corresponding labels).
-        """
-        logging.debug("Trimming maxima labels array to raw array dimensions")
-        if d > 0:
-            arr_maxima_labels_t = arr_maxima_labels[d:-d, d:-d, d:-d]
-        else:
-            arr_maxima_labels_t = arr_maxima_labels
-        logging.debug("Making DataFrame of coordinates (maxima)")
-        z, y, x = np.where(arr_maxima_labels_t)
-        ids_m = arr_maxima_labels_t[z, y, x]
-        df = pd.DataFrame(
-            {
-                "z": z.astype(np.uint16),
-                "y": y.astype(np.uint16),
-                "x": x.astype(np.uint16),
-            },
-            index=pd.Index(ids_m.astype(np.uint32), name="label"),
-        )
-        # print("d:", d, "\nsize:", df.shape, "\n*************************************")
-        # logging.debug("Making vector of region sizes (corresponding to maxima)")
-        # ids_w, counts = np.unique(arr_wshed[arr_wshed > 0], return_counts=True)
-        # df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))
-        # logging.debug("Filtering out cells outside of `arr_raw`")
-        # shape = np.array(arr_maxima_labels.shape)
-        # # df = df.query(
-        # #     f"z >= 0 & z < {shape[0]} & y >= 0 & y < {shape[1]} & x >= 0 & x < {shape[2]}"
-        # # )
-        # Returning
-        return df
-
-    @classmethod
-    # @task
-    def get_cells2(
-        cls,
-        arr_overlap: np.ndarray,
-        arr_maxima: np.ndarray,
-        arr_mask: np.ndarray,
-        d: int = S_DEPTH,
-    ):
-        """
-        Get the cells from the maxima labels and the watershed segmentation
-        (with corresponding labels).
-        """
-        logging.debug("Getting unique labels in arr_maxima")
-        arr_maxima_labels = cls.label_with_ids(arr_maxima)
-        logging.debug("Trimming maxima labels array to raw array dimensions")
-        arr_maxima_labels_t = (
-            arr_maxima_labels[d:-d, d:-d, d:-d] if d > 0 else arr_maxima_labels
-        )
-        logging.debug("Converting to DataFrame of coordinates and sizes")
-        # NOTE: gets centre coord of each unique label
-        # (by getting all coords for each label and taking mean)
-        z, y, x = cls.xp.where(cls.xp.array(arr_maxima_labels_t))
-        z, y, x = arr_cp2np(z), arr_cp2np(y), arr_cp2np(x)
-        ids_m = arr_maxima_labels_t[z, y, x].astype(np.uint32)
-        df = pd.DataFrame(
-            {"z": z, "y": y, "x": x},
-            index=pd.Index(ids_m, name="label"),
-        )
-        logging.debug("Getting unique ave (centre) x,y,z for each unique label")
-        df = df.groupby(level="label").mean().round().astype(np.uint16)
-        logging.debug("Getting wshed of arr_overlap, seeds arr_maxima, mask arr_mask")
-        arr_wshed = cls.watershed_segm(arr_overlap, arr_maxima_labels, arr_mask)
-        arr_wshed = cls.xp.asarray(arr_wshed)
-        ids_w, counts = cls.xp.unique(arr_wshed[arr_wshed > 0], return_counts=True)
-        ids_w = arr_cp2np(ids_w).astype(np.uint32)
-        counts = arr_cp2np(counts).astype(np.uint32)
-        logging.debug("Making vector of region sizes (corresponding to maxima)")
-        df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))
-        # Returning
-        return df
-
-    @classmethod
-    # @task
-    def get_cells3(
         cls,
         arr_overlap: np.ndarray,
         arr_maxima: np.ndarray,
@@ -440,10 +347,7 @@ class CpuArrFuncs:
             .astype(np.uint16)
         )
         logging.debug("Watershed of arr_overlap, seeds arr_maxima, mask arr_mask")
-        arr_wshed = cls.watershed_segm(
-            arr_overlap, arr_cp2np(arr_maxima_labels), arr_mask
-        )
-        arr_wshed = cls.xp.asarray(arr_wshed)
+        arr_wshed = cls.wshed_segm(arr_overlap, arr_cp2np(arr_maxima_labels), arr_mask)
         logging.debug("Making vector of region sizes (corresponding to maxima)")
         ids_w, counts = cls.xp.unique(arr_wshed[arr_wshed > 0], return_counts=True)
         ids_w = arr_cp2np(ids_w).astype(np.uint32)

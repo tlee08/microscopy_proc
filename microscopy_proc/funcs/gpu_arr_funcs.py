@@ -53,12 +53,13 @@ class GpuArrFuncs(CpuArrFuncs):
     @classmethod
     # @task
     def label_with_sizes(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().label_with_sizes)(*args, **kwargs).get()
+        # NOTE: Already returns a numpy array
+        return clear_cuda_mem_dec(super().label_with_sizes)(*args, **kwargs)
 
     @classmethod
     # @task
-    def label_ids_to_sizes(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().label_ids_to_sizes)(*args, **kwargs).get()
+    def ids_to_sizes(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().ids_to_sizes)(*args, **kwargs).get()
 
     @classmethod
     # @task
@@ -82,9 +83,15 @@ class GpuArrFuncs(CpuArrFuncs):
 
     @classmethod
     # @task
-    def watershed_segm(cls, *args, **kwargs):
+    def wshed_segm(cls, *args, **kwargs):
         # NOTE: This is a CPU function
-        return clear_cuda_mem_dec(super().watershed_segm)(*args, **kwargs)
+        return clear_cuda_mem_dec(super().wshed_segm)(*args, **kwargs)
+
+    @classmethod
+    # @task
+    def wshed_segm_sizes(cls, *args, **kwargs):
+        # NOTE: This is a CPU function
+        return clear_cuda_mem_dec(super().wshed_segm_sizes)(*args, **kwargs)
 
     @classmethod
     # @task
@@ -95,13 +102,3 @@ class GpuArrFuncs(CpuArrFuncs):
     # @task
     def get_cells(cls, *args, **kwargs):
         return clear_cuda_mem_dec(super().get_cells)(*args, **kwargs)
-
-    @classmethod
-    # @task
-    def get_cells2(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().get_cells2)(*args, **kwargs)
-
-    @classmethod
-    # @task
-    def get_cells3(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().get_cells3)(*args, **kwargs)
