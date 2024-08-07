@@ -9,7 +9,7 @@ import seaborn as sns
 from scipy import ndimage as sc_ndimage
 from skimage.segmentation import watershed
 
-from microscopy_proc.constants import S_DEPTH
+from microscopy_proc.constants import DEPTH
 
 
 class CpuArrFuncs:
@@ -319,7 +319,7 @@ class CpuArrFuncs:
         arr_overlap: np.ndarray,
         arr_maxima: np.ndarray,
         arr_mask: np.ndarray,
-        d: int = S_DEPTH,
+        d: int = DEPTH,
     ):
         """
         Get the cells from the maxima labels and the watershed segmentation
