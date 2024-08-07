@@ -104,7 +104,11 @@ def img_get_cell_sizes(proj_fp_dict):
         # Loading in arrs
         arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
         arr_filt = da.from_zarr(proj_fp_dict["filt"])
-        arr_maxima_labels = da.from_zarr(proj_fp_dict["maxima_labels"])
+        arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
+
+        # Converting maxima to unique labels
+        arr_maxima_labels = da.map_blocks(GpuArrFuncs.label_with_ids, arr_maxima)
+        arr_maxima_labels = disk_cache(arr_maxima_labels, proj_fp_dict["maxima_labels"])
 
         # Step 8: Watershed segmentation
         arr_watershed = da.map_blocks(
@@ -188,26 +192,56 @@ if __name__ == "__main__":
     #     maxima_sigma=10,
     # )
 
+    # img_get_cell_sizes(proj_fp_dict)
+
     # arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
     # arr_filt = da.from_zarr(proj_fp_dict["filt"])
+    # maxima_sigma = 10
     # with cluster_proc_contxt(LocalCUDACluster()):
     #     # Step 7: Get maxima of image masked by labels
-    #     arr_maxima = da.map_blocks(CpuArrFuncs.block_inf, arr_overlap, arr_filt)
+    #     arr_maxima = da.map_blocks(
+    #         GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
+    #     )
     #     arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
-
-    arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
-    arr_filt = da.from_zarr(proj_fp_dict["filt"])
-    maxima_sigma = 10
-    with cluster_proc_contxt(LocalCUDACluster()):
-        # Step 7: Get maxima of image masked by labels
-        arr_maxima = da.map_blocks(
-            GpuArrFuncs.get_local_maxima, arr_overlap, maxima_sigma, arr_filt
-        )
-        arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
     # img_get_cell_sizes(proj_fp_dict)
 
-    img_trim_pipeline(proj_fp_dict)
+    # img_trim_pipeline(proj_fp_dict)
 
-    img_to_cells_pipeline(proj_fp_dict)
-    img_to_coords_pipeline(proj_fp_dict)
+    # img_to_cells_pipeline(proj_fp_dict)
+    # img_to_coords_pipeline(proj_fp_dict)
+
+    from time import time
+
+    t0_i = time()
+    # # with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
+    # with cluster_proc_contxt(LocalCUDACluster()):
+    #     # Loading in arrs
+    #     arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
+    #     arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
+    #     arr_filt = da.from_zarr(proj_fp_dict["filt"])
+    #     # Getting anything inside boundary
+    #     cells_df = block_to_coords(
+    #         GpuArrFuncs.get_cells2, arr_overlap, arr_maxima, arr_filt, 10
+    #     )
+    #     cells_df.to_parquet(proj_fp_dict["cells_raw_df"] + "A.parquet", overwrite=True)
+    t0_f = time()
+
+    t1_i = time()
+    # with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
+    with cluster_proc_contxt(LocalCUDACluster()):
+        # Loading in arrs
+        arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
+        arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
+        arr_filt = da.from_zarr(proj_fp_dict["filt"])
+        # Getting anything inside boundary
+        cells_df = block_to_coords(
+            GpuArrFuncs.get_cells3, arr_overlap, arr_maxima, arr_filt, 10
+        )
+        cells_df.to_parquet(proj_fp_dict["cells_raw_df"] + "B.parquet", overwrite=True)
+    t1_f = time()
+
+    print("****************************************")
+    print(t0_f - t0_i)
+    print(t1_f - t1_i)
+    print("****************************************")

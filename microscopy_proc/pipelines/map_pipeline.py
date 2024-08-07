@@ -35,7 +35,7 @@ def transform_coords(
         # Setting output key (in the form "<maxima/region>_trfm_df")
         out_id = f"{in_id.split('_')[0]}_trfm_df"
         # Getting cell coords
-        coords = dd.read_parquet(proj_fp_dict[in_id])
+        coords = dd.read_parquet(proj_fp_dict[in_id]).compute()
         coords = coords[["z", "y", "x"]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
@@ -47,12 +47,10 @@ def transform_coords(
             [s.start if s.start else 0 for s in (z_trim, y_trim, x_trim)]
         )
 
-        nparts = coords.npartitions
-        coords = coords.compute()
         coords = transformation_coords(
             coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
         )
-        coords = dd.from_pandas(coords, npartitions=nparts)
+        coords = dd.from_pandas(coords, npartitions=1)
         # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
         # # NOTE: does not work with dask yet
         # coords = coords.repartition(
@@ -150,19 +148,19 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Converting maxima from raw space to refernce atlas space
-    # transform_coords(
-    #     proj_fp_dict=proj_fp_dict,
-    #     in_id="cells_raw_df",
-    #     z_rough=3,
-    #     y_rough=6,
-    #     x_rough=6,
-    #     z_fine=1,
-    #     y_fine=0.6,
-    #     x_fine=0.6,
-    #     z_trim=slice(None, -5),
-    #     y_trim=slice(80, -75),
-    #     x_trim=slice(None, None),
-    # )
+    transform_coords(
+        proj_fp_dict=proj_fp_dict,
+        in_id="cells_raw_df",
+        z_rough=3,
+        y_rough=6,
+        x_rough=6,
+        z_fine=1,
+        y_fine=0.6,
+        x_fine=0.6,
+        z_trim=slice(None, -5),
+        y_trim=slice(80, -75),
+        x_trim=slice(None, None),
+    )
 
     get_cell_mappings(proj_fp_dict)
 

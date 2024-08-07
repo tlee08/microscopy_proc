@@ -83,7 +83,8 @@ class GpuArrFuncs(CpuArrFuncs):
     @classmethod
     # @task
     def watershed_segm(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().watershed_segm)(*args, **kwargs).get()
+        # NOTE: This is a CPU function
+        return clear_cuda_mem_dec(super().watershed_segm)(*args, **kwargs)
 
     @classmethod
     # @task
@@ -94,3 +95,13 @@ class GpuArrFuncs(CpuArrFuncs):
     # @task
     def get_cells(cls, *args, **kwargs):
         return clear_cuda_mem_dec(super().get_cells)(*args, **kwargs)
+
+    @classmethod
+    # @task
+    def get_cells2(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().get_cells2)(*args, **kwargs)
+
+    @classmethod
+    # @task
+    def get_cells3(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().get_cells3)(*args, **kwargs)

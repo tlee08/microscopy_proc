@@ -1,5 +1,4 @@
 import contextlib
-from typing import Optional
 
 import dask
 import dask.array
@@ -11,9 +10,7 @@ from dask.distributed import Client
 from microscopy_proc.constants import S_DEPTH
 
 
-def block_to_coords(
-    func, arr_ls: list[da.Array], args_ls: Optional[list] = []
-) -> dd.DataFrame:
+def block_to_coords(func, *args: list) -> dd.DataFrame:
     """
     Applies the `func` to `arr`.
     Expects `func` to convert `arr` to coords df (of sorts).
@@ -27,26 +24,37 @@ def block_to_coords(
     """
 
     @dask.delayed
-    def func_offsetted(block_ls, args, z_offset, y_offset, x_offset):
-        df = func(*block_ls, *args)
+    def func_offsetted(args, z_offset, y_offset, x_offset):
+        df = func(*args)
         df.loc[:, "z"] = df["z"] + z_offset if "z" in df.columns else z_offset
         df.loc[:, "y"] = df["y"] + y_offset if "y" in df.columns else y_offset
         df.loc[:, "x"] = df["x"] + x_offset if "x" in df.columns else x_offset
         return df
 
+    # Getting the first block in the args list
     # NOTE: assumes all arrays have the same chunks
-    inds = np.meshgrid(
-        *[np.cumsum([0, *i[:-1]]) for i in arr_ls[0].chunks], indexing="ij"
-    )
+    z_offsets, y_offsets, x_offsets = ([0], [0], [0])
+    for arg in args:
+        if isinstance(arg, da.Array):
+            # Getting array of [z, y, x] offsets for each chunk
+            z_offsets, y_offsets, x_offsets = np.meshgrid(
+                *[np.cumsum([0, *i[:-1]]) for i in arg.chunks], indexing="ij"
+            )
+            z_offsets = z_offsets.ravel()
+            y_offsets = y_offsets.ravel()
+            x_offsets = x_offsets.ravel()
+            break
+    n = z_offsets.shape[0]
+    # Converting dask arrays to list of delayed blocks in args list
+    args = [
+        i.to_delayed().ravel() if isinstance(i, da.Array) else const_iter(i, n)
+        for i in args
+    ]
+    # Applying the function to each block
     return dd.from_delayed(
         [
-            func_offsetted(block_ls, args_ls, i, j, k)
-            for *block_ls, i, j, k in zip(
-                *[i.to_delayed().ravel() for i in arr_ls],
-                inds[0].ravel(),
-                inds[1].ravel(),
-                inds[2].ravel(),
-            )
+            func_offsetted(args_ls, i, j, k)
+            for *args_ls, i, j, k in zip(*args, z_offsets, y_offsets, x_offsets)
         ]
     )
 
@@ -126,3 +134,11 @@ def cluster_proc_contxt(cluster):
     finally:
         client.close()
         cluster.close()
+
+
+def const_iter(arr, n):
+    """
+    Iterates over the array `arr` `n` times.
+    """
+    for _ in range(n):
+        yield arr
