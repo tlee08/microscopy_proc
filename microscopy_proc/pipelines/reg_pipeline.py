@@ -92,6 +92,8 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
+    # TODO: save params to json so can use in map_pipeline.py
+
     # Preparing reference images
     prepare_ref(
         ref_fp_dict=ref_fp_dict,

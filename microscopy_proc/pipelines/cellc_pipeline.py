@@ -38,9 +38,9 @@ def img_proc_pipeline(
     thresh_p=30,
     min_threshd=1,
     max_threshd=3000,
+    maxima_sigma=10,
     min_wshed=1,
     max_wshed=1000,
-    maxima_sigma=10,
 ):
     with cluster_proc_contxt(LocalCUDACluster()):
         # Step 0: Read overlapped image
@@ -151,9 +151,9 @@ if __name__ == "__main__":
         thresh_p=32,
         min_threshd=100,
         max_threshd=10000,
+        maxima_sigma=10,
         min_wshed=1,
         max_wshed=1000,
-        maxima_sigma=10,
     )
 
     # img_to_coords_pipeline(proj_fp_dict)

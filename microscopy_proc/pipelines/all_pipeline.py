@@ -1,7 +1,6 @@
 from microscopy_proc.pipelines.cellc_pipeline import (
     img_overlap_pipeline,
     img_proc_pipeline,
-    img_to_cells_pipeline,
 )
 from microscopy_proc.pipelines.make_zarr import tiff_to_zarr
 from microscopy_proc.pipelines.reg_pipeline import (
@@ -84,9 +83,9 @@ if __name__ == "__main__":
         dog_sigma2=4,
         gauss_sigma=101,
         thresh_p=32,
-        min_size=100,
-        max_size=10000,
+        min_threshd=100,
+        max_threshd=10000,
         maxima_sigma=10,
+        min_wshed=1,
+        max_wshed=1000,
     )
-
-    img_to_cells_pipeline(proj_fp_dict)
