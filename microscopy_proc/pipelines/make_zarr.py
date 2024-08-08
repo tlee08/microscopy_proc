@@ -38,4 +38,4 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    tiff_to_zarr(in_fp, proj_fp_dict["raw"])
+    tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
