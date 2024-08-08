@@ -10,19 +10,19 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 
 
 # @flow
-def tiff_to_zarr(in_fp, out_fp):
+def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     with cluster_proc_contxt(LocalCluster()):
         if os.path.isdir(in_fp):
             tiffs_to_zarr(
                 [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
                 out_fp,
-                chunks=PROC_CHUNKS,
+                chunks=chunks,
             )
         elif os.path.isfile(in_fp):
             btiff_to_zarr(
                 in_fp,
                 out_fp,
-                chunks=PROC_CHUNKS,
+                chunks=chunks,
             )
         else:
             raise ValueError("Input file path does not exist.")

@@ -4,6 +4,11 @@ from microscopy_proc.pipelines.cellc_pipeline import (
     img_proc_pipeline,
 )
 from microscopy_proc.pipelines.make_zarr import tiff_to_zarr
+from microscopy_proc.pipelines.map_pipeline import (
+    get_cell_mappings,
+    grouping_cells,
+    transform_coords,
+)
 from microscopy_proc.pipelines.reg_pipeline import (
     prepare_img_fine,
     prepare_img_rough,
@@ -75,7 +80,7 @@ if __name__ == "__main__":
         bspline_fp=proj_fp_dict["bspline"],
     )
 
-    img_overlap_pipeline(proj_fp_dict)
+    img_overlap_pipeline(proj_fp_dict, d=DEPTH)
 
     img_proc_pipeline(
         proj_fp_dict=proj_fp_dict,
@@ -91,3 +96,10 @@ if __name__ == "__main__":
         min_wshed=1,
         max_wshed=1000,
     )
+
+    # Converting maxima from raw space to refernce atlas space
+    transform_coords(proj_fp_dict=proj_fp_dict)
+
+    get_cell_mappings(proj_fp_dict)
+
+    grouping_cells(proj_fp_dict)

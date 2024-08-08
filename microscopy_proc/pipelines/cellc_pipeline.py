@@ -18,13 +18,13 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 
 
 # @flow
-def img_overlap_pipeline(proj_fp_dict, d=DEPTH):
+def img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH):
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=2)):
         # Read raw arr
-        arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+        arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=chunks)
         # Make overlapping blocks
         arr_overlap = da.overlap.overlap(arr_raw, depth=d, boundary="reflect")
-        arr_overlap = da.rechunk(arr_overlap, chunks=[i + d for i in PROC_CHUNKS])
+        arr_overlap = da.rechunk(arr_overlap, chunks=[i + d for i in chunks])
         arr_overlap = disk_cache(arr_overlap, proj_fp_dict["overlap"])
 
 
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    # img_overlap_pipeline(proj_fp_dict)
+    # img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
 
     img_proc_pipeline(
         proj_fp_dict=proj_fp_dict,
