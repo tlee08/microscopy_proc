@@ -1,3 +1,4 @@
+from microscopy_proc.constants import DEPTH
 from microscopy_proc.pipelines.cellc_pipeline import (
     img_overlap_pipeline,
     img_proc_pipeline,
@@ -78,6 +79,7 @@ if __name__ == "__main__":
 
     img_proc_pipeline(
         proj_fp_dict=proj_fp_dict,
+        d=DEPTH,
         tophat_sigma=10,
         dog_sigma1=1,
         dog_sigma2=4,

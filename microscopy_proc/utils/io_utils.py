@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -102,6 +103,16 @@ ElementDataFile = {os.path.split(fp)[1]}
     with open(header_fp, "w") as f:
         f.write(header_content)
     return
+
+
+def read_json(fp: str) -> dict:
+    with open(fp, "r") as f:
+        return json.load(f)
+
+
+def write_json(fp: str, data: dict) -> None:
+    with open(fp, "w") as f:
+        json.dump(data, f, indent=4)
 
 
 def silentremove(fp):

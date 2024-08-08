@@ -1,5 +1,4 @@
 import dask.array as da
-import numpy as np
 from dask.distributed import LocalCluster
 from dask_cuda import LocalCUDACluster
 
@@ -19,18 +18,20 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dir
 
 
 # @flow
-def img_overlap_pipeline(proj_fp_dict):
+def img_overlap_pipeline(proj_fp_dict, d=DEPTH):
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=2)):
         # Read raw arr
         arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=PROC_CHUNKS)
         # Make overlapping blocks
-        arr_overlap = da.overlap.overlap(arr_raw, depth=DEPTH, boundary="reflect")
+        arr_overlap = da.overlap.overlap(arr_raw, depth=d, boundary="reflect")
+        arr_overlap = da.rechunk(arr_overlap, chunks=[i + d for i in PROC_CHUNKS])
         arr_overlap = disk_cache(arr_overlap, proj_fp_dict["overlap"])
 
 
 # @flow
 def img_proc_pipeline(
     proj_fp_dict,
+    d=DEPTH,
     tophat_sigma=10,
     dog_sigma1=2,
     dog_sigma2=5,
@@ -61,16 +62,15 @@ def img_proc_pipeline(
     with cluster_proc_contxt(LocalCluster()):
         # Step 4: Mean thresholding with standard deviation offset
         # Visually inspect sd offset
-        t_p = (
-            arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
-        ).compute()
-        print(t_p)
+        # t_p = arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
+        # t_p = t_p.compute()
+        # print(t_p)
         arr_threshd = da.map_blocks(Cf.manual_thresh, arr_adaptv, thresh_p)
         arr_threshd = disk_cache(arr_threshd, proj_fp_dict["threshd"])
 
-    with cluster_proc_contxt(LocalCUDACluster()):
+    with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Step 5: Object sizes
-        arr_sizes = da.map_blocks(Gf.label_with_sizes, arr_threshd)
+        arr_sizes = da.map_blocks(Cf.label_with_sizes, arr_threshd)
         arr_sizes = disk_cache(arr_sizes, proj_fp_dict["threshd_sizes"])
 
     with cluster_proc_contxt(LocalCluster()):
@@ -103,13 +103,13 @@ def img_proc_pipeline(
 
         # Step 10: Trimming filtered regions overlaps
         # Trimming maxima points overlaps
-        arr_maxima_f = my_trim(arr_maxima, d=DEPTH)
+        arr_maxima_f = my_trim(arr_maxima, d=d)
         disk_cache(arr_maxima_f, proj_fp_dict["maxima_final"])
         # Trimming filtered regions overlaps
-        arr_threshd_final = my_trim(arr_threshd_filt, d=DEPTH)
+        arr_threshd_final = my_trim(arr_threshd_filt, d=d)
         disk_cache(arr_threshd_final, proj_fp_dict["threshd_final"])
         # Trimming watershed sizes overlaps
-        arr_wshed_final = my_trim(arr_wshed_sizes, d=DEPTH)
+        arr_wshed_final = my_trim(arr_wshed_sizes, d=d)
         disk_cache(arr_wshed_final, proj_fp_dict["wshed_final"])
 
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
@@ -124,7 +124,7 @@ def img_proc_pipeline(
 
 
 def img_to_coords_pipeline(proj_fp_dict):
-    with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
+    with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
         arr_maxima_f = da.from_zarr(proj_fp_dict["maxima_final"])
         # Step 10a: Get coords of maxima and get corresponding sizes from watershed
@@ -134,8 +134,8 @@ def img_to_coords_pipeline(proj_fp_dict):
 
 if __name__ == "__main__":
     # Filenames
-    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
@@ -144,6 +144,7 @@ if __name__ == "__main__":
 
     img_proc_pipeline(
         proj_fp_dict=proj_fp_dict,
+        d=DEPTH,
         tophat_sigma=10,
         dog_sigma1=1,
         dog_sigma2=4,
