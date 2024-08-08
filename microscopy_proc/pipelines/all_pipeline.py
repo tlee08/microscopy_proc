@@ -1,4 +1,4 @@
-from microscopy_proc.constants import DEPTH
+from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.pipelines.cellc_pipeline import (
     img_overlap_pipeline,
     img_proc_pipeline,
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Making zarr from tiff file(s)
-    tiff_to_zarr(in_fp, proj_fp_dict["raw"])
+    tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
 
     # Preparing reference images
     prepare_ref(
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         bspline_fp=proj_fp_dict["bspline"],
     )
 
-    img_overlap_pipeline(proj_fp_dict, d=DEPTH)
+    img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
 
     img_proc_pipeline(
         proj_fp_dict=proj_fp_dict,
