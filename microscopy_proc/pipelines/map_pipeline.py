@@ -138,18 +138,7 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(
-        proj_fp_dict=proj_fp_dict,
-        # z_rough=3,
-        # y_rough=6,
-        # x_rough=6,
-        # z_fine=1,
-        # y_fine=0.6,
-        # x_fine=0.6,
-        # z_trim=slice(None, -5),
-        # y_trim=slice(80, -75),
-        # x_trim=slice(None, None),
-    )
+    transform_coords(proj_fp_dict)
 
     get_cell_mappings(proj_fp_dict)
 

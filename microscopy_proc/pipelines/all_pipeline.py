@@ -98,7 +98,7 @@ if __name__ == "__main__":
     )
 
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(proj_fp_dict=proj_fp_dict)
+    transform_coords(proj_fp_dict)
 
     get_cell_mappings(proj_fp_dict)
 
