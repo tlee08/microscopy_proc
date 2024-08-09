@@ -45,10 +45,10 @@ if __name__ == "__main__":
     prepare_ref(
         ref_fp_dict=ref_fp_dict,
         proj_fp_dict=proj_fp_dict,
-        orient_ls=(2, 3, 1),
-        z_trim=slice(None, None),
-        y_trim=slice(None, None),
-        x_trim=slice(None, None),
+        ref_orient_ls=(2, 3, 1),
+        ref_z_trim=slice(None, None),
+        ref_y_trim=slice(None, None),
+        ref_x_trim=slice(None, None),
     )
 
     # Preparing image itself

@@ -88,6 +88,7 @@ def img_proc_pipeline(
         arr_maxima = disk_cache(arr_maxima, proj_fp_dict["maxima"])
 
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
+        # n_workers=2
         # Step 8: Watershed segmentation sizes
         arr_wshed_sizes = da.map_blocks(
             Cf.wshed_segm_sizes, arr_overlap, arr_maxima, arr_threshd_filt
@@ -113,6 +114,7 @@ def img_proc_pipeline(
         disk_cache(arr_wshed_final, proj_fp_dict["wshed_final"])
 
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
+        # n_workers=2
         # Getting maxima coords and corresponding watershed sizes in table
         cells_df = block_to_coords(
             Cf.get_cells, arr_overlap, arr_maxima, arr_wshed_filt, 10
