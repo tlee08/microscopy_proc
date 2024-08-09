@@ -80,7 +80,13 @@ def disk_cache(arr: da.Array, fp):
     return da.from_zarr(fp)
 
 
-def my_trim(arr, d=DEPTH):
+def da_overlap(arr, d=DEPTH):
+    return da.overlap.overlap(arr, depth=d, boundary="reflect").rechunk(
+        [i + 2 * d for i in arr.chunksize]
+    )
+
+
+def da_trim(arr, d=DEPTH):
     return arr.map_blocks(
         lambda x: x[d:-d, d:-d, d:-d],
         chunks=[tuple(np.array(i) - d * 2) for i in arr.chunks],

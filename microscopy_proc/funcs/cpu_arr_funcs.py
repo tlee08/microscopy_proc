@@ -294,7 +294,7 @@ class CpuArrFuncs:
         """
         Get coordinates of regions in 3D tensor.
 
-        Keeps only the first row (i.e cell) for each label.
+        TODO: Keep only the first row (i.e cell) for each label (groupby).
         """
         logging.debug("Getting coordinates of regions")
         z, y, x = np.where(arr)
@@ -302,13 +302,10 @@ class CpuArrFuncs:
         ids = arr[z, y, x]
         logging.debug("Making dataframe")
         df = pd.DataFrame(
-            {
-                "z": z.astype(np.uint16),
-                "y": y.astype(np.uint16),
-                "x": x.astype(np.uint16),
-            },
+            {"z": z, "y": y, "x": x},
             index=pd.Index(ids.astype(np.uint32), name="label"),
-        )
+        ).astype(np.uint16)
+        df["size"] = 10  # TODO: placeholder
         # Returning
         return df
 
@@ -316,6 +313,7 @@ class CpuArrFuncs:
     # @task
     def get_cells(
         cls,
+        arr_raw: np.ndarray,
         arr_overlap: np.ndarray,
         arr_maxima: np.ndarray,
         arr_mask: np.ndarray,
@@ -325,29 +323,30 @@ class CpuArrFuncs:
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).
         """
+        # Asserting arr sizes
+        assert arr_raw.shape == tuple(i - 2 * d for i in arr_overlap.shape)
+        logging.debug("Trimming maxima labels array to raw array dimensions using `d`")
+        slicer = slice(d, -d) if d > 0 else slice(None)
+        arr_maxima = arr_maxima[slicer, slicer, slicer]
         logging.debug("Getting unique labels in arr_maxima")
-        arr_maxima_labels = cls.label_with_ids(arr_maxima)
-        logging.debug("Trimming maxima labels array to raw array dimensions")
-        if d > 0:
-            arr_maxima_labels_t = arr_maxima_labels[d:-d, d:-d, d:-d]
-        else:
-            arr_maxima_labels_t = arr_maxima_labels
+        arr_maxima_l = cls.label_with_ids(arr_maxima)
         logging.debug("Converting to DataFrame of coordinates and sizes")
         # NOTE: gets first coord of each unique label
-        ids_m, ind = cls.xp.unique(arr_maxima_labels_t, return_index=True)
-        ids_m = arr_cp2np(ids_m).astype(np.uint32)
-        z, y, x = cls.xp.unravel_index(ind, arr_overlap.shape)
-        z, y, x = arr_cp2np(z), arr_cp2np(y), arr_cp2np(x)
+        ids_m, ind = cls.xp.unique(arr_maxima_l, return_index=True)
+        z, y, x = cls.xp.unravel_index(ind, arr_maxima_l.shape)
         df = (
             pd.DataFrame(
-                {"z": z, "y": y, "x": x},
-                index=pd.Index(ids_m, name="label"),
+                {"z": arr_cp2np(z), "y": arr_cp2np(y), "x": arr_cp2np(x)},
+                index=pd.Index(arr_cp2np(ids_m).astype(np.uint32), name="label"),
             )
             .drop(index=0)
             .astype(np.uint16)
         )
         logging.debug("Watershed of arr_overlap, seeds arr_maxima, mask arr_mask")
-        arr_wshed = cls.wshed_segm(arr_overlap, arr_cp2np(arr_maxima_labels), arr_mask)
+        arr_maxima_l = np.pad(
+            arr_cp2np(arr_maxima_l), d, mode="constant", constant_values=0
+        )
+        arr_wshed = cls.wshed_segm(arr_overlap, arr_maxima_l, arr_mask)
         logging.debug("Making vector of region sizes (corresponding to maxima)")
         ids_w, counts = cls.xp.unique(arr_wshed[arr_wshed > 0], return_counts=True)
         ids_w = arr_cp2np(ids_w).astype(np.uint32)

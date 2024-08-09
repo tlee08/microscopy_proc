@@ -9,8 +9,9 @@ from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
 from microscopy_proc.utils.dask_utils import (
     block_to_coords,
     cluster_proc_contxt,
+    da_overlap,
+    da_trim,
     disk_cache,
-    my_trim,
 )
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 
@@ -23,8 +24,7 @@ def img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH):
         # Read raw arr
         arr_raw = da.from_zarr(proj_fp_dict["raw"], chunks=chunks)
         # Make overlapping blocks
-        arr_overlap = da.overlap.overlap(arr_raw, depth=d, boundary="reflect")
-        arr_overlap = da.rechunk(arr_overlap, chunks=[i + d for i in chunks])
+        arr_overlap = da_overlap(arr_raw, d=d)
         arr_overlap = disk_cache(arr_overlap, proj_fp_dict["overlap"])
 
 
@@ -43,6 +43,7 @@ def img_proc_pipeline(
     min_wshed=1,
     max_wshed=1000,
 ):
+    arr_raw = da.from_zarr(proj_fp_dict["raw"])
     with cluster_proc_contxt(LocalCUDACluster()):
         # Step 0: Read overlapped image
         arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
@@ -104,20 +105,20 @@ def img_proc_pipeline(
 
         # Step 10: Trimming filtered regions overlaps
         # Trimming maxima points overlaps
-        arr_maxima_f = my_trim(arr_maxima, d=d)
+        arr_maxima_f = da_trim(arr_maxima, d=d)
         disk_cache(arr_maxima_f, proj_fp_dict["maxima_final"])
         # Trimming filtered regions overlaps
-        arr_threshd_final = my_trim(arr_threshd_filt, d=d)
+        arr_threshd_final = da_trim(arr_threshd_filt, d=d)
         disk_cache(arr_threshd_final, proj_fp_dict["threshd_final"])
         # Trimming watershed sizes overlaps
-        arr_wshed_final = my_trim(arr_wshed_sizes, d=d)
+        arr_wshed_final = da_trim(arr_wshed_sizes, d=d)
         disk_cache(arr_wshed_final, proj_fp_dict["wshed_final"])
 
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # n_workers=2
         # Getting maxima coords and corresponding watershed sizes in table
         cells_df = block_to_coords(
-            Cf.get_cells, arr_overlap, arr_maxima, arr_wshed_filt, 10
+            Cf.get_cells, arr_raw, arr_overlap, arr_maxima, arr_wshed_filt, d
         )
         # Filtering out by size
         cells_df = cells_df.query(f"size >= {min_wshed} and size <= {max_wshed}")
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    # img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+    img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
 
     img_proc_pipeline(
         proj_fp_dict=proj_fp_dict,
