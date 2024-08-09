@@ -61,7 +61,7 @@ def img_proc_pipeline(
 
     with cluster_proc_contxt(LocalCluster()):
         # Step 4: Mean thresholding with standard deviation offset
-        # Visually inspect sd offset
+        # # Visually inspect sd offset
         # t_p = arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
         # t_p = t_p.compute()
         # print(t_p)

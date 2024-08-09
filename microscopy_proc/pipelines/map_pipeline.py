@@ -12,39 +12,29 @@ from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json
 from microscopy_proc.utils.map_utils import nested_tree_dict_to_df
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
+from microscopy_proc.utils.reg_params_model import RegParamsModel
 
 
 # @flow
-def transform_coords(
-    proj_fp_dict: dict,
-    # z_rough: int,
-    # y_rough: int,
-    # x_rough: int,
-    # z_fine: float,
-    # y_fine: float,
-    # x_fine: float,
-    # z_trim: slice,
-    # y_trim: slice,
-    # x_trim: slice,
-):
+def transform_coords(proj_fp_dict: dict):
     """
     `in_id` and `out_id` are either maxima or region
     """
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # Getting registration parameters
-        rp = read_json(proj_fp_dict["reg_params"])
+        rp = RegParamsModel.model_validate(read_json(proj_fp_dict["reg_params"]))
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
         cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
         cells_df = cells_df[["z", "y", "x"]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
-        cells_df = cells_df / np.array((rp["z_rough"], rp["y_rough"], rp["x_rough"]))
+        cells_df = cells_df / np.array((rp.z_rough, rp.y_rough, rp.x_rough))
         # Scaling to resampled space
-        cells_df = cells_df * np.array((rp["z_fine"], rp["y_fine"], rp["x_fine"]))
+        cells_df = cells_df * np.array((rp.z_fine, rp.y_fine, rp.x_fine))
         # Trimming/offsetting to sliced space
         cells_df = cells_df - np.array(
-            [s[0] if s[0] else 0 for s in (rp["z_trim"], rp["y_trim"], rp["x_trim"])]
+            [s[0] if s[0] else 0 for s in (rp.z_trim, rp.y_trim, rp.x_trim)]
         )
 
         cells_df = transformation_coords(
