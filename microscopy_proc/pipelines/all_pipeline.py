@@ -46,9 +46,9 @@ if __name__ == "__main__":
         ref_fp_dict=ref_fp_dict,
         proj_fp_dict=proj_fp_dict,
         ref_orient_ls=(2, 3, 1),
-        ref_z_trim=slice(None, None),
-        ref_y_trim=slice(None, None),
-        ref_x_trim=slice(None, None),
+        ref_z_trim=(None, None, None),
+        ref_y_trim=(None, None, None),
+        ref_x_trim=(None, None, None),
     )
 
     # Preparing image itself
@@ -66,9 +66,9 @@ if __name__ == "__main__":
     )
     prepare_img_trim(
         proj_fp_dict,
-        z_trim=slice(None, -5),
-        y_trim=slice(80, -75),
-        x_trim=slice(None, None),
+        z_trim=(None, -5, None),
+        y_trim=(80, -75, None),
+        x_trim=(None, None, None),
     )
 
     # Running Elastix registration
