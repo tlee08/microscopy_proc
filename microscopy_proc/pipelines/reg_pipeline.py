@@ -12,14 +12,14 @@ from microscopy_proc.funcs.reg_funcs import (
     downsmpl_rough_arr,
     reorient_arr,
 )
+from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
-from microscopy_proc.utils.io_utils import read_json, write_json
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     get_ref_fp_dict,
+    init_params,
     make_proj_dirs,
 )
-from microscopy_proc.utils.reg_params_model import RegParamsModel
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -31,13 +31,8 @@ def prepare_ref(
     # Ref Params
     **kwargs,
 ):
-    # Making registration params json
-    try:  # If file exists
-        rp = RegParamsModel.model_validate(read_json(proj_fp_dict["reg_params"]))
-    except Exception:  # If file does not exist
-        rp = RegParamsModel()
-    rp = RegParamsModel.model_validate(rp.model_copy(update=kwargs))
-    write_json(proj_fp_dict["reg_params"], rp.model_dump())
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Making atlas images
     for fp_i, fp_o in [
         (ref_fp_dict["ref"], proj_fp_dict["ref"]),
@@ -60,9 +55,9 @@ def prepare_ref(
 
 # @flow
 def prepare_img_rough(proj_fp_dict: dict, **kwargs):
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     with cluster_proc_contxt(LocalCluster()):
-        # Update registration params json
-        rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
         # Reading
         arr_raw = da.from_zarr(proj_fp_dict["raw"])
         # Rough downsample
@@ -75,7 +70,7 @@ def prepare_img_rough(proj_fp_dict: dict, **kwargs):
 # @flow
 def prepare_img_fine(proj_fp_dict: dict, **kwargs):
     # Update registration params json
-    rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading
     arr_downsmpl1 = tifffile.imread(proj_fp_dict["downsmpl1"])
     # Fine downsample
@@ -87,7 +82,7 @@ def prepare_img_fine(proj_fp_dict: dict, **kwargs):
 # @flow
 def prepare_img_trim(proj_fp_dict: dict, **kwargs):
     # Update registration params json
-    rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading
     arr_downsmpl2 = tifffile.imread(proj_fp_dict["downsmpl2"])
     # Trim
@@ -105,6 +100,9 @@ if __name__ == "__main__":
     ref_fp_dict = get_ref_fp_dict(atlas_rsc_dir)
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
+
+    # Making params json
+    init_params(proj_fp_dict)
 
     # Preparing reference images
     prepare_ref(

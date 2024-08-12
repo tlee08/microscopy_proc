@@ -1,5 +1,8 @@
 import os
 
+from microscopy_proc.utils.config_params_model import ConfigParamsModel
+from microscopy_proc.utils.io_utils import read_json, write_json
+
 
 def get_ref_fp_dict(atlas_dir, ref_v=None, annot_v=None, map_v=None):
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
@@ -27,7 +30,7 @@ def get_ref_fp_dict(atlas_dir, ref_v=None, annot_v=None, map_v=None):
 def get_proj_fp_dict(proj_dir):
     return {
         # CONFIGS
-        "reg_params": os.path.join(proj_dir, "reg_params.json"),
+        "config_params": os.path.join(proj_dir, "config_params.json"),
         # MY ATLAS AND ELASTIX PARAMS FILES
         "ref": os.path.join(proj_dir, "registration", "0a_reference.tif"),
         "annot": os.path.join(proj_dir, "registration", "0b_annotation.tif"),
@@ -76,3 +79,15 @@ def make_proj_dirs(proj_dir):
     os.makedirs(os.path.join(proj_dir, "cellcount"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "analysis"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "visual_check"), exist_ok=True)
+
+
+def init_params(proj_fp_dict, **kwargs):
+    # Making registration params json
+    try:  # If file exists
+        rp = ConfigParamsModel.model_validate(read_json(proj_fp_dict["config_params"]))
+    except Exception:  # If file does not exist
+        rp = ConfigParamsModel()
+    # Update registration params json
+    rp = rp.model_validate(rp.model_copy(update=kwargs))
+    # Writing registration params json
+    write_json(proj_fp_dict["config_params"], rp.model_dump())

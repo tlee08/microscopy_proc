@@ -6,7 +6,11 @@ from dask.distributed import LocalCluster
 from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.funcs.io_funcs import btiff_to_zarr, tiffs_to_zarr
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
+from microscopy_proc.utils.proj_org_utils import (
+    get_proj_fp_dict,
+    init_params,
+    make_proj_dirs,
+)
 
 
 # @flow
@@ -37,5 +41,8 @@ if __name__ == "__main__":
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
+
+    # Making params json
+    init_params(proj_fp_dict)
 
     tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)

@@ -94,7 +94,7 @@ def combine_nested_regions(cells_grouped: pd.DataFrame, annot_df: pd.DataFrame):
         return cells_grouped.loc[i, cols]
 
     # Start from each root (i.e. nodes with no parent region)
-    cols = list(CELL_MEASURES.items())
+    cols = list(CELL_MEASURES.values())
     cells_grouped[cols] = cells_grouped[cols].fillna(0)
     [r(i) for i in cells_grouped[cells_grouped["parent_structure_id"].isna()].index]
     # Removing unnecessary columns

@@ -100,7 +100,6 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     # Adding coords to image
     for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
         if t:
-            print(z, y, x)
             coords_i = coords.copy()
             coords_i["z"] += z
             coords_i["y"] += y

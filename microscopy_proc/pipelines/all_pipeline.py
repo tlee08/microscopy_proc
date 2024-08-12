@@ -19,6 +19,7 @@ from microscopy_proc.pipelines.reg_pipeline import (
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     get_ref_fp_dict,
+    init_params,
     make_proj_dirs,
 )
 
@@ -37,6 +38,9 @@ if __name__ == "__main__":
     ref_fp_dict = get_ref_fp_dict(atlas_rsc_dir)
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
+
+    # Making params json
+    init_params(proj_fp_dict)
 
     # Making zarr from tiff file(s)
     tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)

@@ -4,7 +4,7 @@ from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.utils.io_utils import read_json, write_json
 
 
-class RegParamsModel(BaseModel):
+class ConfigParamsModel(BaseModel):
     """
     Pydantic model for registration parameters
     """
@@ -58,10 +58,7 @@ class RegParamsModel(BaseModel):
 
     @classmethod
     def update_params_file(cls, fp: str, **kwargs):
-        print(fp)
-        a = read_json(fp)
-        print(a)
-        rp = cls.model_validate(a)
+        rp = cls.model_validate(read_json(fp))
         rp = cls.model_validate(rp.model_copy(update=kwargs))
         write_json(fp, rp.model_dump())
         return rp

@@ -6,6 +6,7 @@ from dask_cuda import LocalCUDACluster
 from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs as Cf
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
+from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block_to_coords,
     cluster_proc_contxt,
@@ -13,8 +14,11 @@ from microscopy_proc.utils.dask_utils import (
     da_trim,
     disk_cache,
 )
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
-from microscopy_proc.utils.reg_params_model import RegParamsModel
+from microscopy_proc.utils.proj_org_utils import (
+    get_proj_fp_dict,
+    init_params,
+    make_proj_dirs,
+)
 
 # logging.basicConfig(level=logging.DEBUG)
 
@@ -30,7 +34,7 @@ def img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH):
 # @flow
 def img_proc_pipeline(proj_fp_dict, **kwargs):
     # Update registration params json
-    rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading raw image
     arr_raw = da.from_zarr(proj_fp_dict["raw"])
 
@@ -133,21 +137,47 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+    # Making params json
+    init_params(proj_fp_dict)
 
-    img_proc_pipeline(
-        proj_fp_dict=proj_fp_dict,
-        d=DEPTH,
-        tophat_sigma=10,
-        dog_sigma1=1,
-        dog_sigma2=4,
-        gauss_sigma=101,
-        thresh_p=32,
-        min_threshd=100,
-        max_threshd=10000,
-        maxima_sigma=10,
-        min_wshed=1,
-        max_wshed=1000,
-    )
+    # img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+
+    # img_proc_pipeline(
+    #     proj_fp_dict=proj_fp_dict,
+    #     d=DEPTH,
+    #     tophat_sigma=10,
+    #     dog_sigma1=1,
+    #     dog_sigma2=4,
+    #     gauss_sigma=101,
+    #     thresh_p=32,
+    #     min_threshd=100,
+    #     max_threshd=10000,
+    #     maxima_sigma=10,
+    #     min_wshed=1,
+    #     max_wshed=1000,
+    # )
+
+    arr_raw = da.from_zarr(proj_fp_dict["raw"])
+    arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
+    arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
+    arr_wshed_filt = da.from_zarr(proj_fp_dict["wshed_filt"])
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"])
+
+    with cluster_proc_contxt(LocalCluster()):
+        # Step 10: Trimming filtered regions overlaps
+        # Trimming maxima points overlaps
+        arr_maxima_f = da_trim(arr_maxima, d=rp.d)
+        disk_cache(arr_maxima_f, proj_fp_dict["maxima_final"])
+
+    with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
+        # n_workers=2
+        # Getting maxima coords and corresponding watershed sizes in table
+        cells_df = block_to_coords(
+            Cf.get_cells, arr_raw, arr_overlap, arr_maxima, arr_wshed_filt, rp.d
+        )
+        # Filtering out by size
+        cells_df = cells_df.query(f"size >= {rp.min_wshed} and size <= {rp.max_wshed}")
+        # Saving to parquet
+        cells_df.to_parquet(proj_fp_dict["cells_raw_df"], overwrite=True)
 
     # img_to_coords_pipeline(proj_fp_dict)

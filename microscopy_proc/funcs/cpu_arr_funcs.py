@@ -355,7 +355,7 @@ class CpuArrFuncs:
         counts = arr_cp2np(counts).astype(np.uint32)
         logging.debug("Getting sum intensity for each cell (wshed)")
         sum_itns = cls.xp.bincount(
-            x=cls.xp.asarray(arr_wshed[arr_wshed > 0].ravel()),
+            cls.xp.asarray(arr_wshed[arr_wshed > 0].ravel()),
             weights=cls.xp.asarray(arr_overlap[arr_wshed > 0].ravel()),
             minlength=len(ids_w),
         )

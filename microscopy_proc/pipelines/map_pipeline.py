@@ -13,10 +13,14 @@ from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
     nested_tree_dict_to_df,
 )
+from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
-from microscopy_proc.utils.reg_params_model import RegParamsModel
+from microscopy_proc.utils.proj_org_utils import (
+    get_proj_fp_dict,
+    init_params,
+    make_proj_dirs,
+)
 
 
 # @flow
@@ -26,7 +30,7 @@ def transform_coords(proj_fp_dict: dict):
     """
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # Getting registration parameters
-        rp = RegParamsModel.model_validate(read_json(proj_fp_dict["reg_params"]))
+        rp = ConfigParamsModel.model_validate(read_json(proj_fp_dict["config_params"]))
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
         cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
@@ -153,6 +157,9 @@ if __name__ == "__main__":
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
+
+    # Making params json
+    init_params(proj_fp_dict)
 
     # Converting maxima from raw space to refernce atlas space
     transform_coords(proj_fp_dict)
