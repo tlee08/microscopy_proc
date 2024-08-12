@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from microscopy_proc.constants import CELL_MEASURES
+
 
 def nested_tree_dict_to_df(data_dict: dict):
     """
@@ -86,13 +88,14 @@ def combine_nested_regions(cells_grouped: pd.DataFrame, annot_df: pd.DataFrame):
     def r(i):
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
-        cells_grouped.loc[i, ["count", "volume"]] += np.sum(
+        cells_grouped.loc[i, cols] += np.sum(
             [r(j) for j in cells_grouped.loc[i, "children"]], axis=0
         )
-        return cells_grouped.loc[i, ["count", "volume"]]
+        return cells_grouped.loc[i, cols]
 
     # Start from each root (i.e. nodes with no parent region)
-    cells_grouped[["count", "volume"]] = cells_grouped[["count", "volume"]].fillna(0)
+    cols = list(CELL_MEASURES.items())
+    cells_grouped[cols] = cells_grouped[cols].fillna(0)
     [r(i) for i in cells_grouped[cells_grouped["parent_structure_id"].isna()].index]
     # Removing unnecessary columns
     cells_grouped = cells_grouped.drop(columns=["children"])

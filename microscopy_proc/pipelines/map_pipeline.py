@@ -7,6 +7,7 @@ import tifffile
 from dask.distributed import LocalCluster
 
 # from prefect import flow
+from microscopy_proc.constants import CELL_MEASURES
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json
@@ -125,8 +126,15 @@ def grouping_cells(proj_fp_dict: dict):
         # Grouping cells by region name
         cells_grouped = (
             cells_df.groupby("id")
-            .agg({"z": "count", "size": "sum"})
-            .rename(columns={"z": "count", "size": "volume"})
+            .agg(
+                {
+                    "z": "count",
+                    "size": "sum",
+                    "sum_itns": "sum",
+                    "max_itns": "sum",
+                }
+            )
+            .rename(columns=CELL_MEASURES)
             .compute()
         )
         # Reading annotation mappings dataframe

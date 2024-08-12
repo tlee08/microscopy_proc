@@ -305,7 +305,9 @@ class CpuArrFuncs:
             {"z": z, "y": y, "x": x},
             index=pd.Index(ids.astype(np.uint32), name="label"),
         ).astype(np.uint16)
-        df["size"] = 10  # TODO: placeholder
+        df["size"] = -1  # TODO: placeholder
+        df["sum_itns"] = -1  # TODO: placeholder
+        # df["max_itns"] = -1  # TODO: placeholder
         # Returning
         return df
 
@@ -331,7 +333,7 @@ class CpuArrFuncs:
         logging.debug("Getting unique labels in arr_maxima")
         arr_maxima_l = cls.label_with_ids(arr_maxima)
         logging.debug("Converting to DataFrame of coordinates and sizes")
-        # NOTE: gets first coord of each unique label
+        # NOTE: getting first coord of each unique label
         ids_m, ind = cls.xp.unique(arr_maxima_l, return_index=True)
         z, y, x = cls.xp.unravel_index(ind, arr_maxima_l.shape)
         df = (
@@ -351,7 +353,18 @@ class CpuArrFuncs:
         ids_w, counts = cls.xp.unique(arr_wshed[arr_wshed > 0], return_counts=True)
         ids_w = arr_cp2np(ids_w).astype(np.uint32)
         counts = arr_cp2np(counts).astype(np.uint32)
-        df["size"] = pd.Series(counts, index=pd.Index(ids_w, name="label"))
+        logging.debug("Getting sum intensity for each cell (wshed)")
+        sum_itns = cls.xp.bincount(
+            cls.xp.asarray(arr_wshed[arr_wshed > 0].ravel()),
+            weights=cls.xp.asarray(arr_overlap[arr_wshed > 0].ravel()),
+            minlength=len(ids_w),
+        )
+        sum_itns = arr_cp2np(sum_itns[sum_itns > 0])
+        logging.debug("Adding sizes and intensities to DataFrame")
+        idx = pd.Index(ids_w, name="label")
+        df["size"] = pd.Series(counts, index=idx)
+        df["sum_itns"] = pd.Series(sum_itns, index=idx)
+        # df["max_itns"] = pd.Series(max_itns, index=idx)
         # Filtering out rows with NaNs in z, y, or x columns
         df = df[df[["z", "y", "x"]].isna().mean(axis=1) == 0]
         # Returning

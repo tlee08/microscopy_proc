@@ -141,39 +141,21 @@ if __name__ == "__main__":
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    # img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+    img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
 
-    # img_proc_pipeline(
-    #     proj_fp_dict=proj_fp_dict,
-    #     d=DEPTH,
-    #     tophat_sigma=10,
-    #     dog_sigma1=1,
-    #     dog_sigma2=4,
-    #     gauss_sigma=101,
-    #     thresh_p=32,
-    #     min_threshd=100,
-    #     max_threshd=10000,
-    #     maxima_sigma=10,
-    #     min_wshed=1,
-    #     max_wshed=1000,
-    # )
-
-    arr_raw = da.from_zarr(proj_fp_dict["raw"])
-    arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
-    arr_maxima = da.from_zarr(proj_fp_dict["maxima"])
-    arr_wshed_filt = da.from_zarr(proj_fp_dict["wshed_filt"])
-    d = DEPTH
-    min_wshed = 1
-    max_wshed = 1000
-    with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
-        # n_workers=2
-        # Getting maxima coords and corresponding watershed sizes in table
-        cells_df = block_to_coords(
-            Cf.get_cells, arr_raw, arr_overlap, arr_maxima, arr_wshed_filt, d
-        )
-        # Filtering out by size
-        cells_df = cells_df.query(f"size >= {min_wshed} and size <= {max_wshed}")
-        # Saving to parquet
-        cells_df.to_parquet(proj_fp_dict["cells_raw_df"], overwrite=True)
+    img_proc_pipeline(
+        proj_fp_dict=proj_fp_dict,
+        d=DEPTH,
+        tophat_sigma=10,
+        dog_sigma1=1,
+        dog_sigma2=4,
+        gauss_sigma=101,
+        thresh_p=32,
+        min_threshd=100,
+        max_threshd=10000,
+        maxima_sigma=10,
+        min_wshed=1,
+        max_wshed=1000,
+    )
 
     # img_to_coords_pipeline(proj_fp_dict)
