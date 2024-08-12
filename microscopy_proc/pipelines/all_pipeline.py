@@ -5,6 +5,7 @@ from microscopy_proc.pipelines.cellc_pipeline import (
 )
 from microscopy_proc.pipelines.make_zarr import tiff_to_zarr
 from microscopy_proc.pipelines.map_pipeline import (
+    cells2csv,
     get_cell_mappings,
     grouping_cells,
     transform_coords,
@@ -107,3 +108,5 @@ if __name__ == "__main__":
     get_cell_mappings(proj_fp_dict)
 
     grouping_cells(proj_fp_dict)
+
+    cells2csv(proj_fp_dict)

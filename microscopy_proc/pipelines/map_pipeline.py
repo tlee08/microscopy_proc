@@ -146,9 +146,16 @@ def grouping_cells(proj_fp_dict: dict):
         with open(proj_fp_dict["map"], "r") as f:
             annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
         cells_grouped = combine_nested_regions(cells_grouped, annot_df)
+        # Calculating integrated average intensity (sum_itns / size)
+        cells_grouped["iov"] = cells_grouped["sum"] / cells_grouped["volume"]
         # Saving to disk
         cells_grouped = dd.from_pandas(cells_grouped)
         cells_grouped.to_parquet(proj_fp_dict["cells_agg_df"], overwrite=True)
+
+
+def cells2csv(proj_fp_dict: dict):
+    df = dd.read_parquet(proj_fp_dict["cells_agg_df"]).compute()
+    df.to_csv(proj_fp_dict["cells_agg_csv"])
 
 
 if __name__ == "__main__":
@@ -167,3 +174,5 @@ if __name__ == "__main__":
     get_cell_mappings(proj_fp_dict)
 
     grouping_cells(proj_fp_dict)
+
+    cells2csv(proj_fp_dict)

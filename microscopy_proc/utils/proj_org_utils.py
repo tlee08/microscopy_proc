@@ -64,6 +64,7 @@ def get_proj_fp_dict(proj_dir):
         "cells_trfm_df": os.path.join(proj_dir, "analysis", "12_cells_trfm.parquet"),
         "cells_df": os.path.join(proj_dir, "analysis", "13_cells.parquet"),
         "cells_agg_df": os.path.join(proj_dir, "analysis", "14_cells_agg.parquet"),
+        "cells_agg_csv": os.path.join(proj_dir, "analysis", "15_cells_agg.csv"),
         # VISUAL CHECK FROM CELL DF FILES
         "points_check": os.path.join(proj_dir, "visual_check", "points.zarr"),
         "heatmap_check": os.path.join(proj_dir, "visual_check", "heatmap.zarr"),
