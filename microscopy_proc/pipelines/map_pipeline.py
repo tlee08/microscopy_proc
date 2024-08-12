@@ -10,7 +10,10 @@ from dask.distributed import LocalCluster
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json
-from microscopy_proc.utils.map_utils import nested_tree_dict_to_df
+from microscopy_proc.utils.map_utils import (
+    combine_nested_regions,
+    nested_tree_dict_to_df,
+)
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 from microscopy_proc.utils.reg_params_model import RegParamsModel
 
@@ -120,13 +123,19 @@ def grouping_cells(proj_fp_dict: dict):
         # Reading cells dataframe
         cells_df = dd.read_parquet(proj_fp_dict["cells_df"])
         # Grouping cells by region name
-        cells_grouped = cells_df.groupby("name").agg(
-            {
-                # "size": "sum",
-                "id": "count",
-            }
+        cells_grouped = (
+            cells_df.groupby("id")
+            .agg({"z": "count", "size": "sum"})
+            .rename(columns={"z": "count", "size": "volume"})
+            .compute()
         )
+        # Reading annotation mappings dataframe
+        # Making df of region names and their parent region names
+        with open(proj_fp_dict["map"], "r") as f:
+            annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
+        cells_grouped = combine_nested_regions(cells_grouped, annot_df)
         # Saving to disk
+        cells_grouped = dd.from_pandas(cells_grouped)
         cells_grouped.to_parquet(proj_fp_dict["cells_agg_df"], overwrite=True)
 
 
@@ -138,8 +147,8 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(proj_fp_dict)
+    # transform_coords(proj_fp_dict)
 
-    get_cell_mappings(proj_fp_dict)
+    # get_cell_mappings(proj_fp_dict)
 
     grouping_cells(proj_fp_dict)

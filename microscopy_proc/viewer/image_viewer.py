@@ -45,8 +45,8 @@ def view_imgs(fp_ls, vmax_ls, slicer):
 
 if __name__ == "__main__":
     # Filenames
-    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
@@ -54,12 +54,12 @@ if __name__ == "__main__":
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        # slice(300, 400, None),
-        # slice(1000, 4000, None),
-        # slice(1000, 5000, None),
-        slice(None, None, None),
-        slice(None, None, None),
-        slice(None, None, None),
+        slice(300, 400, None),
+        slice(1000, 4000, None),
+        slice(1000, 5000, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
     )
 
     imgs_ls = (
@@ -67,29 +67,29 @@ if __name__ == "__main__":
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        ("raw", 10000),
+        # ("raw", 10000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
         # ("trimmed", 10000),
         # ("regresult", 10000),
         # CELLC
-        # ("overlap", 10000),
-        # ("bgrm", 2000),
-        # ("dog", 100),
-        # ("adaptv", 100),
-        # ("threshd", 5),
-        # ("threshd_sizes", 10000),
-        # ("threshd_filt", 5),
-        # ("maxima", 5),
-        # ("wshed_sizes", 1000),
-        # ("wshed_filt", 1000),
+        ("overlap", 10000),
+        ("bgrm", 2000),
+        ("dog", 100),
+        ("adaptv", 100),
+        ("threshd", 5),
+        ("threshd_sizes", 10000),
+        ("threshd_filt", 5),
+        ("maxima", 5),
+        ("wshed_sizes", 1000),
+        ("wshed_filt", 1000),
         # CELLC FINAL
         # ("filt_final", 5),
-        ("maxima_final", 5),
+        # ("maxima_final", 5),
         # ("wshed_sizes_final", 1000),
         # POST
-        ("points_check", 5),
+        # ("points_check", 5),
         # ("heatmap_check", 20),
         # ("points_trfm_check", 5),
         # ("heatmap_trfm_check", 100),
