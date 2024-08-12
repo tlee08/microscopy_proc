@@ -1,4 +1,5 @@
 import os
+import re
 
 from dask.distributed import LocalCluster
 
@@ -18,7 +19,11 @@ def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     with cluster_proc_contxt(LocalCluster()):
         if os.path.isdir(in_fp):
             tiffs_to_zarr(
-                [os.path.join(in_fp, f) for f in os.listdir(in_fp)],
+                [
+                    os.path.join(in_fp, f)
+                    for f in os.listdir(in_fp)
+                    if re.search(r".tif$", f)
+                ],
                 out_fp,
                 chunks=chunks,
             )
