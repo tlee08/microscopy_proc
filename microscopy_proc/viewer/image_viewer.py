@@ -54,7 +54,7 @@ if __name__ == "__main__":
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        slice(300, 400, None),
+        slice(600, 650, None),
         slice(1000, 4000, None),
         slice(1000, 5000, None),
         # slice(None, None, None),
