@@ -26,13 +26,14 @@ def get_ref_fp_dict(atlas_dir, ref_v=None, annot_v=None, map_v=None):
 
 def get_proj_fp_dict(proj_dir):
     return {
+        # CONFIGS
+        "reg_params": os.path.join(proj_dir, "reg_params.json"),
         # MY ATLAS AND ELASTIX PARAMS FILES
         "ref": os.path.join(proj_dir, "registration", "0a_reference.tif"),
         "annot": os.path.join(proj_dir, "registration", "0b_annotation.tif"),
         "map": os.path.join(proj_dir, "registration", "0c_mapping.json"),
         "affine": os.path.join(proj_dir, "registration", "0d_align_affine.txt"),
         "bspline": os.path.join(proj_dir, "registration", "0e_align_bspline.txt"),
-        "reg_params": os.path.join(proj_dir, "registration", "0f_reg_params.json"),
         # RAW IMG FILE
         "raw": os.path.join(proj_dir, "raw.zarr"),
         # REGISTRATION PROCESSING FILES

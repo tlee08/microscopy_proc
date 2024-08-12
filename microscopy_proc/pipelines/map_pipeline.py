@@ -9,12 +9,12 @@ from dask.distributed import LocalCluster
 # from prefect import flow
 from microscopy_proc.constants import CELL_MEASURES
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
-from microscopy_proc.utils.dask_utils import cluster_proc_contxt
-from microscopy_proc.utils.io_utils import read_json
-from microscopy_proc.utils.map_utils import (
+from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
     nested_tree_dict_to_df,
 )
+from microscopy_proc.utils.dask_utils import cluster_proc_contxt
+from microscopy_proc.utils.io_utils import read_json
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict, make_proj_dirs
 from microscopy_proc.utils.reg_params_model import RegParamsModel
 
@@ -131,7 +131,7 @@ def grouping_cells(proj_fp_dict: dict):
                     "z": "count",
                     "size": "sum",
                     "sum_itns": "sum",
-                    "max_itns": "sum",
+                    # "max_itns": "sum",
                 }
             )
             .rename(columns=CELL_MEASURES)
@@ -155,8 +155,8 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Converting maxima from raw space to refernce atlas space
-    # transform_coords(proj_fp_dict)
+    transform_coords(proj_fp_dict)
 
-    # get_cell_mappings(proj_fp_dict)
+    get_cell_mappings(proj_fp_dict)
 
     grouping_cells(proj_fp_dict)

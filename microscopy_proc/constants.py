@@ -10,5 +10,5 @@ CELL_MEASURES = {
     "z": "count",
     "size": "volume",
     "sum_itns": "sum",
-    "max_itns": "max",
+    # "max_itns": "max",
 }

@@ -62,9 +62,7 @@ def prepare_ref(
 def prepare_img_rough(proj_fp_dict: dict, **kwargs):
     with cluster_proc_contxt(LocalCluster()):
         # Update registration params json
-        rp = RegParamsModel.model_validate(read_json(proj_fp_dict["reg_params"]))
-        rp = RegParamsModel.model_validate(rp.model_copy(update=kwargs))
-        write_json(proj_fp_dict["reg_params"], rp.model_dump())
+        rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
         # Reading
         arr_raw = da.from_zarr(proj_fp_dict["raw"])
         # Rough downsample
@@ -77,9 +75,7 @@ def prepare_img_rough(proj_fp_dict: dict, **kwargs):
 # @flow
 def prepare_img_fine(proj_fp_dict: dict, **kwargs):
     # Update registration params json
-    rp = RegParamsModel.model_validate(read_json(proj_fp_dict["reg_params"]))
-    rp = RegParamsModel.model_validate(rp.model_copy(update=kwargs))
-    write_json(proj_fp_dict["reg_params"], rp.model_dump())
+    rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
     # Reading
     arr_downsmpl1 = tifffile.imread(proj_fp_dict["downsmpl1"])
     # Fine downsample
@@ -91,9 +87,7 @@ def prepare_img_fine(proj_fp_dict: dict, **kwargs):
 # @flow
 def prepare_img_trim(proj_fp_dict: dict, **kwargs):
     # Update registration params json
-    rp = RegParamsModel.model_validate(read_json(proj_fp_dict["reg_params"]))
-    rp = RegParamsModel.model_validate(rp.model_copy(update=kwargs))
-    write_json(proj_fp_dict["reg_params"], rp.model_dump())
+    rp = RegParamsModel.update_params_file(proj_fp_dict["reg_params"], **kwargs)
     # Reading
     arr_downsmpl2 = tifffile.imread(proj_fp_dict["downsmpl2"])
     # Trim
