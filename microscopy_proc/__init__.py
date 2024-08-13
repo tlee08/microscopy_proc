@@ -10,6 +10,7 @@ from microscopy_proc.constants import CONFIGS_DIR
 # if not os.path.exists(os.path.join(home_dir, CONFIGS_DIR)):
 #     os.makedirs(os.path.join(home_dir, CONFIGS_DIR), exist_ok=True)
 # if not os.path.exists(os.path.join(home_dir, CONFIGS_DIR, "atlas_resources")):
+resources_dir = os.path.join(os.path.dirname(__file__), "..", "resources")
 
 
 # Checking if CPU or GPU version
