@@ -5,6 +5,7 @@ description = ""
 authors = ["tlee08 <timothy.e.lee@sydney.edu.au>"]
 license = "GPL-3.0"
 readme = "README.md"
+include = ["resources/**"]
 
 [tool.poetry.dependencies]
 python = "^3.12"
