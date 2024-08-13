@@ -66,10 +66,10 @@ if __name__ == "__main__":
     # Transformix
     arr_masked_trfm = tifffile.imread(proj_fp_dict["trimmed"])
     x = transformation_img(
-        proj_fp_dict["annot"],
+        proj_fp_dict["ref"],
         proj_fp_dict["regresult"],
     )
-    tifffile.imwrite(proj_fp_dict["regresult"] + "_mask_annot.tif", x)
+    tifffile.imwrite(proj_fp_dict["regresult"] + "_mask.tif", x)
 
     # Transformix
     # coords_df = dd.read_parquet(
