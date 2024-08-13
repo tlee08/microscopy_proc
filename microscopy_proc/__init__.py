@@ -1,4 +1,15 @@
 import importlib.util
+import os
+
+from microscopy_proc.constants import CONFIGS_DIR
+
+# First-time install code
+# Download Allen Brain Atlas atlas resources
+# Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
+# home_dir = os.path.expanduser("~")
+# if not os.path.exists(os.path.join(home_dir, CONFIGS_DIR)):
+#     os.makedirs(os.path.join(home_dir, CONFIGS_DIR), exist_ok=True)
+# if not os.path.exists(os.path.join(home_dir, CONFIGS_DIR, "atlas_resources")):
 
 
 # Checking if CPU or GPU version

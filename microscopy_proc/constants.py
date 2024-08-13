@@ -12,3 +12,5 @@ CELL_MEASURES = {
     "sum_itns": "sum",
     # "max_itns": "max",
 }
+
+CONFIGS_DIR = ".microscopy_proc"
