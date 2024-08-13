@@ -5,6 +5,7 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import SimpleITK as sitk
+import tifffile
 
 from microscopy_proc.utils.io_utils import silentremove
 from microscopy_proc.utils.multiproc_utils import get_cpid
@@ -52,14 +53,16 @@ def registration(
     # Running registration
     elastix_img_filt.Execute()
     # Saving output file
-    sitk.WriteImage(elastix_img_filt.GetResultImage(), output_img_fp)
+    res_img = sitk.Cast(elastix_img_filt.GetResultImage(), sitk.sitkUInt16)
+    # sitk.WriteImage(res_img, output_img_fp)
+    tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
     # Removing temporary and unecessary elastix files
     for i in os.listdir(output_img_dir):
         # Removing IterationInfo files
         if re.search(r"^IterationInfo.(\d+).R(\d+).txt$", i):
             silentremove(os.path.join(output_img_dir, i))
     # Returning the moved image (output_img) array
-    return sitk.GetArrayFromImage(elastix_img_filt.GetResultImage())
+    return sitk.GetArrayFromImage(res_img)
 
 
 def transformation_coords(
@@ -198,13 +201,9 @@ def transformation_img(
     )
     # Execute cell transformation
     transformix_img_filt.Execute()
-    # # Converting transformix output to df
-    # coords_transformed = transformix_file_to_coords(
-    #     os.path.join(output_img_dir, "outputpoints.txt")
-    # )
-    # # Removing temporary and unecessary transformix files
-    # silentremove(os.path.join(output_img_dir, "temp.dat"))
-    # silentremove(os.path.join(output_img_dir, "outputpoints.txt"))
-    # # Returning transformed coords
+    # Saving output file
+    res_img = sitk.Cast(transformix_img_filt.GetResultImage(), sitk.sitkUInt16)
+    # sitk.WriteImage(res_img, output_img_fp)
+    tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
     # return coords_transformed
-    return sitk.GetArrayFromImage(transformix_img_filt.GetResultImage())
+    return sitk.GetArrayFromImage(res_img)
