@@ -97,4 +97,10 @@ if __name__ == "__main__":
     fp_ls = [proj_fp_dict[i] for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]
 
-    view_imgs(fp_ls, vmax_ls, slicer)
+    # view_imgs(fp_ls, vmax_ls, slicer)
+
+    view_imgs(
+        [proj_fp_dict["adaptv"] + "_blur.zarr", proj_fp_dict["threshd"] + "_mask.zarr"],
+        [1000, 5],
+        [slice(400, 410), slice(2000, None), slice(None, 4000)],
+    )

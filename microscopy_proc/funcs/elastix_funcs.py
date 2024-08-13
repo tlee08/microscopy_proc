@@ -17,7 +17,7 @@ def registration(
     output_img_fp: str,
     affine_fp: str = None,
     bspline_fp: str = None,
-):
+) -> np.ndarray:
     """
     Uses SimpleElastix (a plugin for SimpleITK)
 
@@ -53,7 +53,7 @@ def registration(
     # Running registration
     elastix_img_filt.Execute()
     # Saving output file
-    res_img = sitk.Cast(elastix_img_filt.GetResultImage(), sitk.sitkUInt16)
+    res_img = elastix_img_filt.GetResultImage()
     # sitk.WriteImage(res_img, output_img_fp)
     tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
     # Removing temporary and unecessary elastix files
@@ -69,7 +69,7 @@ def transformation_coords(
     coords: pd.DataFrame | dd.DataFrame,
     moving_img_fp: str,
     output_img_fp: str,
-):
+) -> pd.DataFrame:
     """
     Uses the transformation parameter output from registration to transform
     cell coordinates from the fixed image space to moving image space.
@@ -118,8 +118,6 @@ def transformation_coords(
         os.path.join(out_dir, "outputpoints.txt")
     )
     # Removing temporary and unecessary transformix files
-    # silentremove(os.path.join(out_dir, "temp.dat"))
-    # silentremove(os.path.join(out_dir, "outputpoints.txt"))
     silentremove(out_dir)
     # Returning transformed coords
     return coords_transformed
@@ -165,7 +163,7 @@ def transformix_file_to_coords(output_points_fp):
 def transformation_img(
     moving_img_fp: str,
     output_img_fp: str,
-):
+) -> np.ndarray:
     """
     Uses the transformation parameter output from registration to transform
     cell coordinates from the fixed image space to moving image space.
@@ -202,8 +200,8 @@ def transformation_img(
     # Execute cell transformation
     transformix_img_filt.Execute()
     # Saving output file
-    res_img = sitk.Cast(transformix_img_filt.GetResultImage(), sitk.sitkUInt16)
-    # sitk.WriteImage(res_img, output_img_fp)
-    tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
+    res_img = transformix_img_filt.GetResultImage()
+    # # sitk.WriteImage(res_img, output_img_fp)
+    # tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
     # return coords_transformed
     return sitk.GetArrayFromImage(res_img)

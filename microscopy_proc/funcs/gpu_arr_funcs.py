@@ -22,6 +22,11 @@ class GpuArrFuncs(CpuArrFuncs):
 
     @classmethod
     # @task
+    def gauss_blur_filt(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().gauss_blur_filt)(*args, **kwargs).get()
+
+    @classmethod
+    # @task
     def gauss_subt_filt(cls, *args, **kwargs):
         return clear_cuda_mem_dec(super().gauss_subt_filt)(*args, **kwargs).get()
 

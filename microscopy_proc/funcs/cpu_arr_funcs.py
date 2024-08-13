@@ -52,6 +52,15 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
+    def gauss_blur_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
+        arr = cls.xp.asarray(arr).astype(cls.xp.float32)
+        logging.debug("Calculate Gaussian blur")
+        res = cls.xdimage.gaussian_filter(arr, sigma=sigma)
+        # Returning
+        return res.astype(cls.xp.uint16)
+
+    @classmethod
+    # @task
     def gauss_subt_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Calculate local Gaussian blur")
