@@ -1,14 +1,17 @@
 import os
 
+from microscopy_proc.constants import RESOURCES_DIR
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 
 
-def get_ref_fp_dict(atlas_dir, ref_v=None, annot_v=None, map_v=None):
+def get_ref_fp_dict(atlas_dir=None, ref_v=None, annot_v=None, map_v=None):
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     # Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
 
     # NAMES OF ATLAS FILES USED
+    # resources dir
+    atlas_dir = RESOURCES_DIR if atlas_dir is None else atlas_dir
     # "average_template_25", "ara_nissl_25"
     ref_v = "average_template_25" if ref_v is None else ref_v
     # "ccf_2017_25", "ccf_2016_25", "ccf_2015_25"

@@ -97,7 +97,7 @@ if __name__ == "__main__":
     atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    ref_fp_dict = get_ref_fp_dict(atlas_rsc_dir)
+    ref_fp_dict = get_ref_fp_dict()
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 

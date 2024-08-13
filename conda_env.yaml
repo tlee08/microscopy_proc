@@ -1,5 +1,6 @@
 name: microscopy_proc
 channels:
+  # - nvidia
   - conda-forge
   - bioconda
 dependencies:
@@ -11,6 +12,7 @@ dependencies:
   # Visualisation
   - python-graphviz
   # GPU acceleration
+  # - cudatoolkit
   - cupy
   - pip:
     - -e .
