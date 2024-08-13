@@ -151,10 +151,10 @@ if __name__ == "__main__":
         gauss_sigma=101,
         thresh_p=32,
         min_threshd=100,
-        max_threshd=10000,
+        max_threshd=9000,
         maxima_sigma=10,
         min_wshed=1,
-        max_wshed=1000,
+        max_wshed=700,
     )
 
     # img_to_coords_pipeline(proj_fp_dict)

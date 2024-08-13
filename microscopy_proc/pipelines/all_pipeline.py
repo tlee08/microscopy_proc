@@ -1,4 +1,5 @@
 from microscopy_proc.constants import DEPTH, PROC_CHUNKS
+from microscopy_proc.funcs.elastix_funcs import registration
 from microscopy_proc.pipelines.cellc_pipeline import (
     img_overlap_pipeline,
     img_proc_pipeline,
@@ -15,7 +16,6 @@ from microscopy_proc.pipelines.reg_pipeline import (
     prepare_img_rough,
     prepare_img_trim,
     prepare_ref,
-    registration,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -98,10 +98,10 @@ if __name__ == "__main__":
         gauss_sigma=101,
         thresh_p=32,
         min_threshd=100,
-        max_threshd=10000,
+        max_threshd=9000,
         maxima_sigma=10,
         min_wshed=1,
-        max_wshed=1000,
+        max_wshed=700,
     )
 
     # Converting maxima from raw space to refernce atlas space
