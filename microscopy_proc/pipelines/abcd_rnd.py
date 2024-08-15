@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import tifffile
+from scipy import ndimage
 
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
@@ -8,7 +9,6 @@ from microscopy_proc.funcs.visual_check_funcs import coords_to_points
 
 # logging.basicConfig(level=logging.DEBUG)
 # from prefect import flow
-from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     make_proj_dirs,
@@ -44,6 +44,8 @@ def fill_outline(arr: np.ndarray, coords_df: pd.DataFrame) -> np.ndarray:
     res = np.zeros(arr.shape, dtype=np.uint8)
     # Checking that type is 0 or 1
     assert coords_df["is_in"].isin([0, 1]).all()
+    # Ordering by z, y, x, so fill outline works
+    coords_df = coords_df.sort_values(by=["z", "y", "x"]).reset_index(drop=True)
     # For each outline coord
     for i, x in coords_df.iterrows():
         # If type is 1, fill in
@@ -59,75 +61,61 @@ def fill_outline(arr: np.ndarray, coords_df: pd.DataFrame) -> np.ndarray:
 if __name__ == "__main__":
     # Filenames
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
-    # proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/B15_agg_2.5x_1xzoom_03072024"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
 
-    # Update registration params json
-    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"])
+    # Reading ref img
+    arr_ref = tifffile.imread(proj_fp_dict["ref"])
     # Reading raw image
     arr_trimmed = tifffile.imread(proj_fp_dict["trimmed"])
 
+    # Making mask
     arr_smoothed = Gf.gauss_blur_filt(arr_trimmed, 1)
     arr_mask = Gf.manual_thresh(arr_smoothed, 400)
     tifffile.imwrite(proj_fp_dict["mask"], arr_mask)
 
     # Make outline
     outline_df = make_outline(arr_mask)
-
     # Transformix on coords
-    outline_trfm_df = transformation_coords(
-        outline_df,
-        proj_fp_dict["ref"],
-        proj_fp_dict["regresult"],
-    )
     outline_df[["z", "y", "x"]] = (
-        outline_trfm_df[["z", "y", "x"]].round(0).astype(np.int32)
+        transformation_coords(
+            outline_df,
+            proj_fp_dict["ref"],
+            proj_fp_dict["regresult"],
+        )[["z", "y", "x"]]
+        .round(0)
+        .astype(np.int32)
     )
-    outline_df.to_parquet(proj_fp_dict["outline_df"])
-
     # Filtering out of bounds coords
-    arr_ref = tifffile.imread(proj_fp_dict["ref"])
-    shape = arr_ref.shape
-    outline_df = pd.read_parquet(proj_fp_dict["outline_df"])
     outline_df = outline_df.query(
-        f"z >= 0 and z < {shape[0]} and y >= 0 and y < {shape[1]} and x >= 0 and x < {shape[2]}"
+        f"z >= 0 and z < {arr_ref.shape[0]} and y >= 0 and y < {arr_ref.shape[1]} and x >= 0 and x < {arr_ref.shape[2]}"
     )
+
     # Make outline img
     coords_to_points(
-        outline_trfm_df,
+        outline_df[outline_df["is_in"] == 1],
         arr_ref.shape,
         proj_fp_dict["outline"],
     )
+    outline_in = tifffile.imread(proj_fp_dict["outline"])
+    coords_to_points(
+        outline_df[outline_df["is_in"] == 0],
+        arr_ref.shape,
+        proj_fp_dict["outline"],
+    )
+    outline_out = tifffile.imread(proj_fp_dict["outline"])
+    tifffile.imwrite(proj_fp_dict["outline"], outline_in + outline_out * 2)
 
     # Fill in outline
     arr_mask_reg = fill_outline(arr_ref, outline_df)
-    # Make warped mask img
+    # Opening (removes FP) and closing (fills FN)
+    arr_mask_reg = ndimage.binary_opening(arr_mask_reg, iterations=2).astype(np.uint8)
+    arr_mask_reg = ndimage.binary_closing(arr_mask_reg, iterations=2).astype(np.uint8)
+    # Saving
     tifffile.imwrite(proj_fp_dict["mask_reg"], arr_mask_reg)
 
-    # Convert 3d tensor to (z, y, x) coords
-    # outline_df = Gf.get_coords(arr_outline)
-
-    # # Transformix
-    # outline_trfm_df = transformation_coords(
-    #     Gf.get_coords(arr_outline),
-    #     proj_fp_dict["ref"],
-    #     proj_fp_dict["regresult"],
-    # )
-    # outline_trfm_df.to_parquet(proj_fp_dict["outline_df"])
-
-    # # Coords to spatial
-    # coords_to_points(
-    #     outline_trfm_df,
-    #     tifffile.imread(proj_fp_dict["ref"]).shape,
-    #     proj_fp_dict["outline_reg"],
-    # )
-
-    # # Fill in outline
-    # arr_outline_reg = tifffile.imread(proj_fp_dict["outline_reg"])
-
+    # View images
     view_imgs(
         [
             proj_fp_dict["ref"],

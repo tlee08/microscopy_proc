@@ -4,7 +4,7 @@ import dask.array as da
 import tifffile
 from dask.distributed import LocalCluster
 
-from microscopy_proc.funcs.elastix_funcs import transformation_img
+from microscopy_proc.funcs.elastix_funcs import registration
 
 # from prefect import flow
 from microscopy_proc.funcs.reg_funcs import (
@@ -134,19 +134,19 @@ if __name__ == "__main__":
     #     x_trim=(None, None, None),
     # )
 
-    # # Running Elastix registration
-    # registration(
-    #     fixed_img_fp=proj_fp_dict["trimmed"],
-    #     moving_img_fp=proj_fp_dict["ref"],
-    #     output_img_fp=proj_fp_dict["regresult"],
-    #     affine_fp=proj_fp_dict["affine"],
-    #     bspline_fp=proj_fp_dict["bspline"],
-    # )
-
-    # Transformix
-    arr_masked_trfm = tifffile.imread(proj_fp_dict["trimmed"])
-    x = transformation_img(
-        proj_fp_dict["ref"],
-        proj_fp_dict["regresult"],
+    # Running Elastix registration
+    registration(
+        fixed_img_fp=proj_fp_dict["trimmed"],
+        moving_img_fp=proj_fp_dict["ref"],
+        output_img_fp=proj_fp_dict["regresult"],
+        affine_fp=proj_fp_dict["affine"],
+        bspline_fp=proj_fp_dict["bspline"],
     )
-    tifffile.imwrite(proj_fp_dict["regresult"], x)
+
+    # # Transformix
+    # arr_masked_trfm = tifffile.imread(proj_fp_dict["trimmed"])
+    # arr_regresult = transformation_img(
+    #     proj_fp_dict["ref"],
+    #     proj_fp_dict["regresult"],
+    # )
+    # tifffile.imwrite(proj_fp_dict["regresult"], arr_regresult)
