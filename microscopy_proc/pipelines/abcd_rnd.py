@@ -110,8 +110,8 @@ if __name__ == "__main__":
     # Fill in outline
     arr_mask_reg = fill_outline(arr_ref, outline_df)
     # Opening (removes FP) and closing (fills FN)
-    arr_mask_reg = ndimage.binary_opening(arr_mask_reg, iterations=2).astype(np.uint8)
     arr_mask_reg = ndimage.binary_closing(arr_mask_reg, iterations=2).astype(np.uint8)
+    arr_mask_reg = ndimage.binary_opening(arr_mask_reg, iterations=2).astype(np.uint8)
     # Saving
     tifffile.imwrite(proj_fp_dict["mask_reg"], arr_mask_reg)
 
