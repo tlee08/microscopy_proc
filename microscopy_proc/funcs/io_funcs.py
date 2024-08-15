@@ -1,5 +1,6 @@
 import dask
 import dask.array as da
+import nibabel as nib
 import numpy as np
 import tifffile
 import zarr
@@ -55,3 +56,9 @@ def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
     arr = da.stack(tiffs_ls, axis=0).rechunk(chunks)
     # Saving to zarr
     arr.to_zarr(out_fp, overwrite=True)
+
+
+# @task
+def btiff_to_niftygz(in_fp, out_fp):
+    arr = tifffile.imread(in_fp)
+    nib.Nifti1Image(arr, None).to_filename(out_fp)
