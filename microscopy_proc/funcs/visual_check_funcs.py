@@ -20,7 +20,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
         .round(0)
         .astype(np.int16)
         .query(
-            "z >= 0 and z < @shape[0] and y >= 0 and y < @shape[1] and x >= 0 and x < @shape[2]"
+            f"z >= 0 and z < {shape[0]} and y >= 0 and y < {shape[1]} and x >= 0 and x < {shape[2]}"
         )
         .values
     )
