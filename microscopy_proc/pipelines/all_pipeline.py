@@ -33,10 +33,10 @@ if __name__ == "__main__":
     in_fp = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis/B15_agg_2.5x_1xzoom_03072024"
     proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/B15_agg_2.5x_1xzoom_03072024"
 
-    atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
-
-    ref_fp_dict = get_ref_fp_dict(atlas_rsc_dir)
+    # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
+    ref_fp_dict = get_ref_fp_dict()
     proj_fp_dict = get_proj_fp_dict(proj_dir)
+    # Making project folders
     make_proj_dirs(proj_dir)
 
     # Making params json

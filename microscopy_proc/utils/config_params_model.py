@@ -33,7 +33,7 @@ class ConfigParamsModel(BaseModel):
     dog_sigma1: int = 1
     dog_sigma2: int = 4
     gauss_sigma: int = 101
-    thresh_p: int = 32
+    thresh_p: int = 60
     min_threshd: int = 100
     max_threshd: int = 10000
     maxima_sigma: int = 10

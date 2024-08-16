@@ -1,3 +1,4 @@
+import logging
 import os
 
 from microscopy_proc.constants import RESOURCES_DIR
@@ -96,7 +97,8 @@ def init_params(proj_fp_dict, **kwargs):
     try:  # If file exists
         rp = ConfigParamsModel.model_validate(read_json(proj_fp_dict["config_params"]))
     except FileNotFoundError as e:  # If file does not exist
-        print(e)
+        logging.info(e)
+        logging.info("Making new params json")
         rp = ConfigParamsModel()
     # Update registration params json
     rp = rp.model_validate(rp.model_copy(update=kwargs))

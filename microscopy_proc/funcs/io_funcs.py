@@ -4,7 +4,6 @@ import nibabel as nib
 import numpy as np
 import tifffile
 import zarr
-from natsort import natsorted
 
 # from prefect import task
 from microscopy_proc.constants import PROC_CHUNKS
@@ -39,8 +38,6 @@ def btiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
 
 # @task
 def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
-    # Natsorting in_fp_ls
-    in_fp_ls = natsorted(in_fp_ls)
     # Getting shape and dtype
     arr1 = read_tiff(in_fp_ls[0])
     shape = (len(in_fp_ls), *arr1.shape)
