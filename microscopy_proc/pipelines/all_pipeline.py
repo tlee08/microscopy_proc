@@ -24,9 +24,6 @@ from microscopy_proc.utils.proj_org_utils import (
     make_proj_dirs,
 )
 
-# from prefect import flow
-
-
 if __name__ == "__main__":
     # Filenames
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
@@ -96,7 +93,7 @@ if __name__ == "__main__":
         dog_sigma1=1,
         dog_sigma2=4,
         gauss_sigma=101,
-        thresh_p=32,
+        thresh_p=60,
         min_threshd=100,
         max_threshd=9000,
         maxima_sigma=10,

@@ -228,7 +228,6 @@ class CpuArrFuncs:
         arr: np.ndarray,
         sigma: int = 10,
         arr_mask: np.ndarray = None,
-        block_info=None,
     ):
         """
         Getting local maxima (no connectivity) in a 3D tensor.

@@ -37,11 +37,10 @@ def img_proc_pipeline(proj_fp_dict, **kwargs):
     rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading raw image
     arr_raw = da.from_zarr(proj_fp_dict["raw"])
+    # Reading overlapped image
+    arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
 
     with cluster_proc_contxt(LocalCUDACluster()):
-        # Step 0: Read overlapped image
-        arr_overlap = da.from_zarr(proj_fp_dict["overlap"])
-
         # Step 1: Top-hat filter (background subtraction)
         arr_bgrm = da.map_blocks(Gf.tophat_filt, arr_overlap, rp.tophat_sigma)
         arr_bgrm = disk_cache(arr_bgrm, proj_fp_dict["bgrm"])
@@ -149,7 +148,7 @@ if __name__ == "__main__":
         dog_sigma1=1,
         dog_sigma2=4,
         gauss_sigma=101,
-        thresh_p=32,
+        thresh_p=60,
         min_threshd=100,
         max_threshd=9000,
         maxima_sigma=10,

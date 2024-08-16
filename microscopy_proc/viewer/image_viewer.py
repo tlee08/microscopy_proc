@@ -47,6 +47,7 @@ if __name__ == "__main__":
     # Filenames
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
+    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/B15_agg_2.5x_1xzoom_03072024"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
@@ -79,14 +80,14 @@ if __name__ == "__main__":
         # ("mask_reg", 5),
         # CELLC
         ("overlap", 10000),
-        # ("bgrm", 2000),
-        # ("dog", 100),
-        # ("adaptv", 100),
-        # ("threshd", 5),
-        ("threshd_sizes", 10000),
+        ("bgrm", 2000),
+        ("dog", 100),
+        ("adaptv", 100),
+        ("threshd", 5),
+        # ("threshd_sizes", 10000),
         # ("threshd_filt", 5),
-        ("maxima", 5),
-        ("wshed_sizes", 1000),
+        # ("maxima", 5),
+        # ("wshed_sizes", 1000),
         # ("wshed_filt", 1000),
         # CELLC FINAL
         # ("filt_final", 5),
@@ -101,10 +102,4 @@ if __name__ == "__main__":
     fp_ls = [proj_fp_dict[i] for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]
 
-    # view_imgs(fp_ls, vmax_ls, slicer)
-
-    view_imgs(
-        [proj_fp_dict["adaptv"] + "_blur.zarr", proj_fp_dict["threshd"] + "_mask.zarr"],
-        [1000, 5],
-        [slice(400, 410), slice(2000, None), slice(None, 4000)],
-    )
+    view_imgs(fp_ls, vmax_ls, slicer)
