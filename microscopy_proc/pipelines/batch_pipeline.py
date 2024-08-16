@@ -27,7 +27,7 @@ from microscopy_proc.utils.proj_org_utils import (
     make_proj_dirs,
 )
 
-# from prefect import flow
+# logging.basicConfig(level=logging.DEBUG)
 
 
 if __name__ == "__main__":
