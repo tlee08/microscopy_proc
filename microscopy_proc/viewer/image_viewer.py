@@ -73,6 +73,10 @@ if __name__ == "__main__":
         # ("downsmpl_2", 10000),
         # ("trimmed", 10000),
         # ("regresult", 10000),
+        # MASK
+        # ("mask", 5),
+        # ("outline", 5),
+        # ("mask_reg", 5),
         # CELLC
         ("overlap", 10000),
         # ("bgrm", 2000),

@@ -47,9 +47,11 @@ def get_proj_fp_dict(proj_dir):
         "downsmpl2": os.path.join(proj_dir, "registration", "2_downsmpl2.tif"),
         "trimmed": os.path.join(proj_dir, "registration", "3_trimmed.tif"),
         "regresult": os.path.join(proj_dir, "registration", "4_regresult.tif"),
-        "mask": os.path.join(proj_dir, "registration", "5a_masked.tif"),
-        "outline": os.path.join(proj_dir, "registration", "5b_outline.tif"),
-        "mask_reg": os.path.join(proj_dir, "registration", "5c_mask_reg.tif"),
+        # WHOLE MASK
+        "mask": os.path.join(proj_dir, "mask", "1_mask_trimmed.tif"),
+        "outline": os.path.join(proj_dir, "mask", "2_outline_reg.tif"),
+        "mask_reg": os.path.join(proj_dir, "mask", "3_mask_reg.tif"),
+        "mask_counts_df": os.path.join(proj_dir, "mask", "4_mask_counts.parquet"),
         # CELL COUNTING ARR FILES
         "overlap": os.path.join(proj_dir, "cellcount", "0_overlap.zarr"),
         "bgrm": os.path.join(proj_dir, "cellcount", "1_bgrm.zarr"),
@@ -83,6 +85,7 @@ def get_proj_fp_dict(proj_dir):
 
 def make_proj_dirs(proj_dir):
     os.makedirs(os.path.join(proj_dir, "registration"), exist_ok=True)
+    os.makedirs(os.path.join(proj_dir, "mask"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "cellcount"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "analysis"), exist_ok=True)
     os.makedirs(os.path.join(proj_dir, "visual_check"), exist_ok=True)

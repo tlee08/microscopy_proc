@@ -130,3 +130,22 @@ def df_to_nested_tree_dict(df: pd.DataFrame) -> dict:
     tree = r(df[df["parent_structure_id"].isna()].index[0], {})
     # Returning
     return tree
+
+
+def df_map_ids(cells_df: pd.DataFrame, annot_df: pd.DataFrame) -> pd.DataFrame:
+    # Getting the annotation name for every cell (zyx coord)
+    # Left-joining the cells dataframe with the annotation mappings dataframe
+    cells_df = pd.merge(
+        left=cells_df,
+        right=annot_df,
+        how="left",
+        on="id",
+    )
+    # Setting points with ID == -1 as "invalid" label
+    cells_df.loc[cells_df["id"] == -1, "name"] = "invalid"
+    # Setting points with ID == 0 as "universe" label
+    cells_df.loc[cells_df["id"] == 0, "name"] = "universe"
+    # Setting points with no region map name (but have a positive ID value) as "no label" label
+    cells_df.loc[cells_df["name"].isna(), "name"] = "no label"
+    # Returning
+    return cells_df

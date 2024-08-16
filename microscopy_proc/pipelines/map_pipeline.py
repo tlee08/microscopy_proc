@@ -11,6 +11,7 @@ from microscopy_proc.constants import CELL_MEASURES
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
+    df_map_ids,
     nested_tree_dict_to_df,
 )
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
@@ -70,7 +71,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         # Reading cells dataframe
         cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
         coords_trfm = dd.read_parquet(proj_fp_dict["cells_trfm_df"]).compute()
-        # Making unique index
+        # Making unique incrementing index
         cells_df = cells_df.reset_index(drop=True)
         # Setting the transformed coords
         cells_df["z_trfm"] = coords_trfm["z"].values
@@ -78,10 +79,10 @@ def get_cell_mappings(proj_fp_dict: dict):
         cells_df["x_trfm"] = coords_trfm["x"].values
 
         # Reading annotation image
-        annot_arr = tifffile.imread(proj_fp_dict["annot"])
+        arr_annot = tifffile.imread(proj_fp_dict["annot"])
         # Getting the annotation ID for every cell (zyx coord)
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
-        s = annot_arr.shape
+        s = arr_annot.shape
         trfm_loc = (
             cells_df[["z_trfm", "y_trfm", "x_trfm"]]
             .round(0)
@@ -93,7 +94,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         # Getting the pixel values of each valid transformed coord (hence the specified index).
         # Invalids are set to -1
         cells_df["id"] = pd.Series(
-            annot_arr[*trfm_loc.values.T].astype(np.uint32),
+            arr_annot[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
         ).fillna(-1)
 
@@ -101,19 +102,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         with open(proj_fp_dict["map"], "r") as f:
             annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
         # Getting the annotation name for every cell (zyx coord)
-        # Left-joining the cells dataframe with the annotation mappings dataframe
-        cells_df = pd.merge(
-            left=cells_df,
-            right=annot_df,
-            how="left",
-            on="id",
-        )
-        # Setting points with ID == -1 as "invalid" label
-        cells_df.loc[cells_df["id"] == -1, "name"] = "invalid"
-        # Setting points with ID == 0 as "universe" label
-        cells_df.loc[cells_df["id"] == 0, "name"] = "universe"
-        # Setting points with no region map name (but have a positive ID value) as "no label" label
-        cells_df.loc[cells_df["name"].isna(), "name"] = "no label"
+        cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
         cells_df = dd.from_pandas(cells_df)
         cells_df.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
@@ -154,8 +143,11 @@ def grouping_cells(proj_fp_dict: dict):
 
 
 def cells2csv(proj_fp_dict: dict):
-    df = dd.read_parquet(proj_fp_dict["cells_agg_df"]).compute()
-    df.to_csv(proj_fp_dict["cells_agg_csv"])
+    (
+        dd.read_parquet(proj_fp_dict["cells_agg_df"])
+        .compute()
+        .to_csv(proj_fp_dict["cells_agg_csv"])
+    )
 
 
 if __name__ == "__main__":
