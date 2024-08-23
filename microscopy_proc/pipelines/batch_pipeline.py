@@ -27,7 +27,7 @@ from microscopy_proc.utils.proj_org_utils import (
     make_proj_dirs,
 )
 
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == "__main__":
@@ -125,5 +125,5 @@ if __name__ == "__main__":
             # Saving cells to csv
             cells2csv(proj_fp_dict)
         except Exception as e:
-            logging.debug(f"Error in {i}: {e}")
+            logging.info(f"Error in {i}: {e}")
             continue
