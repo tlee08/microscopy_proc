@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import shutil
@@ -37,15 +38,14 @@ def rename_slices_fps(dir, pattern):
     """
 
     for fp in os.listdir(dir):
-        print(fp)
+        logging.debug(fp)
         fp_new = re.sub(
             pattern,
             lambda x: x.group(0).zfill(4),
             fp,
         )
-        print(fp_new)
+        logging.debug(fp_new)
         # os.rename(os.path.join(dir, fp), os.path.join(dir, new_fp))
-        print()
 
 
 #####################################################################

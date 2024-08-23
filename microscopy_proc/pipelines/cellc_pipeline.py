@@ -58,7 +58,7 @@ def img_proc_pipeline(proj_fp_dict, **kwargs):
         # # Visually inspect sd offset
         # t_p = arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
         # t_p = t_p.compute()
-        # print(t_p)
+        # logging.debug(t_p)
         arr_threshd = da.map_blocks(Cf.manual_thresh, arr_adaptv, rp.thresh_p)
         arr_threshd = disk_cache(arr_threshd, proj_fp_dict["threshd"])
 

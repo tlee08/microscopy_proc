@@ -1,4 +1,5 @@
 import contextlib
+import logging
 
 import dask
 import dask.array
@@ -116,7 +117,7 @@ def cluster_proc_dec(cluster_factory):
         def wrapper(*args, **kwargs):
             cluster = cluster_factory()
             client = Client(cluster)
-            print(client.dashboard_link)
+            logging.debug(client.dashboard_link)
             res = func(*args, **kwargs)
             client.close()
             cluster.close()
@@ -134,7 +135,7 @@ def cluster_proc_contxt(cluster):
     then closes the client and cluster.
     """
     client = Client(cluster)
-    print(client.dashboard_link)
+    logging.debug(client.dashboard_link)
     try:
         yield
     finally:

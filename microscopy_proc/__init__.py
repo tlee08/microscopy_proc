@@ -1,4 +1,5 @@
 import importlib.util
+import logging
 
 
 # Checking if CPU or GPU version
@@ -11,4 +12,4 @@ if is_installed("cupy"):
     INSTALLATION_TYPE = "gpu"
 else:
     INSTALLATION_TYPE = "cpu"
-print(f"Installation type: {INSTALLATION_TYPE}")
+logging.debug(f"Installation type: {INSTALLATION_TYPE}")
