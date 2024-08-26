@@ -43,7 +43,7 @@ if __name__ == "__main__":
         # Checking if it is a directory
         if not os.path.isdir(os.path.join(in_fp_dir, i)):
             continue
-        # INFO
+        # Logging which file is being processed
         logging.info(f"Running: {i}")
         try:
             # Filenames
