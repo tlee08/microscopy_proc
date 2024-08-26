@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 
 import numpy as np
 import pandas as pd
@@ -21,15 +23,14 @@ from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     make_proj_dirs,
 )
-from microscopy_proc.viewer.image_viewer import view_imgs
 
-if __name__ == "__main__":
-    # Filenames
-    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
-    make_proj_dirs(proj_dir)
-
+def make_mask_for_ref(proj_fp_dict: dict):
+    """
+    Makes mask of actual image in reference space.
+    Also stores # and proportion of existent voxels
+    for each region.
+    """
     # Reading ref and trimmed imgs
     arr_ref = tifffile.imread(proj_fp_dict["ref"])
     arr_trimmed = tifffile.imread(proj_fp_dict["trimmed"])
@@ -98,17 +99,55 @@ if __name__ == "__main__":
     # Saving
     mask_counts_df.to_parquet(proj_fp_dict["mask_counts_df"])
 
-    # View images
-    view_imgs(
-        [
-            proj_fp_dict["ref"],
-            # proj_fp_dict["trimmed"],
-            # proj_fp_dict["smoothed"],
-            # proj_fp_dict["mask"],
-            proj_fp_dict["outline"],
-            # proj_fp_dict["outline_reg"],
-            proj_fp_dict["mask_reg"],
-        ],
-        [5, 5, 5, 5, 5, 5],
-        [slice(None, None), slice(None, None), slice(None, None)],
-    )
+    # # View images
+    # view_imgs(
+    #     [
+    #         proj_fp_dict["ref"],
+    #         # proj_fp_dict["trimmed"],
+    #         # proj_fp_dict["smoothed"],
+    #         # proj_fp_dict["mask"],
+    #         proj_fp_dict["outline"],
+    #         # proj_fp_dict["outline_reg"],
+    #         proj_fp_dict["mask_reg"],
+    #     ],
+    #     [5, 5, 5, 5, 5, 5],
+    #     [slice(None, None), slice(None, None), slice(None, None)],
+    # )
+
+
+if __name__ == "__main__":
+    # # Filenames
+    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    # # Getting file paths
+    # proj_fp_dict = get_proj_fp_dict(proj_dir)
+    # Making project folders
+    # make_proj_dirs(proj_dir)
+    # # Running mask pipeline
+    # make_mask_for_ref(proj_fp_dict)
+
+    # Filenames
+    # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
+    in_fp_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
+    batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
+    # in_fp_dir and batch_proj_dir cannot be the same
+    assert in_fp_dir != batch_proj_dir
+
+    for i in os.listdir(in_fp_dir):
+        # Checking if it is a directory
+        if not os.path.isdir(os.path.join(in_fp_dir, i)):
+            continue
+        # Logging which file is being processed
+        logging.info(f"Running: {i}")
+        try:
+            # Filenames
+            proj_dir = os.path.join(batch_proj_dir, i)
+            # Getting file paths
+            proj_fp_dict = get_proj_fp_dict(proj_dir)
+            # Making project folders
+            make_proj_dirs(proj_dir)
+
+            # Running mask pipeline
+            make_mask_for_ref(proj_fp_dict)
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            continue
