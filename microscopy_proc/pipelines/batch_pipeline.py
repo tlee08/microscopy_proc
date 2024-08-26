@@ -4,6 +4,7 @@ import os
 from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.funcs.elastix_funcs import registration
 from microscopy_proc.pipelines.cellc_pipeline import (
+    cells_df_smb_field_patch,
     img_overlap_pipeline,
     img_proc_pipeline,
 )
@@ -39,12 +40,12 @@ if __name__ == "__main__":
     assert in_fp_dir != batch_proj_dir
 
     for i in os.listdir(in_fp_dir):
+        # Checking if it is a directory
+        if not os.path.isdir(os.path.join(in_fp_dir, i)):
+            continue
+        # INFO
+        logging.info(f"Running: {i}")
         try:
-            # Checking if it is a directory
-            if not os.path.isdir(os.path.join(in_fp_dir, i)):
-                continue
-
-            logging.info(f"Running: {i}")
             # Filenames
             in_fp = os.path.join(in_fp_dir, i)
             proj_dir = os.path.join(batch_proj_dir, i)
@@ -115,6 +116,8 @@ if __name__ == "__main__":
                 min_wshed=1,
                 max_wshed=700,
             )
+            # Patch to fix extra smb column error
+            cells_df_smb_field_patch(proj_fp_dict["cells_raw_df"])
 
             # Converting maxima from raw space to refernce atlas space
             transform_coords(proj_fp_dict)
