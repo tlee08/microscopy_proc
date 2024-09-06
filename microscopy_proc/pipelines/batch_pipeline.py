@@ -101,27 +101,28 @@ if __name__ == "__main__":
                     bspline_fp=proj_fp_dict["bspline"],
                 )
 
-            if not os.path.exists(proj_fp_dict["cells_raw_df"]):
-                # Making overlapped chunks images for processing
-                img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
-                # Cell counting
-                img_proc_pipeline(
-                    proj_fp_dict=proj_fp_dict,
-                    d=DEPTH,
-                    tophat_sigma=10,
-                    dog_sigma1=1,
-                    dog_sigma2=4,
-                    gauss_sigma=101,
-                    thresh_p=60,
-                    min_threshd=100,
-                    max_threshd=9000,
-                    maxima_sigma=10,
-                    min_wshed=1,
-                    max_wshed=700,
-                )
-                # Patch to fix extra smb column error
-                cells_df_smb_field_patch(proj_fp_dict["cells_raw_df"])
+            # if not os.path.exists(proj_fp_dict["cells_raw_df"]):
+            # Making overlapped chunks images for processing
+            img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+            # Cell counting
+            img_proc_pipeline(
+                proj_fp_dict=proj_fp_dict,
+                d=DEPTH,
+                tophat_sigma=10,
+                dog_sigma1=1,
+                dog_sigma2=4,
+                gauss_sigma=101,
+                thresh_p=60,
+                min_threshd=50,
+                max_threshd=9000,
+                maxima_sigma=10,
+                min_wshed=1,
+                max_wshed=700,
+            )
+            # Patch to fix extra smb column error
+            cells_df_smb_field_patch(proj_fp_dict["cells_raw_df"])
 
+            # if not os.path.exists(proj_fp_dict["cells_trfm_df"]):
             # Converting maxima from raw space to refernce atlas space
             transform_coords(proj_fp_dict)
             # Getting ID mappings
