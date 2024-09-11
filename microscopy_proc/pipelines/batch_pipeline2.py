@@ -1,9 +1,8 @@
 import logging
 import os
 
-from microscopy_proc.pipelines.reg_pipeline import (
-    prepare_img_trim,
-)
+from microscopy_proc.funcs.elastix_funcs import registration
+from microscopy_proc.pipelines.reg_pipeline import prepare_img_trim, prepare_ref
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     get_ref_fp_dict,
@@ -22,12 +21,12 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_fp_dir != batch_proj_dir
 
-    for i in [
-        "B3_2.5x_1x_zoom_08082024",
-        "B18_2.5x_1x_zoom_07082024",
-        "G5_agg_2.5x_1xzoom_05072024",
-    ]:
-        # for i in os.listdir(in_fp_dir):
+    # for i in [
+    #     "B3_2.5x_1x_zoom_08082024",
+    #     "B18_2.5x_1x_zoom_07082024",
+    #     "G5_agg_2.5x_1xzoom_05072024",
+    # ]:
+    for i in os.listdir(in_fp_dir):
         # Checking if it is a directory
         if not os.path.isdir(os.path.join(in_fp_dir, i)):
             continue
@@ -53,14 +52,14 @@ if __name__ == "__main__":
 
             # if not os.path.exists(proj_fp_dict["regresult"]):
             #     # Preparing reference images
-            #     prepare_ref(
-            #         ref_fp_dict=ref_fp_dict,
-            #         proj_fp_dict=proj_fp_dict,
-            #         ref_orient_ls=(2, 3, 1),
-            #         ref_z_trim=(None, None, None),
-            #         ref_y_trim=(None, None, None),
-            #         ref_x_trim=(None, None, None),
-            #     )
+            prepare_ref(
+                ref_fp_dict=ref_fp_dict,
+                proj_fp_dict=proj_fp_dict,
+                ref_orient_ls=(-2, 3, 1),
+                ref_z_trim=(None, None, None),
+                ref_y_trim=(None, None, None),
+                ref_x_trim=(None, None, None),
+            )
             #     # Preparing image itself
             #     prepare_img_rough(
             #         proj_fp_dict,
@@ -77,17 +76,17 @@ if __name__ == "__main__":
             prepare_img_trim(
                 proj_fp_dict,
                 # z_trim=(None, None, None),
-                # y_trim=(80, None, None),
+                # y_trim=(None, None, None),
                 # x_trim=(None, None, None),
             )
-            #     # Running Elastix registration
-            #     registration(
-            #         fixed_img_fp=proj_fp_dict["trimmed"],
-            #         moving_img_fp=proj_fp_dict["ref"],
-            #         output_img_fp=proj_fp_dict["regresult"],
-            #         affine_fp=proj_fp_dict["affine"],
-            #         bspline_fp=proj_fp_dict["bspline"],
-            #     )
+            # Running Elastix registration
+            registration(
+                fixed_img_fp=proj_fp_dict["trimmed"],
+                moving_img_fp=proj_fp_dict["ref"],
+                output_img_fp=proj_fp_dict["regresult"],
+                affine_fp=proj_fp_dict["affine"],
+                bspline_fp=proj_fp_dict["bspline"],
+            )
 
             # # if not os.path.exists(proj_fp_dict["cells_raw_df"]):
             # # Making overlapped chunks images for processing
