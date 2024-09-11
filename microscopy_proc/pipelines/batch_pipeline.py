@@ -88,8 +88,8 @@ if __name__ == "__main__":
                 )
                 prepare_img_trim(
                     proj_fp_dict,
-                    z_trim=(None, -5, None),
-                    y_trim=(80, -75, None),
+                    z_trim=(None, None, None),
+                    y_trim=(None, None, None),
                     x_trim=(None, None, None),
                 )
                 # Running Elastix registration
@@ -122,9 +122,9 @@ if __name__ == "__main__":
             # Patch to fix extra smb column error
             cells_df_smb_field_patch(proj_fp_dict["cells_raw_df"])
 
-            # if not os.path.exists(proj_fp_dict["cells_trfm_df"]):
-            # Converting maxima from raw space to refernce atlas space
-            transform_coords(proj_fp_dict)
+            if not os.path.exists(proj_fp_dict["cells_trfm_df"]):
+                # Converting maxima from raw space to refernce atlas space
+                transform_coords(proj_fp_dict)
             # Getting ID mappings
             get_cell_mappings(proj_fp_dict)
             # Grouping cells
