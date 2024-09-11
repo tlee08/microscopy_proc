@@ -59,3 +59,8 @@ def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
 def btiff_to_niftygz(in_fp, out_fp):
     arr = tifffile.imread(in_fp)
     nib.Nifti1Image(arr, None).to_filename(out_fp)
+
+
+def read_niftygz(fp):
+    img = nib.load(fp)
+    return np.array(img.dataobj)
