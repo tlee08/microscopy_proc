@@ -29,7 +29,7 @@ from microscopy_proc.utils.proj_org_utils import (
 )
 
 # logging.basicConfig(level=logging.INFO)
-
+logging.disable(logging.CRITICAL)
 
 if __name__ == "__main__":
     # Filenames

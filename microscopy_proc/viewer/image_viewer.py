@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # Filenames
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
-    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/G3_agg_2.5x_1xzoom_03072024"
+    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/B23_2.5x_1x_zoom_05082024"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
