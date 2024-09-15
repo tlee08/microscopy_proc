@@ -17,7 +17,7 @@ from microscopy_proc.utils.proj_org_utils import (
 
 # @flow
 def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
-    with cluster_proc_contxt(LocalCluster()):
+    with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
         if os.path.isdir(in_fp):
             tiffs_to_zarr(
                 natsorted(
