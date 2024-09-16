@@ -21,8 +21,6 @@ from microscopy_proc.utils.proj_org_utils import (
     make_proj_dirs,
 )
 
-# logging.basicConfig(level=logging.DEBUG)
-
 
 # @flow
 def prepare_ref(

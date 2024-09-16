@@ -1,6 +1,8 @@
 import logging
 import os
 
+from natsort import natsorted
+
 from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.funcs.elastix_funcs import registration
 from microscopy_proc.pipelines.cellc_pipeline import (
@@ -39,7 +41,7 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_fp_dir != batch_proj_dir
 
-    for i in os.listdir(in_fp_dir):
+    for i in natsorted(os.listdir(in_fp_dir)):
         # Checking if it is a directory
         if not os.path.isdir(os.path.join(in_fp_dir, i)):
             continue

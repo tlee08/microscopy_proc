@@ -21,8 +21,6 @@ from microscopy_proc.utils.proj_org_utils import (
     make_proj_dirs,
 )
 
-# logging.basicConfig(level=logging.DEBUG)
-
 
 # @flow
 def img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH):

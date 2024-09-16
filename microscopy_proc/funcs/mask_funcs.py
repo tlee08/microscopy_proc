@@ -1,9 +1,6 @@
 import numpy as np
 import pandas as pd
 
-# logging.basicConfig(level=logging.DEBUG)
-# from prefect import flow
-
 
 def make_outline(arr: np.ndarray) -> pd.DataFrame:
     # Shifting along last axis

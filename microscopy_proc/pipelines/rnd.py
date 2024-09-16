@@ -1,11 +1,7 @@
-import logging
-
 import numpy as np
 import tifffile
 
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs
-
-logging.basicConfig(level=logging.DEBUG)
 
 # Pipeline
 

@@ -16,9 +16,6 @@ from microscopy_proc.funcs.mask_funcs import (
     mask_to_region_counts,
 )
 from microscopy_proc.funcs.visual_check_funcs import coords_to_points
-
-# logging.basicConfig(level=logging.DEBUG)
-# from prefect import flow
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     make_proj_dirs,

@@ -10,9 +10,6 @@ from microscopy_proc.utils.proj_org_utils import (
     make_proj_dirs,
 )
 
-logging.basicConfig(level=logging.INFO)
-
-
 if __name__ == "__main__":
     # Filenames
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
