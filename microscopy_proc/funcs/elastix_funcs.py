@@ -112,7 +112,9 @@ def transformation_coords(
     transformix_img_filt.LogToFileOff()
     # transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
+    print("STARTING TRANSFORMIX")
     transformix_img_filt.Execute()
+    print("FINISHING TRANSFORMIX")
     # Converting transformix output to df
     coords_transformed = transformix_file_to_coords(
         os.path.join(out_dir, "outputpoints.txt")
