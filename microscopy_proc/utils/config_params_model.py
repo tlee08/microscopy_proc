@@ -58,7 +58,14 @@ class ConfigParamsModel(BaseModel):
 
     @classmethod
     def update_params_file(cls, fp: str, **kwargs):
+        """
+        Reads the json file in `fp`, updates the parameters with `kwargs`,
+        writes the updated parameters back to `fp` (if there are any updates),
+        and returns the model instance.
+        """
         rp = cls.model_validate(read_json(fp))
-        rp = cls.model_validate(rp.model_copy(update=kwargs))
-        write_json(fp, rp.model_dump())
+        # Updating and saving if kwargs is not empty
+        if kwargs != {}:
+            rp = cls.model_validate(rp.model_copy(update=kwargs))
+            write_json(fp, rp.model_dump())
         return rp

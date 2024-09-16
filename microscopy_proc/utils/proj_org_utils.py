@@ -100,7 +100,11 @@ def init_params(proj_fp_dict, **kwargs):
         logging.info(e)
         logging.info("Making new params json")
         rp = ConfigParamsModel()
-    # Update registration params json
-    rp = rp.model_validate(rp.model_copy(update=kwargs))
-    # Writing registration params json
-    write_json(proj_fp_dict["config_params"], rp.model_dump())
+    # If there are any updates
+    if kwargs != {}:
+        # Update registration params json
+        rp = rp.model_validate(rp.model_copy(update=kwargs))
+        # Writing registration params json
+        write_json(proj_fp_dict["config_params"], rp.model_dump())
+    # Returning the registration params
+    return rp
