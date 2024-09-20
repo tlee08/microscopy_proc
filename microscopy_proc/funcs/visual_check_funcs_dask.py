@@ -7,7 +7,7 @@ import seaborn as sns
 
 # from prefect import flow, task
 from microscopy_proc.constants import PROC_CHUNKS
-from microscopy_proc.utils.dask_utils import coords_to_block
+from microscopy_proc.utils.dask_utils import coords2block
 
 
 # @task
@@ -38,12 +38,12 @@ def cell_counts_plot(df):
 
 
 # @task
-def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
+def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
     arr = arr.copy()
     shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
-        coords = coords_to_block(coords, block_info)
+        coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering
@@ -67,13 +67,13 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=N
 
 
 # @task
-def coords_to_sphere_workers(
+def coords2sphere_workers(
     arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
 ):
     shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
-        coords = coords_to_block(coords, block_info)
+        coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering for points within the image + radius padding bounds
@@ -98,7 +98,7 @@ def coords_to_sphere_workers(
             coords_i["z"] += z
             coords_i["y"] += y
             coords_i["x"] += x
-            arr = coords_to_points_workers(arr, coords_i)
+            arr = coords2points_workers(arr, coords_i)
     # Return arr
     return arr
 
@@ -109,7 +109,7 @@ def coords_to_sphere_workers(
 
 
 # @flow
-def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: str):
+def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: str):
     """
     Converts list of coordinates to spatial array single points.
 
@@ -125,15 +125,15 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
     arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
     # arr = arr.map_blocks(
-    #     lambda i, block_info=None: coords_to_points_workers(i, coords, block_info)
+    #     lambda i, block_info=None: coords2points_workers(i, coords, block_info)
     # )
-    arr = da.map_blocks(coords_to_points_workers, arr, coords)
+    arr = da.map_blocks(coords2points_workers, arr, coords)
     # Computing and saving
     arr.to_zarr(arr_out_fp, overwrite=True)
 
 
 # @flow
-def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
+def coords2heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     """
     Converts list of coordinates to spatial array as voxels.
     Overlapping areas accumulate in intensity.
@@ -151,14 +151,14 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
     arr = arr.map_blocks(
-        lambda i, block_info=None: coords_to_sphere_workers(i, coords, r, block_info)
+        lambda i, block_info=None: coords2sphere_workers(i, coords, r, block_info)
     )
     # Computing and saving
     arr.to_zarr(arr_out_fp, overwrite=True)
 
 
 # @flow
-def coords_to_regions(coords, shape, arr_out_fp):
+def coords2regions(coords, shape, arr_out_fp):
     """
     Converts list of coordinates to spatial array.
 

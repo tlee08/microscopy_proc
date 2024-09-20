@@ -6,7 +6,7 @@ from natsort import natsorted
 
 # from prefect import flow
 from microscopy_proc.constants import PROC_CHUNKS
-from microscopy_proc.funcs.io_funcs import btiff_to_zarr, tiffs_to_zarr
+from microscopy_proc.funcs.io_funcs import btiff2zarr, tiffs2zarr
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -16,10 +16,10 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 # @flow
-def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
+def tiff2zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
         if os.path.isdir(in_fp):
-            tiffs_to_zarr(
+            tiffs2zarr(
                 natsorted(
                     [
                         os.path.join(in_fp, f)
@@ -31,7 +31,7 @@ def tiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
                 chunks=chunks,
             )
         elif os.path.isfile(in_fp):
-            btiff_to_zarr(
+            btiff2zarr(
                 in_fp,
                 out_fp,
                 chunks=chunks,
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     # Making params json
     init_params(proj_fp_dict)
 
-    tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+    tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)

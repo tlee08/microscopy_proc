@@ -18,7 +18,7 @@ def read_tiff(fp):
 
 
 # @task
-def btiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
+def btiff2zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
     # To intermediate tiff
     arr_mmap = tifffile.memmap(in_fp)
     arr_zarr = zarr.open(
@@ -37,7 +37,7 @@ def btiff_to_zarr(in_fp, out_fp, chunks=PROC_CHUNKS):
 
 
 # @task
-def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
+def tiffs2zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
     # Getting shape and dtype
     arr1 = read_tiff(in_fp_ls[0])
     shape = (len(in_fp_ls), *arr1.shape)
@@ -56,7 +56,7 @@ def tiffs_to_zarr(in_fp_ls, out_fp, chunks=PROC_CHUNKS):
 
 
 # @task
-def btiff_to_niftygz(in_fp, out_fp):
+def btiff2niftygz(in_fp, out_fp):
     arr = tifffile.imread(in_fp)
     nib.Nifti1Image(arr, None).to_filename(out_fp)
 

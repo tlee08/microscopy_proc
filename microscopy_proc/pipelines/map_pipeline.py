@@ -12,7 +12,7 @@ from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
     df_map_ids,
-    nested_tree_dict_to_df,
+    nested_tree_dict2df,
 )
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
@@ -100,7 +100,7 @@ def get_cell_mappings(proj_fp_dict: dict):
 
         # Reading annotation mappings dataframe
         with open(proj_fp_dict["map"], "r") as f:
-            annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
+            annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
         # Getting the annotation name for every cell (zyx coord)
         cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
@@ -133,7 +133,7 @@ def grouping_cells(proj_fp_dict: dict):
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
         with open(proj_fp_dict["map"], "r") as f:
-            annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
+            annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
         cells_grouped = combine_nested_regions(cells_grouped, annot_df)
         # Calculating integrated average intensity (sum_itns / size)
         cells_grouped["iov"] = cells_grouped["sum"] / cells_grouped["volume"]
@@ -152,7 +152,8 @@ def cells2csv(proj_fp_dict: dict):
 
 if __name__ == "__main__":
     # Filenames
-    proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
+    proj_dir = r"/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/R18_agg_2.5x_1xzoom_03072024"
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
     make_proj_dirs(proj_dir)
@@ -163,8 +164,8 @@ if __name__ == "__main__":
     # Converting maxima from raw space to refernce atlas space
     transform_coords(proj_fp_dict)
 
-    get_cell_mappings(proj_fp_dict)
+    # get_cell_mappings(proj_fp_dict)
 
-    grouping_cells(proj_fp_dict)
+    # grouping_cells(proj_fp_dict)
 
-    cells2csv(proj_fp_dict)
+    # cells2csv(proj_fp_dict)

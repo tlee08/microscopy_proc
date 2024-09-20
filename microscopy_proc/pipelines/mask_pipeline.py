@@ -9,13 +9,13 @@ from scipy import ndimage
 
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
-from microscopy_proc.funcs.map_funcs import df_map_ids, nested_tree_dict_to_df
+from microscopy_proc.funcs.map_funcs import df_map_ids, nested_tree_dict2df
 from microscopy_proc.funcs.mask_funcs import (
     fill_outline,
     make_outline,
-    mask_to_region_counts,
+    mask2region_counts,
 )
-from microscopy_proc.funcs.visual_check_funcs import coords_to_points
+from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     make_proj_dirs,
@@ -55,13 +55,13 @@ def make_mask_for_ref(proj_fp_dict: dict):
     )
 
     # Make outline img (1 for in, 2 for out)
-    coords_to_points(
+    coords2points(
         outline_df[outline_df["is_in"] == 1],
         arr_ref.shape,
         proj_fp_dict["outline"],
     )
     outline_in = tifffile.imread(proj_fp_dict["outline"])
-    coords_to_points(
+    coords2points(
         outline_df[outline_df["is_in"] == 0],
         arr_ref.shape,
         proj_fp_dict["outline"],
@@ -80,11 +80,11 @@ def make_mask_for_ref(proj_fp_dict: dict):
     # Counting mask voxels in each region
     arr_annot = tifffile.imread(proj_fp_dict["annot"])
     with open(proj_fp_dict["map"], "r") as f:
-        annot_df = nested_tree_dict_to_df(json.load(f)["msg"][0])
+        annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
     # Getting the annotation name for every cell (zyx coord)
     mask_counts_df = pd.merge(
-        left=mask_to_region_counts(np.full(arr_annot.shape, 1), arr_annot),
-        right=mask_to_region_counts(arr_mask_reg, arr_annot),
+        left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),
+        right=mask2region_counts(arr_mask_reg, arr_annot),
         how="left",
         on="id",
         suffixes=("_annot", "_mask"),

@@ -4,7 +4,7 @@ import pandas as pd
 from microscopy_proc.constants import CELL_MEASURES
 
 
-def nested_tree_dict_to_df(data_dict: dict):
+def nested_tree_dict2df(data_dict: dict):
     """
     Recursively find the region information for all nested objects.
     """
@@ -37,7 +37,7 @@ def nested_tree_dict_to_df(data_dict: dict):
         df = pd.concat(
             [
                 df,
-                nested_tree_dict_to_df(i),
+                nested_tree_dict2df(i),
             ],
             axis=0,
             ignore_index=True,
@@ -103,7 +103,7 @@ def combine_nested_regions(cells_grouped: pd.DataFrame, annot_df: pd.DataFrame):
     return cells_grouped
 
 
-def df_to_nested_tree_dict(df: pd.DataFrame) -> dict:
+def df2nested_tree_dict(df: pd.DataFrame) -> dict:
     # Adding children list to each region
     df = df.copy()
     df["children"] = [[] for i in range(df.shape[0])]

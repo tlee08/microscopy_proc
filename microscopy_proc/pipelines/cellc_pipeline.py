@@ -9,7 +9,7 @@ from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs as Cf
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
-    block_to_coords,
+    block2coords,
     cluster_proc_contxt,
     da_overlap,
     da_trim,
@@ -109,7 +109,7 @@ def img_proc_pipeline(proj_fp_dict, **kwargs):
     with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
         # n_workers=2
         # Getting maxima coords and corresponding watershed sizes in table
-        cells_df = block_to_coords(
+        cells_df = block2coords(
             Cf.get_cells, arr_raw, arr_overlap, arr_maxima, arr_wshed_filt, rp.d
         )
         # Filtering out by size
@@ -118,12 +118,12 @@ def img_proc_pipeline(proj_fp_dict, **kwargs):
         cells_df.to_parquet(proj_fp_dict["cells_raw_df"], overwrite=True)
 
 
-def img_to_coords_pipeline(proj_fp_dict):
+def img2coords_pipeline(proj_fp_dict):
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
         arr_maxima_f = da.from_zarr(proj_fp_dict["maxima_final"])
         # Step 10a: Get coords of maxima and get corresponding sizes from watershed
-        coords_df = block_to_coords(Gf.get_coords, arr_maxima_f)
+        coords_df = block2coords(Gf.get_coords, arr_maxima_f)
         coords_df.to_parquet(proj_fp_dict["maxima_df"], overwrite=True)
 
 
@@ -170,4 +170,4 @@ if __name__ == "__main__":
 
     cells_df_smb_field_patch(proj_fp_dict["cells_raw_df"])
 
-    # img_to_coords_pipeline(proj_fp_dict)
+    # img2coords_pipeline(proj_fp_dict)

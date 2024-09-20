@@ -161,7 +161,7 @@ class CpuArrFuncs:
 
     @classmethod
     # @task
-    def ids_to_sizes(cls, arr: np.ndarray) -> np.ndarray:
+    def ids2sizes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Convert labels to sizes.
         """
@@ -182,7 +182,7 @@ class CpuArrFuncs:
         Label objects in a 3D tensor.
         """
         arr = cls.label_with_ids(arr)
-        res = cls.ids_to_sizes(arr)
+        res = cls.ids2sizes(arr)
         return res
 
     @classmethod
@@ -292,7 +292,7 @@ class CpuArrFuncs:
         # Watershed segmentation
         arr_wshed = cls.wshed_segm(arr_raw, arr_maxima, arr_mask)
         # Getting sizes of watershed regions
-        res = cls.ids_to_sizes(arr_wshed)
+        res = cls.ids2sizes(arr_wshed)
         # Returning
         return res
 

@@ -7,6 +7,7 @@ import pandas as pd
 import SimpleITK as sitk
 import tifffile
 
+from microscopy_proc.constants import TEMP_DIR
 from microscopy_proc.utils.io_utils import silentremove
 from microscopy_proc.utils.multiproc_utils import get_cpid
 
@@ -88,7 +89,8 @@ def transformation_coords(
     # coords = coords.compute() if isinstance(coords, Delayed) else coords
     # Getting the output image directory
     reg_dir = os.path.dirname(output_img_fp)
-    out_dir = os.path.join(reg_dir, f"transformed_coords_{get_cpid()}")
+    # Using TEMP_DIR in user home directory (faster than network drive)
+    out_dir = os.path.join(TEMP_DIR, f"transformed_coords_{get_cpid()}")
     os.makedirs(out_dir, exist_ok=True)
     # Setting up Transformix object
     transformix_img_filt = sitk.TransformixImageFilter()
@@ -112,11 +114,9 @@ def transformation_coords(
     transformix_img_filt.LogToFileOff()
     # transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
-    print("STARTING TRANSFORMIX")
     transformix_img_filt.Execute()
-    print("FINISHING TRANSFORMIX")
     # Converting transformix output to df
-    coords_transformed = transformix_file_to_coords(
+    coords_transformed = transformix_file2coords(
         os.path.join(out_dir, "outputpoints.txt")
     )
     # Removing temporary and unecessary transformix files
@@ -138,7 +138,7 @@ def make_fixed_points_file(coords, fixed_points_fp):
             f.write(f"{coords[i, 0]} {coords[i, 1]} {coords[i, 2]}\n")
 
 
-def transformix_file_to_coords(output_points_fp):
+def transformix_file2coords(output_points_fp):
     """
     Takes filename of the transformix output points and converts it to a pd.DataFrame of points.
 

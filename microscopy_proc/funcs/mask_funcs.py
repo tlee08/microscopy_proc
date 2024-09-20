@@ -44,7 +44,7 @@ def fill_outline(arr: np.ndarray, coords_df: pd.DataFrame) -> np.ndarray:
     return res
 
 
-def mask_to_region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFrame:
+def mask2region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFrame:
     # Convert arr_mask to binary
     arr_mask = (arr_mask > 0).astype(np.uint8)
     # Multiply mask by annotation to convert mask to region IDs

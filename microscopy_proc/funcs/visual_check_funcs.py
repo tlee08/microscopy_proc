@@ -10,7 +10,7 @@ from microscopy_proc.utils.io_utils import silentremove
 #####################################################################
 
 
-def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
+def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
     shape = arr.shape  # noqa: F841
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
@@ -31,7 +31,7 @@ def coords_to_points_workers(arr: np.ndarray, coords: pd.DataFrame):
     return arr
 
 
-def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
+def coords2points_start(shape: tuple, arr_out_fp: str) -> da.Array:
     # Initialising spatial array
     arr = np.memmap(
         "temp.dat",
@@ -42,7 +42,7 @@ def coords_to_points_start(shape: tuple, arr_out_fp: str) -> da.Array:
     return arr
 
 
-def coords_to_points_end(arr, arr_out_fp):
+def coords2points_end(arr, arr_out_fp):
     # # Saving the subsampled array
     tifffile.imwrite(arr_out_fp, arr)
     # Removing temporary memmap
@@ -54,7 +54,7 @@ def coords_to_points_end(arr, arr_out_fp):
 #####################################################################
 
 
-def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: str):
+def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: str):
     """
     Converts list of coordinates to spatial array single points.
 
@@ -67,14 +67,14 @@ def coords_to_points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: s
         The output image array
     """
     # Initialising spatial array
-    arr = coords_to_points_start(shape, arr_out_fp)
+    arr = coords2points_start(shape, arr_out_fp)
     # Adding coords to image
-    coords_to_points_workers(arr, coords)
+    coords2points_workers(arr, coords)
     # Saving the subsampled array
-    coords_to_points_end(arr, arr_out_fp)
+    coords2points_end(arr, arr_out_fp)
 
 
-def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
+def coords2heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     """
     Converts list of coordinates to spatial array as voxels.
     Overlapping areas accumulate in intensity.
@@ -89,7 +89,7 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
         The output image array
     """
     # Initialising spatial array
-    arr = coords_to_points_start(shape, arr_out_fp)
+    arr = coords2points_start(shape, arr_out_fp)
 
     # Constructing sphere array mask
     zz, yy, xx = np.ogrid[1 : r * 2, 1 : r * 2, 1 : r * 2]
@@ -104,13 +104,13 @@ def coords_to_heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
             coords_i["z"] += z
             coords_i["y"] += y
             coords_i["x"] += x
-            coords_to_points_workers(arr, coords_i)
+            coords2points_workers(arr, coords_i)
 
     # Saving the subsampled array
-    coords_to_points_end(arr, arr_out_fp)
+    coords2points_end(arr, arr_out_fp)
 
 
-def coords_to_regions(coords, shape, arr_out_fp):
+def coords2regions(coords, shape, arr_out_fp):
     """
     Converts list of coordinates to spatial array.
 
@@ -123,7 +123,7 @@ def coords_to_regions(coords, shape, arr_out_fp):
         The output image array
     """
     # Initialising spatial array
-    arr = coords_to_points_start(shape)
+    arr = coords2points_start(shape)
 
     # Adding coords to image with np.apply_along_axis
     def f(coord):
@@ -138,4 +138,4 @@ def coords_to_regions(coords, shape, arr_out_fp):
         np.apply_along_axis(f, 1, coords)
 
     # Saving the subsampled array
-    coords_to_points_end(arr, arr_out_fp)
+    coords2points_end(arr, arr_out_fp)

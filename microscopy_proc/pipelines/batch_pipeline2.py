@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
             # if not os.path.exists(proj_fp_dict["raw"]):
             #     # Making zarr from tiff file(s)
-            #     tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+            #     tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
 
             # if not os.path.exists(proj_fp_dict["regresult"]):
             #     # Preparing reference images

@@ -1,6 +1,6 @@
 from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.funcs.elastix_funcs import registration
-from microscopy_proc.pipelines.make_zarr import tiff_to_zarr
+from microscopy_proc.pipelines.make_zarr import tiff2zarr
 from microscopy_proc.pipelines.map_pipeline import (
     cells2csv,
     get_cell_mappings,
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     init_params(proj_fp_dict)
 
     # Making zarr from tiff file(s)
-    tiff_to_zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+    tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
 
     # Preparing reference images
     prepare_ref(

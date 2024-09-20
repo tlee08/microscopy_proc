@@ -11,7 +11,7 @@ from dask.distributed import Client
 from microscopy_proc.constants import DEPTH
 
 
-def block_to_coords(func, *args: list) -> dd.DataFrame:
+def block2coords(func, *args: list) -> dd.DataFrame:
     """
     Applies the `func` to `arr`.
     Expects `func` to convert `arr` to coords df (of sorts).
@@ -60,7 +60,7 @@ def block_to_coords(func, *args: list) -> dd.DataFrame:
     )
 
 
-def coords_to_block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
+def coords2block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
     """
     Converts the coords to a block.
     """
