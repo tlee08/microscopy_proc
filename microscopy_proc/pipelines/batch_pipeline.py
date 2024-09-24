@@ -11,10 +11,10 @@ from microscopy_proc.pipelines.map_pipeline import (
     transform_coords,
 )
 from microscopy_proc.pipelines.reg_pipeline import (
-    prepare_img_fine,
-    prepare_img_rough,
-    prepare_img_trim,
-    prepare_ref,
+    img_fine_pipeline,
+    img_rough_pipeline,
+    img_trim_pipeline,
+    ref_prepare_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
             # if not os.path.exists(proj_fp_dict["regresult"]):
             # Preparing reference images
-            prepare_ref(
+            ref_prepare_pipeline(
                 ref_fp_dict=ref_fp_dict,
                 proj_fp_dict=proj_fp_dict,
                 # ref_orient_ls=(-2, 3, 1),
@@ -79,19 +79,19 @@ if __name__ == "__main__":
                 # ref_x_trim=(None, None, None),
             )
             # Preparing image itself
-            prepare_img_rough(
+            img_rough_pipeline(
                 proj_fp_dict,
                 # z_rough=3,
                 # y_rough=6,
                 # x_rough=6,
             )
-            prepare_img_fine(
+            img_fine_pipeline(
                 proj_fp_dict,
                 # z_fine=1,
                 # y_fine=0.6,
                 # x_fine=0.6,
             )
-            prepare_img_trim(
+            img_trim_pipeline(
                 proj_fp_dict,
                 # z_trim=(None, None, None),
                 # y_trim=(None, None, None),

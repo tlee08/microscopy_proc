@@ -23,10 +23,9 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 # @flow
-def prepare_ref(
+def ref_prepare_pipeline(
     ref_fp_dict: dict,
     proj_fp_dict: dict,
-    # Ref Params
     **kwargs,
 ):
     # Update registration params json
@@ -52,7 +51,7 @@ def prepare_ref(
 
 
 # @flow
-def prepare_img_rough(proj_fp_dict: dict, **kwargs):
+def img_rough_pipeline(proj_fp_dict: dict, **kwargs):
     # Update registration params json
     rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     with cluster_proc_contxt(LocalCluster()):
@@ -66,7 +65,7 @@ def prepare_img_rough(proj_fp_dict: dict, **kwargs):
 
 
 # @flow
-def prepare_img_fine(proj_fp_dict: dict, **kwargs):
+def img_fine_pipeline(proj_fp_dict: dict, **kwargs):
     # Update registration params json
     rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading
@@ -78,7 +77,7 @@ def prepare_img_fine(proj_fp_dict: dict, **kwargs):
 
 
 # @flow
-def prepare_img_trim(proj_fp_dict: dict, **kwargs):
+def img_trim_pipeline(proj_fp_dict: dict, **kwargs):
     # Update registration params json
     rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading
@@ -87,6 +86,18 @@ def prepare_img_trim(proj_fp_dict: dict, **kwargs):
     arr_trimmed = arr_downsmpl2[slice(*rp.z_trim), slice(*rp.y_trim), slice(*rp.x_trim)]
     # Saving
     tifffile.imwrite(proj_fp_dict["trimmed"], arr_trimmed)
+
+
+# @flow
+def registration_pipeline(proj_fp_dict: dict, **kwargs):
+    # Running Elastix registration
+    registration(
+        fixed_img_fp=proj_fp_dict["trimmed"],
+        moving_img_fp=proj_fp_dict["ref"],
+        output_img_fp=proj_fp_dict["regresult"],
+        affine_fp=proj_fp_dict["affine"],
+        bspline_fp=proj_fp_dict["bspline"],
+    )
 
 
 if __name__ == "__main__":
@@ -133,13 +144,7 @@ if __name__ == "__main__":
     # )
 
     # Running Elastix registration
-    registration(
-        fixed_img_fp=proj_fp_dict["trimmed"],
-        moving_img_fp=proj_fp_dict["ref"],
-        output_img_fp=proj_fp_dict["regresult"],
-        affine_fp=proj_fp_dict["affine"],
-        bspline_fp=proj_fp_dict["bspline"],
-    )
+    registration_pipeline(proj_fp_dict)
 
     # # Transformix
     # arr_masked_trfm = tifffile.imread(proj_fp_dict["trimmed"])
