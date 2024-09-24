@@ -1,6 +1,3 @@
-# %%
-
-
 import logging
 import os
 
@@ -47,7 +44,7 @@ if __name__ == "__main__":
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
     proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    proj_dir = os.path.join(proj_dir, "G17_2.5x_1x_zoom_07082024")
+    proj_dir = os.path.join(proj_dir, "P11_agg_2.5x_1xzoom_02072024")
 
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 

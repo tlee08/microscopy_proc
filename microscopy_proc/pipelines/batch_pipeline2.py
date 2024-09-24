@@ -3,7 +3,6 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.elastix_funcs import registration
 from microscopy_proc.pipelines.map_pipeline import (
     cells2csv,
     get_cell_mappings,
@@ -13,6 +12,7 @@ from microscopy_proc.pipelines.map_pipeline import (
 from microscopy_proc.pipelines.reg_pipeline import (
     img_trim_pipeline,
     ref_prepare_pipeline,
+    registration_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -34,11 +34,17 @@ if __name__ == "__main__":
     for i in natsorted(os.listdir(in_fp_dir)):
         # Only given files
         if i not in [
-            "B3_2.5x_1x_zoom_08082024",
-            "B9_2.5x_1x_zoom_06082024",
-            "G5_agg_2.5x_1xzoom_05072024",
-            "G8_2.5x_1x_zoom_08082024",
+            # "B3_2.5x_1x_zoom_08082024",
+            # "B9_2.5x_1x_zoom_06082024",
+            # "G5_agg_2.5x_1xzoom_05072024",
+            # "G8_2.5x_1x_zoom_08082024",
             "G13_2.5x_1x_zoom_07082024",
+            "G20_agg_2.5x_1xzoom_02072024",
+            "P5_2.5x_1x_zoom_05082024",
+            "P6_2.5x_1x_zoom_08082024",
+            "P8_2.5x_1x_zoom_07082024",
+            "P10_2.5x_1x_zoom_08082024",
+            "P11_agg_2.5x_1xzoom_02072024",
         ]:
             continue
         # Checking if it is a directory
@@ -96,13 +102,7 @@ if __name__ == "__main__":
                 # x_trim=(None, None, None),
             )
             # Running Elastix registration
-            registration(
-                fixed_img_fp=proj_fp_dict["trimmed"],
-                moving_img_fp=proj_fp_dict["ref"],
-                output_img_fp=proj_fp_dict["regresult"],
-                affine_fp=proj_fp_dict["affine"],
-                bspline_fp=proj_fp_dict["bspline"],
-            )
+            registration_pipeline(proj_fp_dict)
 
             # if not os.path.exists(proj_fp_dict["cells_raw_df"]):
             #     # Making overlapped chunks images for processing

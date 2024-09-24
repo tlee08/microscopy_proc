@@ -3,7 +3,6 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.elastix_funcs import registration
 from microscopy_proc.pipelines.map_pipeline import (
     cells2csv,
     get_cell_mappings,
@@ -15,6 +14,7 @@ from microscopy_proc.pipelines.reg_pipeline import (
     img_rough_pipeline,
     img_trim_pipeline,
     ref_prepare_pipeline,
+    registration_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -98,13 +98,7 @@ if __name__ == "__main__":
                 # x_trim=(None, None, None),
             )
             # Running Elastix registration
-            registration(
-                fixed_img_fp=proj_fp_dict["trimmed"],
-                moving_img_fp=proj_fp_dict["ref"],
-                output_img_fp=proj_fp_dict["regresult"],
-                affine_fp=proj_fp_dict["affine"],
-                bspline_fp=proj_fp_dict["bspline"],
-            )
+            registration_pipeline(proj_fp_dict)
 
             # if not os.path.exists(proj_fp_dict["cells_raw_df"]):
             #     # Making overlapped chunks images for processing
