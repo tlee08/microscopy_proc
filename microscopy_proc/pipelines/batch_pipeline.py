@@ -34,6 +34,15 @@ if __name__ == "__main__":
     assert in_fp_dir != batch_proj_dir
 
     for i in natsorted(os.listdir(in_fp_dir)):
+        # Only given files
+        if i not in [
+            "B3_2.5x_1x_zoom_08082024",
+            "B9_2.5x_1x_zoom_06082024",
+            "G5_agg_2.5x_1xzoom_05072024",
+            "G8_2.5x_1x_zoom_08082024",
+            "G13_2.5x_1x_zoom_07082024",
+        ]:
+            continue
         # Checking if it is a directory
         if not os.path.isdir(os.path.join(in_fp_dir, i)):
             continue
@@ -64,10 +73,10 @@ if __name__ == "__main__":
             prepare_ref(
                 ref_fp_dict=ref_fp_dict,
                 proj_fp_dict=proj_fp_dict,
-                ref_orient_ls=(-2, 3, 1),
-                ref_z_trim=(None, None, None),
-                ref_y_trim=(None, None, None),
-                ref_x_trim=(None, None, None),
+                # ref_orient_ls=(-2, 3, 1),
+                # ref_z_trim=(None, None, None),
+                # ref_y_trim=(None, None, None),
+                # ref_x_trim=(None, None, None),
             )
             # Preparing image itself
             prepare_img_rough(

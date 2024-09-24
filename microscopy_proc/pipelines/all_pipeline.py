@@ -1,6 +1,4 @@
-from microscopy_proc.constants import PROC_CHUNKS
 from microscopy_proc.funcs.elastix_funcs import registration
-from microscopy_proc.pipelines.make_zarr import tiff2zarr
 from microscopy_proc.pipelines.map_pipeline import (
     cells2csv,
     get_cell_mappings,
@@ -9,9 +7,7 @@ from microscopy_proc.pipelines.map_pipeline import (
 )
 from microscopy_proc.pipelines.reg_pipeline import (
     prepare_img_fine,
-    prepare_img_rough,
     prepare_img_trim,
-    prepare_ref,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
@@ -26,8 +22,8 @@ if __name__ == "__main__":
     # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
     # in_fp = "/home/linux1/Desktop/A-1-1/example"
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    in_fp = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis/G17_2.5x_1x_zoom_07082024"
-    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/G17_2.5x_1x_zoom_07082024"
+    in_fp = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis/G5_agg_2.5x_1xzoom_05072024"
+    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/G5_agg_2.5x_1xzoom_05072024"
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     ref_fp_dict = get_ref_fp_dict()
@@ -39,36 +35,36 @@ if __name__ == "__main__":
     init_params(proj_fp_dict)
 
     # Making zarr from tiff file(s)
-    tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+    # tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
 
     # Preparing reference images
-    prepare_ref(
-        ref_fp_dict=ref_fp_dict,
-        proj_fp_dict=proj_fp_dict,
-        ref_orient_ls=(2, 3, 1),
-        ref_z_trim=(None, None, None),
-        ref_y_trim=(None, -110, None),
-        ref_x_trim=(None, None, None),
-    )
+    # prepare_ref(
+    #     ref_fp_dict=ref_fp_dict,
+    #     proj_fp_dict=proj_fp_dict,
+    #     # ref_orient_ls=(-2, 3, 1),
+    #     # ref_z_trim=(None, None, None),
+    #     # ref_y_trim=(None, -110, None),
+    #     # ref_x_trim=(None, None, None),
+    # )
 
     # Preparing image itself
-    prepare_img_rough(
-        proj_fp_dict,
-        z_rough=3,
-        y_rough=6,
-        x_rough=6,
-    )
+    # prepare_img_rough(
+    #     proj_fp_dict,
+    #     # z_rough=3,
+    #     # y_rough=6,
+    #     # x_rough=6,
+    # )
     prepare_img_fine(
         proj_fp_dict,
-        z_fine=1,
-        y_fine=0.6,
-        x_fine=0.6,
+        # z_fine=1,
+        # y_fine=0.6,
+        # x_fine=0.6,
     )
     prepare_img_trim(
         proj_fp_dict,
-        z_trim=(None, -5, None),
-        y_trim=(80, -75, None),
-        x_trim=(None, None, None),
+        # z_trim=(None, -5, None),
+        # y_trim=(80, -75, None),
+        # x_trim=(None, None, None),
     )
 
     # Running Elastix registration
