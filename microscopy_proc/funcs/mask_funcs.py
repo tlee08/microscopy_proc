@@ -7,6 +7,8 @@ def make_outline(arr: np.ndarray) -> pd.DataFrame:
     l_shift = np.concatenate([arr[..., 1:], np.zeros((*arr.shape[:-1], 1))], axis=-1)
     r_shift = np.concatenate([np.zeros((*arr.shape[:-1], 1)), arr[..., :-1]], axis=-1)
     # Finding outline (ins and outs)
+    # is_in = 1 means starts in (last axis - x) from pixel
+    # is_in = 0 means NEXT pixel starts out (last axis - x)
     coords_df = pd.concat(
         [
             pd.DataFrame(

@@ -39,6 +39,9 @@ class ConfigParamsModel(BaseModel):
     maxima_sigma: int = 10
     min_wshed: int = 1
     max_wshed: int = 1000
+    # Masking
+    mask_gaus_blur: int = 1
+    mask_thresh: int = 300
 
     @model_validator(mode="after")
     def validate_trims(self):

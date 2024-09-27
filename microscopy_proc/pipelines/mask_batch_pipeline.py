@@ -82,6 +82,10 @@ def make_mask_for_ref(proj_fp_dict: dict):
     with open(proj_fp_dict["map"], "r") as f:
         annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
     # Getting the annotation name for every cell (zyx coord)
+    # This merge gets:
+    # - Annot (baseline) counts for each region
+    # - Mask counts (e.g. may be some missing areas) for each region
+    # Then divides volume_mask by volume_annot to get proportion
     mask_counts_df = pd.merge(
         left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),
         right=mask2region_counts(arr_mask_reg, arr_annot),
@@ -128,7 +132,7 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
 
     # for i in os.listdir(batch_fp_dir):
-    proj_dir = os.path.join(batch_proj_dir, "P8_2.5x_1x_zoom_07082024")
+    proj_dir = os.path.join(batch_proj_dir, "B3_2.5x_1x_zoom_08082024")
     # Getting file paths
     proj_fp_dict = get_proj_fp_dict(proj_dir)
 
