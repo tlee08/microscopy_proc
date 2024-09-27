@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 
 import numpy as np
@@ -16,25 +15,30 @@ from microscopy_proc.funcs.mask_funcs import (
     mask2region_counts,
 )
 from microscopy_proc.funcs.visual_check_funcs import coords2points
+from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
-    make_proj_dirs,
 )
 
 
-def make_mask_for_ref(proj_fp_dict: dict):
+def make_mask_for_ref(
+    proj_fp_dict: dict,
+    **kwargs,
+):
     """
     Makes mask of actual image in reference space.
     Also stores # and proportion of existent voxels
     for each region.
     """
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
     # Reading ref and trimmed imgs
     arr_ref = tifffile.imread(proj_fp_dict["ref"])
     arr_trimmed = tifffile.imread(proj_fp_dict["trimmed"])
-
     # Making mask
-    arr_smoothed = Gf.gauss_blur_filt(arr_trimmed, 1)
-    arr_mask = Gf.manual_thresh(arr_smoothed, 400)
+    arr_blur = Gf.gauss_blur_filt(arr_trimmed, rp.mask_gaus_blur)
+    tifffile.imwrite(proj_fp_dict["premask_blur"], arr_blur)
+    arr_mask = Gf.manual_thresh(arr_blur, rp.mask_thresh)
     tifffile.imwrite(proj_fp_dict["mask"], arr_mask)
 
     # Make outline
@@ -123,28 +127,20 @@ if __name__ == "__main__":
     # make_mask_for_ref(proj_fp_dict)
 
     # Filenames
-    # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
-    in_fp_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    # in_fp_dir and batch_proj_dir cannot be the same
-    assert in_fp_dir != batch_proj_dir
 
-    for i in os.listdir(in_fp_dir):
-        # Checking if it is a directory
-        if not os.path.isdir(os.path.join(in_fp_dir, i)):
-            continue
+    for i in os.listdir(batch_proj_dir):
         # Logging which file is being processed
-        logging.info(f"Running: {i}")
+        print(f"Running: {i}")
         try:
             # Filenames
             proj_dir = os.path.join(batch_proj_dir, i)
             # Getting file paths
             proj_fp_dict = get_proj_fp_dict(proj_dir)
-            # Making project folders
-            make_proj_dirs(proj_dir)
 
             # Running mask pipeline
             make_mask_for_ref(proj_fp_dict)
+            print()
         except Exception as e:
-            logging.error(f"Error: {e}")
+            print(f"Error: {e}")
             continue
