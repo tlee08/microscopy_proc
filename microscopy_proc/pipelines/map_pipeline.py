@@ -35,6 +35,7 @@ def transform_coords(proj_fp_dict: dict):
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
         cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        # Taking only "z", "y", "x" coord columns
         cells_df = cells_df[["z", "y", "x"]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
