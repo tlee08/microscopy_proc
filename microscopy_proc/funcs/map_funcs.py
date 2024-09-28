@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 
-from microscopy_proc.constants import CELL_MEASURES
-
 
 def nested_tree_dict2df(data_dict: dict):
     """
@@ -49,9 +47,7 @@ def nested_tree_dict2df(data_dict: dict):
     return df
 
 
-def combine_nested_regions(
-    cells_grouped_df: pd.DataFrame, annot_df: pd.DataFrame, sum_cols=None
-):
+def combine_nested_regions(cells_grouped_df: pd.DataFrame, annot_df: pd.DataFrame):
     """
     Combine (sum) children regions in their parent regions in the cells_grouped dataframe.
 
@@ -62,6 +58,8 @@ def combine_nested_regions(
     - The `annot_df` is the annotation mappings dataframe.
     - The `cells_grouped` is the cells dataframe grouped by region ID (so ID is the index).
     """
+    # Getting the sum column names (i.e. all columns in cells_grouped_d)
+    sum_cols = cells_grouped_df.columns
     # For each region, storing the parent region name in `annot_df`
     annot_df = (
         pd.merge(
@@ -103,8 +101,6 @@ def combine_nested_regions(
         return cells_grouped_df.loc[i, sum_cols]
 
     # Start from each root (i.e. nodes with no parent region)
-    if sum_cols is None:
-        sum_cols = list(CELL_MEASURES.values())
     cells_grouped_df[sum_cols] = cells_grouped_df[sum_cols].fillna(0)
     [
         r(i)
