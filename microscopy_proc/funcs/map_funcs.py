@@ -49,13 +49,20 @@ def nested_tree_dict2df(data_dict: dict):
     return df
 
 
-def combine_nested_regions(cells_grouped: pd.DataFrame, annot_df: pd.DataFrame):
+def combine_nested_regions(
+    cells_grouped_df: pd.DataFrame, annot_df: pd.DataFrame, sum_cols=None
+):
     """
     Combine (sum) children regions in their parent regions in the cells_grouped dataframe.
 
     Done recursively.
+
+    Notes
+    -----
+    - The `annot_df` is the annotation mappings dataframe.
+    - The `cells_grouped` is the cells dataframe grouped by region ID (so ID is the index).
     """
-    # Storing the parent region names in `annot_df`
+    # For each region, storing the parent region name in `annot_df`
     annot_df = (
         pd.merge(
             left=annot_df,
@@ -66,41 +73,47 @@ def combine_nested_regions(cells_grouped: pd.DataFrame, annot_df: pd.DataFrame):
             right_on="parent_id",
             how="left",
         )
-        .drop(columns=["parent_id"])
+        # .drop(columns=["parent_id"])
         .set_index("id")
     )[["name", "acronym", "color_hex_triplet", "parent_structure_id", "parent_acronym"]]
     # Merging the cells_grouped df with the annot_df
-    cells_grouped = pd.merge(
+    # NOTE: we are setting the annot_df index as ID
+    # and assuming cells_grouped index is ID (via groupby)
+    cells_grouped_df = pd.merge(
         left=annot_df,
-        right=cells_grouped,
+        right=cells_grouped_df,
         left_index=True,
         right_index=True,
         how="outer",
     )
     # Making a children list column in cells_grouped
-    cells_grouped["children"] = [[] for i in range(cells_grouped.shape[0])]
-    for i in cells_grouped.index:
-        i_parent = cells_grouped.loc[i, "parent_structure_id"]
+    cells_grouped_df["children"] = [[] for i in range(cells_grouped_df.shape[0])]
+    for i in cells_grouped_df.index:
+        i_parent = cells_grouped_df.loc[i, "parent_structure_id"]
         if not np.isnan(i_parent):
-            cells_grouped.loc[i_parent, "children"].append(i)
+            cells_grouped_df.loc[i_parent, "children"].append(i)
 
     # Summing the cell count and volume for each region
     def r(i):
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
-        cells_grouped.loc[i, cols] += np.sum(
-            [r(j) for j in cells_grouped.loc[i, "children"]], axis=0
+        cells_grouped_df.loc[i, sum_cols] += np.sum(
+            [r(j) for j in cells_grouped_df.loc[i, "children"]], axis=0
         )
-        return cells_grouped.loc[i, cols]
+        return cells_grouped_df.loc[i, sum_cols]
 
     # Start from each root (i.e. nodes with no parent region)
-    cols = list(CELL_MEASURES.values())
-    cells_grouped[cols] = cells_grouped[cols].fillna(0)
-    [r(i) for i in cells_grouped[cells_grouped["parent_structure_id"].isna()].index]
+    if sum_cols is None:
+        sum_cols = list(CELL_MEASURES.values())
+    cells_grouped_df[sum_cols] = cells_grouped_df[sum_cols].fillna(0)
+    [
+        r(i)
+        for i in cells_grouped_df[cells_grouped_df["parent_structure_id"].isna()].index
+    ]
     # Removing unnecessary columns
-    cells_grouped = cells_grouped.drop(columns=["children"])
+    cells_grouped_df = cells_grouped_df.drop(columns=["children"])
     # Returning
-    return cells_grouped
+    return cells_grouped_df
 
 
 def df2nested_tree_dict(df: pd.DataFrame) -> dict:

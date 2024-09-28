@@ -8,7 +8,7 @@ from scipy import ndimage
 
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
-from microscopy_proc.funcs.map_funcs import df_map_ids, nested_tree_dict2df
+from microscopy_proc.funcs.map_funcs import combine_nested_regions, nested_tree_dict2df
 from microscopy_proc.funcs.mask_funcs import (
     fill_outline,
     make_outline,
@@ -90,13 +90,16 @@ def make_mask_for_ref(
         left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),
         right=mask2region_counts(arr_mask_reg, arr_annot),
         how="left",
-        on="id",
+        left_index=True,
+        right_index=True,
         suffixes=("_annot", "_mask"),
     ).fillna(0)
+    # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
+    mask_counts_df = combine_nested_regions(mask_counts_df, annot_df)
+    # Calculating proportion of mask volume in each region
     mask_counts_df["volume_prop"] = (
         mask_counts_df["volume_mask"] / mask_counts_df["volume_annot"]
     )
-    mask_counts_df = df_map_ids(mask_counts_df, annot_df)
     # Saving
     mask_counts_df.to_parquet(proj_fp_dict["mask_counts_df"])
 

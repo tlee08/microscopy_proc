@@ -15,8 +15,8 @@ ROWSPPART = 10000000
 CELL_MEASURES = {
     "z": "count",
     "size": "volume",
-    "sum_itns": "sum",
-    # "max_itns": "max",
+    "sum_intensity": "sum",
+    # "max_intensity": "max",
 }
 
 

@@ -49,9 +49,9 @@ def transform_coords(proj_fp_dict: dict):
         cells_df = transformation_coords(
             cells_df, proj_fp_dict["ref"], proj_fp_dict["regresult"]
         )
-        cells_df = dd.from_pandas(cells_df, npartitions=1)
+        # NOTE: Using pandas parquet. does not work with dask yet
+        # cells_df = dd.from_pandas(cells_df, npartitions=1)
         # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
-        # NOTE: does not work with dask yet
         # cells_df = cells_df.repartition(
         #     npartitions=int(np.ceil(cells_df.shape[0].compute() / ROWSPPART))
         # )
@@ -104,7 +104,8 @@ def get_cell_mappings(proj_fp_dict: dict):
         # Getting the annotation name for every cell (zyx coord)
         cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
-        cells_df = dd.from_pandas(cells_df)
+        # NOTE: Using pandas parquet. does not work with dask yet
+        # cells_df = dd.from_pandas(cells_df)
         cells_df.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
 
 
@@ -117,14 +118,14 @@ def grouping_cells(proj_fp_dict: dict):
         # Reading cells dataframe
         cells_df = dd.read_parquet(proj_fp_dict["cells_df"])
         # Grouping cells by region name
-        cells_grouped = (
+        cells_grouped_df = (
             cells_df.groupby("id")
             .agg(
                 {
                     "z": "count",
                     "size": "sum",
-                    "sum_itns": "sum",
-                    # "max_itns": "sum",
+                    "sum_intensity": "sum",
+                    # "max_intensity": "sum",
                 }
             )
             .rename(columns=CELL_MEASURES)
@@ -134,12 +135,14 @@ def grouping_cells(proj_fp_dict: dict):
         # Making df of region names and their parent region names
         with open(proj_fp_dict["map"], "r") as f:
             annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
-        cells_grouped = combine_nested_regions(cells_grouped, annot_df)
-        # Calculating integrated average intensity (sum_itns / size)
-        cells_grouped["iov"] = cells_grouped["sum"] / cells_grouped["volume"]
+        # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
+        cells_grouped_df = combine_nested_regions(cells_grouped_df, annot_df)
+        # Calculating integrated average intensity (sum_intensity / size)
+        cells_grouped_df["iov"] = cells_grouped_df["sum"] / cells_grouped_df["volume"]
         # Saving to disk
-        cells_grouped = dd.from_pandas(cells_grouped)
-        cells_grouped.to_parquet(proj_fp_dict["cells_agg_df"], overwrite=True)
+        # NOTE: Using pandas parquet. does not work with dask yet
+        # cells_grouped = dd.from_pandas(cells_grouped)
+        cells_grouped_df.to_parquet(proj_fp_dict["cells_agg_df"], overwrite=True)
 
 
 def cells2csv(proj_fp_dict: dict):

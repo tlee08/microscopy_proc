@@ -47,6 +47,14 @@ def fill_outline(arr: np.ndarray, coords_df: pd.DataFrame) -> np.ndarray:
 
 
 def mask2region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFrame:
+    """
+    Given an nd-array mask and an same-shaped annotation array,
+    returns a dataframe with region IDs (from annotation array)
+    and their corresponding voxel counts that are True in the array mask.
+
+    The dataframe index is the ID and the columns are:
+    - volume: the number of voxels in the mask for that region ID.
+    """
     # Convert arr_mask to binary
     arr_mask = (arr_mask > 0).astype(np.uint8)
     # Multiply mask by annotation to convert mask to region IDs
@@ -54,9 +62,8 @@ def mask2region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFr
     # Getting annotated region IDs
     id_labels, id_counts = np.unique(arr_mask, return_counts=True)
     # Returning region IDs and counts as dataframe
+    # NOTE: dropping the 0 index (background)
     return pd.DataFrame(
-        {
-            "id": id_labels,
-            "volume": id_counts,
-        }
+        {"volume": id_counts},
+        index=pd.Index(id_labels, name="id"),
     ).drop(index=0)
