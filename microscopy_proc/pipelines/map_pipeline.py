@@ -59,7 +59,7 @@ def transform_coords(proj_fp_dict: dict):
         # cells_df = cells_df.map_partitions(
         #     transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
         # )
-        cells_df.to_parquet(proj_fp_dict["cells_trfm_df"], overwrite=True)
+        cells_df.to_parquet(proj_fp_dict["cells_trfm_df"])
 
 
 # @flow
@@ -107,7 +107,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_df = dd.from_pandas(cells_df)
-        cells_df.to_parquet(proj_fp_dict["cells_df"], overwrite=True)
+        cells_df.to_parquet(proj_fp_dict["cells_df"])
 
 
 def grouping_cells(proj_fp_dict: dict):
@@ -143,7 +143,7 @@ def grouping_cells(proj_fp_dict: dict):
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_grouped = dd.from_pandas(cells_grouped)
-        cells_grouped_df.to_parquet(proj_fp_dict["cells_agg_df"], overwrite=True)
+        cells_grouped_df.to_parquet(proj_fp_dict["cells_agg_df"])
 
 
 def cells2csv(proj_fp_dict: dict):
