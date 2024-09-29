@@ -17,13 +17,14 @@ from microscopy_proc.funcs.mask_funcs import (
 from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.proj_org_utils import (
+    ProjFpModel,
     get_proj_fp_model,
     make_proj_dirs,
 )
 
 
 def make_mask_for_ref(
-    pfm: dict,
+    pfm: ProjFpModel,
     **kwargs,
 ):
     """
@@ -45,12 +46,12 @@ def make_mask_for_ref(
     # Make outline
     outline_df = make_outline(arr_mask)
     # Transformix on coords
-    outline_df[.z", "y", "x] = (
+    outline_df["z", "y", "x"] = (
         transformation_coords(
             outline_df,
             pfm.ref,
             pfm.regresult,
-        )[.z", "y", "x]
+        )["z", "y", "x"]
         .round(0)
         .astype(np.int32)
     )

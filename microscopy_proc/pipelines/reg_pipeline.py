@@ -73,7 +73,7 @@ def img_rough_pipeline(pfm: ProjFpModel, **kwargs):
 
 
 # @flow
-def img_fine_pipeline(pfm: dict, **kwargs):
+def img_fine_pipeline(pfm: ProjFpModel, **kwargs):
     # Update registration params json
     rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Reading
@@ -85,7 +85,7 @@ def img_fine_pipeline(pfm: dict, **kwargs):
 
 
 # @flow
-def img_trim_pipeline(pfm: dict, **kwargs):
+def img_trim_pipeline(pfm: ProjFpModel, **kwargs):
     # Update registration params json
     rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Reading
@@ -97,7 +97,7 @@ def img_trim_pipeline(pfm: dict, **kwargs):
 
 
 # @flow
-def registration_pipeline(pfm: dict, **kwargs):
+def registration_pipeline(pfm: ProjFpModel, **kwargs):
     # Running Elastix registration
     registration(
         fixed_img_fp=pfm.trimmed,

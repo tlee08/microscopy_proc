@@ -18,6 +18,7 @@ from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import (
+    ProjFpModel,
     get_proj_fp_model,
     init_configs,
     make_proj_dirs,
@@ -25,7 +26,7 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 # @flow
-def transform_coords(pfm: dict):
+def transform_coords(pfm: ProjFpModel):
     """
     `in_id` and `out_id` are either maxima or region
 
@@ -40,7 +41,7 @@ def transform_coords(pfm: dict):
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Taking only "z", "y", "x" coord columns
-        cells_df = cells_df[.z", "y", "x]
+        cells_df = cells_df["z", "y", "x"]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
         cells_df = cells_df / np.array((rp.z_rough, rp.y_rough, rp.x_rough))
@@ -65,7 +66,7 @@ def transform_coords(pfm: dict):
 
 
 # @flow
-def get_cell_mappings(pfm: dict):
+def get_cell_mappings(pfm: ProjFpModel):
     """
     Using the transformed cell coordinates, get the region ID and name for each cell
     corresponding to the reference atlas.
@@ -92,7 +93,7 @@ def get_cell_mappings(pfm: dict):
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
         s = arr_annot.shape
         trfm_loc = (
-            cells_df[.z_trfm", "y_trfm", "x_trfm]
+            cells_df["z_trfm", "y_trfm", "x_trfm"]
             .round(0)
             .astype(np.int32)
             .query(
@@ -117,7 +118,7 @@ def get_cell_mappings(pfm: dict):
         cells_df.to_parquet(pfm.cells_df)
 
 
-def grouping_cells(pfm: dict):
+def grouping_cells(pfm: ProjFpModel):
     """
     Grouping cells by region name and aggregating total cell volume
     and cell count for each region.
@@ -152,7 +153,7 @@ def grouping_cells(pfm: dict):
         cells_grouped_df.to_parquet(pfm.cells_agg_df)
 
 
-def cells2csv(pfm: dict):
+def cells2csv(pfm: ProjFpModel):
     # Reading cells dataframe
     cells_df = pd.read_parquet(pfm.cells_df)
     # Sanitising (removing smb columns)
