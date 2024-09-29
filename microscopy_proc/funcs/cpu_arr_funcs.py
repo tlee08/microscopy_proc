@@ -362,17 +362,17 @@ class CpuArrFuncs:
         ids_w = arr_cp2np(ids_w).astype(np.uint32)
         counts = arr_cp2np(counts).astype(np.uint32)
         logging.debug("Getting sum intensity for each cell (wshed)")
-        sum_itns = cls.xp.bincount(
+        sum_intensity = cls.xp.bincount(
             cls.xp.asarray(arr_wshed[arr_wshed > 0].ravel()),
             weights=cls.xp.asarray(arr_overlap[arr_wshed > 0].ravel()),
             minlength=len(ids_w),
         )
-        sum_itns = arr_cp2np(sum_itns[sum_itns > 0])
+        sum_intensity = arr_cp2np(sum_intensity[sum_intensity > 0])
         logging.debug("Adding sizes and intensities to DataFrame")
         idx = pd.Index(ids_w, name="label")
         df[CellMeasures.volume.value] = pd.Series(counts, index=idx)
-        df[CellMeasures.sum_intensity.value] = pd.Series(sum_itns, index=idx)
-        # df["max_itns"] = pd.Series(max_itns, index=idx)
+        df[CellMeasures.sum_intensity.value] = pd.Series(sum_intensity, index=idx)
+        # df["max_intensity"] = pd.Series(max_intensity, index=idx)
         # Filtering out rows with NaNs in z, y, or x columns
         df = df[df[["z", "y", "x"]].isna().mean(axis=1) == 0]
         # Returning
