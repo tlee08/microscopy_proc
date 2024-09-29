@@ -18,32 +18,32 @@ if __name__ == "__main__":
     pfm = get_proj_fp_model(proj_dir)
 
     with cluster_proc_contxt(LocalCluster()):
-        # df = dd.read_parquet(pfm["cells_raw_df"]).compute()
+        # df = dd.read_parquet(pfm.cells_raw_df).compute()
         # coords2heatmaps(
         #     df,
         #     5,
-        #     da.from_zarr(pfm["raw"]).shape,
-        #     pfm["heatmap_check"],
+        #     da.from_zarr(pfm.raw).shape,
+        #     pfm.heatmap_check,
         # )
 
-        # df = dd.read_parquet(pfm["cells_raw_df"]).compute()
+        # df = dd.read_parquet(pfm.cells_raw_df).compute()
         # coords2points(
         #     df,
-        #     da.from_zarr(pfm["raw"]).shape,
-        #     pfm["points_check"],
+        #     da.from_zarr(pfm.raw).shape,
+        #     pfm.points_check,
         # )
 
-        df = dd.read_parquet(pfm["cells_trfm_df"])
+        df = dd.read_parquet(pfm.cells_trfm_df)
         coords2heatmaps(
             df,
             3,
-            tifffile.imread(pfm["ref"]).shape,
-            pfm["heatmap_trfm_check"],
+            tifffile.imread(pfm.ref).shape,
+            pfm.heatmap_trfm_check,
         )
 
-        df = dd.read_parquet(pfm["cells_trfm_df"])
+        df = dd.read_parquet(pfm.cells_trfm_df)
         coords2points(
             df,
-            tifffile.imread(pfm["ref"]).shape,
-            pfm["points_trfm_check"],
+            tifffile.imread(pfm.ref).shape,
+            pfm.points_trfm_check,
         )
