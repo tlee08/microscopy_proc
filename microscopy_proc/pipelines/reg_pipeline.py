@@ -31,7 +31,7 @@ def ref_prepare_pipeline(
     **kwargs,
 ):
     # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm["config_params"], **kwargs)
+    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Making atlas images
     for fp_i, fp_o in [
         (ref_fp_dict.ref, pfm.ref),
@@ -59,7 +59,7 @@ def ref_prepare_pipeline(
 # @flow
 def img_rough_pipeline(pfm: ProjFpModel, **kwargs):
     # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm["config_params"], **kwargs)
+    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     with cluster_proc_contxt(LocalCluster()):
         # Reading
         arr_raw = da.from_zarr(pfm.raw)
@@ -69,42 +69,42 @@ def img_rough_pipeline(pfm: ProjFpModel, **kwargs):
         )
         arr_downsmpl1 = arr_downsmpl1.compute()
         # Saving
-        tifffile.imwrite(pfm["downsmpl1"], arr_downsmpl1)
+        tifffile.imwrite(pfm.downsmpl1, arr_downsmpl1)
 
 
 # @flow
 def img_fine_pipeline(pfm: dict, **kwargs):
     # Update registration params json
-    rp = ConfigParamsModel.update_params_file(pfm["config_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Reading
-    arr_downsmpl1 = tifffile.imread(pfm["downsmpl1"])
+    arr_downsmpl1 = tifffile.imread(pfm.downsmpl1)
     # Fine downsample
     arr_downsmpl2 = downsmpl_fine_arr(arr_downsmpl1, rp.z_fine, rp.y_fine, rp.x_fine)
     # Saving
-    tifffile.imwrite(pfm["downsmpl2"], arr_downsmpl2)
+    tifffile.imwrite(pfm.downsmpl2, arr_downsmpl2)
 
 
 # @flow
 def img_trim_pipeline(pfm: dict, **kwargs):
     # Update registration params json
-    rp = ConfigParamsModel.update_params_file(pfm["config_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Reading
-    arr_downsmpl2 = tifffile.imread(pfm["downsmpl2"])
+    arr_downsmpl2 = tifffile.imread(pfm.downsmpl2)
     # Trim
     arr_trimmed = arr_downsmpl2[slice(*rp.z_trim), slice(*rp.y_trim), slice(*rp.x_trim)]
     # Saving
-    tifffile.imwrite(pfm["trimmed"], arr_trimmed)
+    tifffile.imwrite(pfm.trimmed, arr_trimmed)
 
 
 # @flow
 def registration_pipeline(pfm: dict, **kwargs):
     # Running Elastix registration
     registration(
-        fixed_img_fp=pfm["trimmed"],
-        moving_img_fp=pfm["ref"],
-        output_img_fp=pfm["regresult"],
-        affine_fp=pfm["affine"],
-        bspline_fp=pfm["bspline"],
+        fixed_img_fp=pfm.trimmed,
+        moving_img_fp=pfm.ref,
+        output_img_fp=pfm.regresult,
+        affine_fp=pfm.affine,
+        bspline_fp=pfm.bspline,
     )
 
 
@@ -155,9 +155,9 @@ if __name__ == "__main__":
     registration_pipeline(pfm)
 
     # # Transformix
-    # arr_masked_trfm = tifffile.imread(pfm["trimmed"])
+    # arr_masked_trfm = tifffile.imread(pfm.trimmed)
     # arr_regresult = transformation_img(
-    #     pfm["ref"],
-    #     pfm["regresult"],
+    #     pfm.ref,
+    #     pfm.regresult,
     # )
-    # tifffile.imwrite(pfm["regresult"], arr_regresult)
+    # tifffile.imwrite(pfm.regresult, arr_regresult)
