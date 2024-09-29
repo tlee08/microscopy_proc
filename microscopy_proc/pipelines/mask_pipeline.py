@@ -46,7 +46,7 @@ def make_mask_for_ref(
     # Make outline
     outline_df = make_outline(arr_mask)
     # Transformix on coords
-    outline_df["z", "y", "x"] = (
+    outline_df[["z", "y", "x"]] = (
         transformation_coords(
             outline_df,
             pfm.ref,

@@ -41,7 +41,7 @@ def transform_coords(pfm: ProjFpModel):
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Taking only "z", "y", "x" coord columns
-        cells_df = cells_df["z", "y", "x"]
+        cells_df = cells_df[["z", "y", "x"]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
         cells_df = cells_df / np.array((rp.z_rough, rp.y_rough, rp.x_rough))
@@ -83,9 +83,9 @@ def get_cell_mappings(pfm: ProjFpModel):
         # Making unique incrementing index
         cells_df = cells_df.reset_index(drop=True)
         # Setting the transformed coords
-        cells_df.z_trfm = coords_trfm.z.values
-        cells_df.y_trfm = coords_trfm.y.values
-        cells_df.x_trfm = coords_trfm.x.values
+        cells_df["z_trfm"] = coords_trfm.z.values
+        cells_df["y_trfm"] = coords_trfm.y.values
+        cells_df["x_trfm"] = coords_trfm.x.values
 
         # Reading annotation image
         arr_annot = tifffile.imread(pfm.annot)
@@ -93,7 +93,7 @@ def get_cell_mappings(pfm: ProjFpModel):
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
         s = arr_annot.shape
         trfm_loc = (
-            cells_df["z_trfm", "y_trfm", "x_trfm"]
+            cells_df[["z_trfm", "y_trfm", "x_trfm"]]
             .round(0)
             .astype(np.int32)
             .query(
@@ -102,7 +102,7 @@ def get_cell_mappings(pfm: ProjFpModel):
         )
         # Getting the pixel values of each valid transformed coord (hence the specified index).
         # Invalids are set to -1
-        cells_df.id = pd.Series(
+        cells_df["id"] = pd.Series(
             arr_annot[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
         ).fillna(-1)
