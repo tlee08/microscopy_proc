@@ -31,13 +31,13 @@ def tiff2zarr(in_fp: str, pfm: ProjFpModel, **kwargs):
                         if re.search(r".tif$", f)
                     ]
                 ),
-                pfm["raw"],
+                pfm.raw,
                 chunks=configs.chunksize,
             )
         elif os.path.isfile(in_fp):
             btiff2zarr(
                 in_fp,
-                pfm["raw"],
+                pfm.raw,
                 chunks=configs.chunksize,
             )
         else:
