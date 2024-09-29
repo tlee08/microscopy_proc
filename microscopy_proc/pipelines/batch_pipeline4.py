@@ -1,14 +1,8 @@
 import logging
 import os
 
-import dask.dataframe as dd
 from natsort import natsorted
 
-from microscopy_proc.pipelines.map_pipeline import (
-    cells2csv,
-    get_cell_mappings,
-    grouping_cells,
-)
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     get_ref_fp_model,
@@ -17,6 +11,9 @@ from microscopy_proc.utils.proj_org_utils import (
 
 # logging.basicConfig(level=logging.INFO)
 logging.disable(logging.CRITICAL)
+
+
+import dask.dataframe as dd
 
 if __name__ == "__main__":
     # Filenames
@@ -28,14 +25,6 @@ if __name__ == "__main__":
 
     for i in natsorted(os.listdir(in_fp_dir)):
         # # Only given files
-        if i not in [
-            "B3_2.5x_1x_zoom_08082024",
-            #     "B9_2.5x_1x_zoom_06082024",
-            #     "G5_agg_2.5x_1xzoom_05072024",
-            #     "G8_2.5x_1x_zoom_08082024",
-            #     "G13_2.5x_1x_zoom_07082024",
-        ]:
-            continue
         # Checking if it is a directory
         if not os.path.isdir(os.path.join(in_fp_dir, i)):
             continue
@@ -50,19 +39,30 @@ if __name__ == "__main__":
         # Getting file paths
         rfm = get_ref_fp_model()
         pfm = get_proj_fp_model(proj_dir)
-        # Making project folders
-        make_proj_dirs(proj_dir)
-        # Converting maxima from raw space to refernce atlas space
-        # transform_coords(pfm)
-        print(dd.read_parquet(pfm.cells_raw_df))
-        # Getting ID mappings
-        get_cell_mappings(pfm)
-        # Grouping cells
-        grouping_cells(pfm)
-        # Saving cells to csv
-        cells2csv(pfm)
-        print()
-        # except Exception as e:
-        #     logging.info(f"Error in {i}: {e}")
-        #     print(f"Error in {i}: {e}")
-        #     continue
+        try:
+            # Making project folders
+            make_proj_dirs(proj_dir)
+            # Converting maxima from raw space to refernce atlas space
+            # transform_coords(pfm)
+            # Getting ID mappings
+            # get_cell_mappings(pfm)
+            # # Grouping cells
+            # grouping_cells(pfm)
+            # # Saving cells to csv
+            # cells2csv(pfm)
+
+            temp_fp = pfm.cells_raw_df
+
+            x = dd.read_parquet(temp_fp)
+            x = x.rename(columns={"size": "volume"})
+            x = x.drop(columns=["smb-share:server"])
+            # print(x)
+            x = x.compute()
+            x = dd.from_pandas(x, npartitions=1)
+            x.to_parquet(pfm.cells_raw_df, overwrite=True)
+
+            print()
+        except Exception as e:
+            logging.info(f"Error in {i}: {e}")
+            print(f"Error in {i}: {e}")
+        # break

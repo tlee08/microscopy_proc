@@ -15,7 +15,7 @@ ROWSPPART = 10000000
 
 class CellMeasures(Enum):
     z = "z"
-    size = "size"
+    volume = "volume"
     sum_intensity = "sum_intensity"
     # max_intensity = "max_intensity"
     iov = "iov"
@@ -23,7 +23,7 @@ class CellMeasures(Enum):
 
 CELL_AGG_MAPPING = {
     CellMeasures.z.value: "count",
-    CellMeasures.size.value: "volume",
+    CellMeasures.volume.value: "sum",
     CellMeasures.sum_intensity.value: "sum",
     # CellMeasures.max_intensity.value: "max",
 }

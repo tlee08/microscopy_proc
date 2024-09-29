@@ -9,7 +9,7 @@ import seaborn as sns
 from scipy import ndimage as sc_ndimage
 from skimage.segmentation import watershed
 
-from microscopy_proc.constants import DEPTH
+from microscopy_proc.constants import DEPTH, CellMeasures
 
 
 class CpuArrFuncs:
@@ -370,8 +370,8 @@ class CpuArrFuncs:
         sum_itns = arr_cp2np(sum_itns[sum_itns > 0])
         logging.debug("Adding sizes and intensities to DataFrame")
         idx = pd.Index(ids_w, name="label")
-        df["size"] = pd.Series(counts, index=idx)
-        df["sum_itns"] = pd.Series(sum_itns, index=idx)
+        df[CellMeasures.volume.value] = pd.Series(counts, index=idx)
+        df[CellMeasures.sum_intensity.value] = pd.Series(sum_itns, index=idx)
         # df["max_itns"] = pd.Series(max_itns, index=idx)
         # Filtering out rows with NaNs in z, y, or x columns
         df = df[df[["z", "y", "x"]].isna().mean(axis=1) == 0]

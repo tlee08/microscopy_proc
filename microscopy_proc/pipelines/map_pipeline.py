@@ -109,7 +109,7 @@ def get_cell_mappings(pfm: ProjFpModel):
 
         # Reading annotation mappings dataframe
         with open(pfm.map, "r") as f:
-            annot_df = nested_tree_dict2df(json.load(f).msg[0])
+            annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
         # Getting the annotation name for every cell (zyx coord)
         cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
@@ -139,7 +139,7 @@ def grouping_cells(pfm: ProjFpModel):
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
         with open(pfm.map, "r") as f:
-            annot_df = nested_tree_dict2df(json.load(f).msg[0])
+            annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
         # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
         cells_grouped_df = combine_nested_regions(cells_grouped_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)

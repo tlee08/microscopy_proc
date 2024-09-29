@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
     proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    proj_dir = os.path.join(proj_dir, "G13_2.5x_1x_zoom_07082024")
+    proj_dir = os.path.join(proj_dir, "B3_2.5x_1x_zoom_08082024")
 
     pfm = get_proj_fp_model(proj_dir)
 
@@ -52,12 +52,12 @@ if __name__ == "__main__":
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        # slice(600, 650, None),
-        # slice(2300, 3100, None),
-        # slice(2300, 3100, None),
-        slice(None, None, None),
-        slice(None, None, None),
-        slice(None, None, None),
+        slice(600, 650, None),
+        slice(1400, 3100, None),
+        slice(500, 3100, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
     )
 
     imgs_ls = (
@@ -65,12 +65,12 @@ if __name__ == "__main__":
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        # ("raw", 10000),
+        ("raw", 7000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
-        ("trimmed", 4000),
-        ("regresult", 500),
+        # ("trimmed", 4000),
+        # ("regresult", 500),
         # MASK
         # ("mask", 5),
         # ("outline", 5),
@@ -87,16 +87,16 @@ if __name__ == "__main__":
         # ("wshed_sizes", 1000),
         # ("wshed_filt", 1000),
         # CELLC FINAL
-        # ("filt_final", 5),
-        # ("maxima_final", 5),
-        # ("wshed_sizes_final", 1000),
+        ("threshd_final", 5),
+        ("maxima_final", 5),
+        ("wshed_final", 1000),
         # POST
         # ("points_check", 5),
         # ("heatmap_check", 20),
         # ("points_trfm_check", 5),
         # ("heatmap_trfm_check", 100),
     )
-    fp_ls = [pfm[i] for i, j in imgs_ls]
+    fp_ls = [getattr(pfm, i) for i, j in imgs_ls]
     vmax_ls = [j for i, j in imgs_ls]
 
     view_imgs(fp_ls, vmax_ls, slicer)

@@ -26,7 +26,7 @@ from microscopy_proc.utils.proj_org_utils import (
 
 # @flow
 def ref_prepare_pipeline(
-    ref_fp_dict: RefFpModel,
+    rfm: RefFpModel,
     pfm: ProjFpModel,
     **kwargs,
 ):
@@ -34,8 +34,8 @@ def ref_prepare_pipeline(
     configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Making atlas images
     for fp_i, fp_o in [
-        (ref_fp_dict.ref, pfm.ref),
-        (ref_fp_dict.annot, pfm.annot),
+        (rfm.ref, pfm.ref),
+        (rfm.annot, pfm.annot),
     ]:
         # Reading
         arr = tifffile.imread(fp_i)
@@ -50,10 +50,10 @@ def ref_prepare_pipeline(
         # Saving
         tifffile.imwrite(fp_o, arr)
     # Copying region mapping json to project folder
-    shutil.copyfile(ref_fp_dict.map, pfm.map)
+    shutil.copyfile(rfm.map, pfm.map)
     # Copying transformation files
-    shutil.copyfile(ref_fp_dict.affine, pfm.affine)
-    shutil.copyfile(ref_fp_dict.bspline, pfm.bspline)
+    shutil.copyfile(rfm.affine, pfm.affine)
+    shutil.copyfile(rfm.bspline, pfm.bspline)
 
 
 # @flow
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    ref_fp_dict = get_ref_fp_model()
+    rfm = get_ref_fp_model()
     pfm = get_proj_fp_model(proj_dir)
     make_proj_dirs(proj_dir)
 
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     # # Preparing reference images
     # prepare_ref(
-    #     ref_fp_dict=ref_fp_dict,
+    #     rfm=rfm,
     #     pfm=pfm,
     #     ref_orient_ls=(-2, 3, 1),
     #     ref_z_trim=(None, None, None),

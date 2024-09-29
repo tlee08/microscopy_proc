@@ -86,7 +86,7 @@ def make_mask_for_ref(
     # Counting mask voxels in each region
     arr_annot = tifffile.imread(pfm.annot)
     with open(pfm.map, "r") as f:
-        annot_df = nested_tree_dict2df(json.load(f).msg[0])
+        annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
     # Getting the annotation name for every cell (zyx coord)
     mask_counts_df = pd.merge(
         left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),

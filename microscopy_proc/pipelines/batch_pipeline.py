@@ -55,7 +55,7 @@ if __name__ == "__main__":
             proj_dir = os.path.join(batch_proj_dir, i)
 
             # Getting file paths
-            ref_fp_dict = get_ref_fp_model()
+            rfm = get_ref_fp_model()
             pfm = get_proj_fp_model(proj_dir)
             # Making project folders
             make_proj_dirs(proj_dir)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
             # if not os.path.exists(pfm.regresult"]):
             # Preparing reference images
             ref_prepare_pipeline(
-                ref_fp_dict=ref_fp_dict,
+                rfm=rfm,
                 pfm=pfm,
                 # ref_orient_ls=(-2, 3, 1),
                 # ref_z_trim=(None, None, None),
