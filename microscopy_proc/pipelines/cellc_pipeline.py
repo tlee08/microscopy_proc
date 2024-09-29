@@ -17,7 +17,7 @@ from microscopy_proc.utils.dask_utils import (
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    init_params,
+    init_configs,
     make_proj_dirs,
 )
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Making params json
-    init_params(proj_fp_dict)
+    init_configs(proj_fp_dict)
 
     img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
 

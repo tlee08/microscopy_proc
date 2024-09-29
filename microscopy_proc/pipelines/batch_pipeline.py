@@ -61,7 +61,7 @@ if __name__ == "__main__":
             make_proj_dirs(proj_dir)
 
             # # Making params json
-            # init_params(proj_fp_dict)
+            # init_configs(proj_fp_dict)
 
             # if not os.path.exists(proj_fp_dict["raw"]):
             #     print("Making zarr")

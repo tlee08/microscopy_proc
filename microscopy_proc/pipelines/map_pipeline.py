@@ -19,7 +19,7 @@ from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    init_params,
+    init_configs,
     make_proj_dirs,
 )
 
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Making params json
-    init_params(proj_fp_dict)
+    init_configs(proj_fp_dict)
 
     # Converting maxima from raw space to refernce atlas space
     transform_coords(proj_fp_dict)
