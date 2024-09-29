@@ -55,12 +55,12 @@ if __name__ == "__main__":
             # # Making params json
             # init_configs(pfm)
 
-            # if not os.path.exists(pfm["raw"]):
+            # if not os.path.exists(pfm.raw):
             #     print("Making zarr")
             #     # Making zarr from tiff file(s)
-            #     tiff2zarr(in_fp, pfm["raw"], chunks=PROC_CHUNKS)
+            #     tiff2zarr(in_fp, pfm.raw, chunks=PROC_CHUNKS)
 
-            # if not os.path.exists(pfm["regresult"]):
+            # if not os.path.exists(pfm.regresult):
             # Preparing reference images
             # ref_prepare_pipeline(
             #     ref_fp_dict=ref_fp_dict,
@@ -92,7 +92,7 @@ if __name__ == "__main__":
             # Running Elastix registration
             # registration_pipeline(pfm)
 
-            # if not os.path.exists(pfm["cells_raw_df"]):
+            # if not os.path.exists(pfm.cells_raw_df):
             #     # Making overlapped chunks images for processing
             #     img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH)
             #     # Cell counting
@@ -111,9 +111,9 @@ if __name__ == "__main__":
             #         max_wshed=700,
             #     )
             #     # Patch to fix extra smb column error
-            #     cells_df_smb_field_patch(pfm["cells_raw_df"])
+            #     cells_df_smb_field_patch(pfm.cells_raw_df)
 
-            # if not os.path.exists(pfm["cells_trfm_df"]):
+            # if not os.path.exists(pfm.cells_trfm_df):
             # Converting maxima from raw space to refernce atlas space
             # transform_coords(pfm)
             # Getting ID mappings
