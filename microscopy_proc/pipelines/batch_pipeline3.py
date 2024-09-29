@@ -7,11 +7,10 @@ from microscopy_proc.pipelines.map_pipeline import (
     cells2csv,
     get_cell_mappings,
     grouping_cells,
-    transform_coords,
 )
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
-    get_ref_fp_dict,
+    get_proj_fp_model,
+    get_ref_fp_model,
     make_proj_dirs,
 )
 
@@ -48,8 +47,8 @@ if __name__ == "__main__":
             proj_dir = os.path.join(batch_proj_dir, i)
 
             # Getting file paths
-            ref_fp_dict = get_ref_fp_dict()
-            proj_fp_dict = get_proj_fp_dict(proj_dir)
+            ref_fp_dict = get_ref_fp_model()
+            proj_fp_dict = get_proj_fp_model(proj_dir)
             # Making project folders
             make_proj_dirs(proj_dir)
 
@@ -116,7 +115,7 @@ if __name__ == "__main__":
 
             # if not os.path.exists(proj_fp_dict["cells_trfm_df"]):
             # Converting maxima from raw space to refernce atlas space
-            transform_coords(proj_fp_dict)
+            # transform_coords(proj_fp_dict)
             # Getting ID mappings
             get_cell_mappings(proj_fp_dict)
             # Grouping cells

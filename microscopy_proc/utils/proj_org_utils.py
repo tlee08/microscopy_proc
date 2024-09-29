@@ -166,11 +166,11 @@ class ProjFpModel(BaseModel):
 
 
 def get_ref_fp_model(atlas_dir=None, ref_v=None, annot_v=None, map_v=None):
-    RefFpModel.get_ref_fp_model(atlas_dir, ref_v, annot_v, map_v)
+    return RefFpModel.get_ref_fp_model(atlas_dir, ref_v, annot_v, map_v)
 
 
 def get_proj_fp_model(proj_dir):
-    ProjFpModel.get_proj_fp_model(proj_dir)
+    return ProjFpModel.get_proj_fp_model(proj_dir)
 
 
 def make_proj_dirs(proj_dir):

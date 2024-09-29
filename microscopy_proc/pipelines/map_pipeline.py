@@ -18,7 +18,7 @@ from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
+    get_proj_fp_model,
     init_params,
     make_proj_dirs,
 )
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     proj_dir = r"/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/R18_agg_2.5x_1xzoom_03072024"
 
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
+    proj_fp_dict = get_proj_fp_model(proj_dir)
     make_proj_dirs(proj_dir)
 
     # Making params json

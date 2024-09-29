@@ -20,8 +20,8 @@ from microscopy_proc.pipelines.reg_pipeline import (
     registration_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
-    get_ref_fp_dict,
+    get_proj_fp_model,
+    get_ref_fp_model,
     init_params,
     make_proj_dirs,
 )
@@ -40,8 +40,8 @@ if __name__ == "__main__":
     proj_dir = os.path.join(proj_dir, exp_name)
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
-    ref_fp_dict = get_ref_fp_dict()
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
+    ref_fp_dict = get_ref_fp_model()
+    proj_fp_dict = get_proj_fp_model(proj_dir)
     # Making project folders
     make_proj_dirs(proj_dir)
 

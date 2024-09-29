@@ -15,8 +15,8 @@ from microscopy_proc.funcs.reg_funcs import (
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
-    get_ref_fp_dict,
+    get_proj_fp_model,
+    get_ref_fp_model,
     init_params,
     make_proj_dirs,
 )
@@ -106,8 +106,8 @@ if __name__ == "__main__":
     atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    ref_fp_dict = get_ref_fp_dict()
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
+    ref_fp_dict = get_ref_fp_model()
+    proj_fp_dict = get_proj_fp_model(proj_dir)
     make_proj_dirs(proj_dir)
 
     # Making params json

@@ -17,8 +17,8 @@ from microscopy_proc.pipelines.reg_pipeline import (
     registration_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
-    get_ref_fp_dict,
+    get_proj_fp_model,
+    get_ref_fp_model,
     make_proj_dirs,
 )
 
@@ -55,8 +55,8 @@ if __name__ == "__main__":
             proj_dir = os.path.join(batch_proj_dir, i)
 
             # Getting file paths
-            ref_fp_dict = get_ref_fp_dict()
-            proj_fp_dict = get_proj_fp_dict(proj_dir)
+            ref_fp_dict = get_ref_fp_model()
+            proj_fp_dict = get_proj_fp_model(proj_dir)
             # Making project folders
             make_proj_dirs(proj_dir)
 

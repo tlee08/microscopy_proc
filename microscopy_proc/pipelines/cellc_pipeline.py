@@ -16,7 +16,7 @@ from microscopy_proc.utils.dask_utils import (
     disk_cache,
 )
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
+    get_proj_fp_model,
     init_params,
     make_proj_dirs,
 )
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
 
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
+    proj_fp_dict = get_proj_fp_model(proj_dir)
     make_proj_dirs(proj_dir)
 
     # Making params json

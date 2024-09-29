@@ -7,7 +7,7 @@ import tifffile
 from dask.distributed import LocalCluster
 
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_dict
+from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 
 # @flow
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
     proj_dir = os.path.join(proj_dir, "G13_2.5x_1x_zoom_07082024")
 
-    proj_fp_dict = get_proj_fp_dict(proj_dir)
+    proj_fp_dict = get_proj_fp_model(proj_dir)
 
     slicer = (
         # slice(400, 500, None),  #  slice(None, None, 3),

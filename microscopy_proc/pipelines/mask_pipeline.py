@@ -17,7 +17,7 @@ from microscopy_proc.funcs.mask_funcs import (
 from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_dict,
+    get_proj_fp_model,
     make_proj_dirs,
 )
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # # Filenames
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # # Getting file paths
-    # proj_fp_dict = get_proj_fp_dict(proj_dir)
+    # proj_fp_dict = get_proj_fp_model(proj_dir)
     # Making project folders
     # make_proj_dirs(proj_dir)
     # # Running mask pipeline
@@ -145,7 +145,7 @@ if __name__ == "__main__":
             # Filenames
             proj_dir = os.path.join(batch_proj_dir, i)
             # Getting file paths
-            proj_fp_dict = get_proj_fp_dict(proj_dir)
+            proj_fp_dict = get_proj_fp_model(proj_dir)
 
             # Making project folders
             make_proj_dirs(os.path.join(batch_proj_dir, i))
