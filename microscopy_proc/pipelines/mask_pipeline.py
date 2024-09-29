@@ -32,25 +32,25 @@ def make_mask_for_ref(
     for each region.
     """
     # Update registration params json
-    rp = ConfigParamsModel.update_params_file(pfm["config_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Reading ref and trimmed imgs
-    arr_ref = tifffile.imread(pfm["ref"])
-    arr_trimmed = tifffile.imread(pfm["trimmed"])
+    arr_ref = tifffile.imread(pfm.ref)
+    arr_trimmed = tifffile.imread(pfm.trimmed)
     # Making mask
     arr_blur = Gf.gauss_blur_filt(arr_trimmed, rp.mask_gaus_blur)
-    tifffile.imwrite(pfm["premask_blur"], arr_blur)
+    tifffile.imwrite(pfm.premask_blur, arr_blur)
     arr_mask = Gf.manual_thresh(arr_blur, rp.mask_thresh)
-    tifffile.imwrite(pfm["mask"], arr_mask)
+    tifffile.imwrite(pfm.mask, arr_mask)
 
     # Make outline
     outline_df = make_outline(arr_mask)
     # Transformix on coords
-    outline_df[["z", "y", "x"]] = (
+    outline_df[.z", "y", "x] = (
         transformation_coords(
             outline_df,
-            pfm["ref"],
-            pfm["regresult"],
-        )[["z", "y", "x"]]
+            pfm.ref,
+            pfm.regresult,
+        )[.z", "y", "x]
         .round(0)
         .astype(np.int32)
     )
@@ -61,18 +61,18 @@ def make_mask_for_ref(
 
     # Make outline img (1 for in, 2 for out)
     coords2points(
-        outline_df[outline_df["is_in"] == 1],
+        outline_df[outline_df.is_in == 1],
         arr_ref.shape,
-        pfm["outline"],
+        pfm.outline,
     )
-    outline_in = tifffile.imread(pfm["outline"])
+    outline_in = tifffile.imread(pfm.outline)
     coords2points(
-        outline_df[outline_df["is_in"] == 0],
+        outline_df[outline_df.is_in == 0],
         arr_ref.shape,
-        pfm["outline"],
+        pfm.outline,
     )
-    outline_out = tifffile.imread(pfm["outline"])
-    tifffile.imwrite(pfm["outline"], outline_in + outline_out * 2)
+    outline_out = tifffile.imread(pfm.outline)
+    tifffile.imwrite(pfm.outline, outline_in + outline_out * 2)
 
     # Fill in outline to recreate mask (not perfect)
     arr_mask_reg = fill_outline(arr_ref, outline_df)
@@ -80,12 +80,12 @@ def make_mask_for_ref(
     arr_mask_reg = ndimage.binary_closing(arr_mask_reg, iterations=2).astype(np.uint8)
     arr_mask_reg = ndimage.binary_opening(arr_mask_reg, iterations=2).astype(np.uint8)
     # Saving
-    tifffile.imwrite(pfm["mask_reg"], arr_mask_reg)
+    tifffile.imwrite(pfm.mask_reg, arr_mask_reg)
 
     # Counting mask voxels in each region
-    arr_annot = tifffile.imread(pfm["annot"])
-    with open(pfm["map"], "r") as f:
-        annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
+    arr_annot = tifffile.imread(pfm.annot)
+    with open(pfm.map, "r") as f:
+        annot_df = nested_tree_dict2df(json.load(f).msg[0])
     # Getting the annotation name for every cell (zyx coord)
     mask_counts_df = pd.merge(
         left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),
@@ -98,22 +98,22 @@ def make_mask_for_ref(
     # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
     mask_counts_df = combine_nested_regions(mask_counts_df, annot_df)
     # Calculating proportion of mask volume in each region
-    mask_counts_df["volume_prop"] = (
-        mask_counts_df["volume_mask"] / mask_counts_df["volume_annot"]
+    mask_counts_df.volume_prop = (
+        mask_counts_df.volume_mask / mask_counts_df.volume_annot
     )
     # Saving
-    mask_counts_df.to_parquet(pfm["mask_counts_df"])
+    mask_counts_df.to_parquet(pfm.mask_counts_df)
 
     # # View images
     # view_imgs(
     #     [
-    #         pfm["ref"],
-    #         # pfm["trimmed"],
-    #         # pfm["smoothed"],
-    #         # pfm["mask"],
-    #         pfm["outline"],
-    #         # pfm["outline_reg"],
-    #         pfm["mask_reg"],
+    #         pfm.ref,
+    #         # pfm.trimmed,
+    #         # pfm.smoothed,
+    #         # pfm.mask,
+    #         pfm.outline,
+    #         # pfm.outline_reg,
+    #         pfm.mask_reg,
     #     ],
     #     [5, 5, 5, 5, 5, 5],
     #     [slice(None, None), slice(None, None), slice(None, None)],
