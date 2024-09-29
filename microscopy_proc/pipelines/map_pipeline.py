@@ -7,7 +7,7 @@ import tifffile
 from dask.distributed import LocalCluster
 
 # from prefect import flow
-from microscopy_proc.constants import CELL_MEASURES
+from microscopy_proc.constants import CELL_AGG_MAPPING, CellMeasures
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
@@ -16,7 +16,7 @@ from microscopy_proc.funcs.map_funcs import (
 )
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
-from microscopy_proc.utils.io_utils import read_json
+from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_dict,
     init_params,
@@ -28,6 +28,8 @@ from microscopy_proc.utils.proj_org_utils import (
 def transform_coords(proj_fp_dict: dict):
     """
     `in_id` and `out_id` are either maxima or region
+
+    NOTE: saves the cells_trfm dataframe as pandas parquet.
     """
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # Getting registration parameters
@@ -35,6 +37,8 @@ def transform_coords(proj_fp_dict: dict):
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
         cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        # Sanitising (removing smb columns)
+        cells_df = sanitise_smb_df(cells_df)
         # Taking only "z", "y", "x" coord columns
         cells_df = cells_df[["z", "y", "x"]]
         # Scaling to resampled rough space
@@ -67,11 +71,16 @@ def get_cell_mappings(proj_fp_dict: dict):
     """
     Using the transformed cell coordinates, get the region ID and name for each cell
     corresponding to the reference atlas.
+
+    NOTE: saves the cells dataframe as pandas parquet.
     """
     with cluster_proc_contxt(LocalCluster()):
-        # Reading cells dataframe
+        # Reading cells_raw and cells_trfm dataframes
         cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
-        coords_trfm = dd.read_parquet(proj_fp_dict["cells_trfm_df"]).compute()
+        coords_trfm = pd.read_parquet(proj_fp_dict["cells_trfm_df"])
+        # Sanitising (removing smb columns)
+        cells_df = sanitise_smb_df(cells_df)
+        coords_trfm = sanitise_smb_df(coords_trfm)
         # Making unique incrementing index
         cells_df = cells_df.reset_index(drop=True)
         # Setting the transformed coords
@@ -114,23 +123,19 @@ def grouping_cells(proj_fp_dict: dict):
     """
     Grouping cells by region name and aggregating total cell volume
     and cell count for each region.
+
+    NOTE: saves the cells_agg dataframe as pandas parquet.
     """
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells dataframe
-        cells_df = dd.read_parquet(proj_fp_dict["cells_df"])
+        cells_df = pd.read_parquet(proj_fp_dict["cells_df"])
+        # Sanitising (removing smb columns)
+        cells_df = sanitise_smb_df(cells_df)
         # Grouping cells by region name
         cells_grouped_df = (
             cells_df.groupby("id")
-            .agg(
-                {
-                    "z": "count",
-                    "size": "sum",
-                    "sum_intensity": "sum",
-                    # "max_intensity": "sum",
-                }
-            )
-            .rename(columns=CELL_MEASURES)
-            .compute()
+            .agg(CELL_AGG_MAPPING)
+            .rename(columns=[i.value for i in CellMeasures])
         )
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
@@ -139,7 +144,10 @@ def grouping_cells(proj_fp_dict: dict):
         # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
         cells_grouped_df = combine_nested_regions(cells_grouped_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)
-        cells_grouped_df["iov"] = cells_grouped_df["sum"] / cells_grouped_df["volume"]
+        cells_grouped_df[CellMeasures.iov.value] = (
+            cells_grouped_df[CellMeasures.size.value]
+            / cells_grouped_df[CellMeasures.volume.value]
+        )
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_grouped = dd.from_pandas(cells_grouped)
@@ -147,11 +155,12 @@ def grouping_cells(proj_fp_dict: dict):
 
 
 def cells2csv(proj_fp_dict: dict):
-    (
-        dd.read_parquet(proj_fp_dict["cells_agg_df"])
-        .compute()
-        .to_csv(proj_fp_dict["cells_agg_csv"])
-    )
+    # Reading cells dataframe
+    cells_df = pd.read_parquet(proj_fp_dict["cells_df"])
+    # Sanitising (removing smb columns)
+    cells_df = sanitise_smb_df(cells_df)
+    # Saving to csv
+    cells_df.to_csv(proj_fp_dict["cells_csv"])
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from microscopy_proc.utils.io_utils import read_json, write_json
 
 class ConfigParamsModel(BaseModel):
     """
-    Pydantic model for registration parameters
+    Pydantic model for registration parameters.
     """
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)

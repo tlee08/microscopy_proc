@@ -126,3 +126,13 @@ def silentremove(fp):
             shutil.rmtree(fp)
         except OSError:
             pass
+
+
+def sanitise_smb_df(df):
+    """
+    Sanitizes the SMB share dataframe.
+    Removes any column called "smb-share:server".
+    """
+    if "smb-share:server" in df.columns:
+        df = df.drop(columns="smb-share:server")
+    return df

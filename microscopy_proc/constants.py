@@ -1,5 +1,6 @@
 import os
 import pathlib
+from enum import Enum
 
 PROC_CHUNKS = (500, 1000, 1000)
 # PROC_CHUNKS = (500, 1200, 1200)
@@ -12,12 +13,35 @@ DEPTH = 50
 ROWSPPART = 10000000
 
 
-CELL_MEASURES = {
-    "z": "count",
-    "size": "volume",
-    "sum_intensity": "sum",
-    # "max_intensity": "max",
+class CellMeasures(Enum):
+    z = "z"
+    size = "size"
+    sum_intensity = "sum_intensity"
+    # max_intensity = "max_intensity"
+    iov = "iov"
+
+
+CELL_AGG_MAPPING = {
+    CellMeasures.z.value: "count",
+    CellMeasures.size.value: "volume",
+    CellMeasures.sum_intensity.value: "sum",
+    # CellMeasures.max_intensity.value: "max",
 }
+
+
+class ProjFolders(Enum):
+    REGISTRATION = "registration"
+    MASK = "mask"
+    CELLCOUNT = "cellcount"
+    ANALYSIS = "analysis"
+    VISUALISATION = "visualisation"
+
+
+class RefFolders(Enum):
+    REFERENCE = "reference"
+    ANNOTATION = "annotation"
+    MAPPING = "region_mapping"
+    ELASTIX = "elastix_params"
 
 
 CONFIGS_DIR = ".microscopy_proc"

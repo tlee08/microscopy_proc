@@ -314,8 +314,8 @@ class CpuArrFuncs:
             index=pd.Index(ids.astype(np.uint32), name="label"),
         ).astype(np.uint16)
         df["size"] = -1  # TODO: placeholder
-        df["sum_itns"] = -1  # TODO: placeholder
-        # df["max_itns"] = -1  # TODO: placeholder
+        df["sum_intensity"] = -1  # TODO: placeholder
+        # df["max_intensity"] = -1  # TODO: placeholder
         # Returning
         return df
 
