@@ -56,23 +56,23 @@ if __name__ == "__main__":
 
             # Getting file paths
             ref_fp_dict = get_ref_fp_model()
-            proj_fp_dict = get_proj_fp_model(proj_dir)
+            pfm = get_proj_fp_model(proj_dir)
             # Making project folders
             make_proj_dirs(proj_dir)
 
             # # Making params json
-            # init_configs(proj_fp_dict)
+            # init_configs(pfm)
 
-            # if not os.path.exists(proj_fp_dict["raw"]):
+            # if not os.path.exists(pfm.raw):
             #     print("Making zarr")
             #     # Making zarr from tiff file(s)
-            #     tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+            #     tiff2zarr(in_fp, pfm.raw, chunks=PROC_CHUNKS)
 
-            # if not os.path.exists(proj_fp_dict["regresult"]):
+            # if not os.path.exists(pfm.regresult"]):
             # Preparing reference images
             ref_prepare_pipeline(
                 ref_fp_dict=ref_fp_dict,
-                proj_fp_dict=proj_fp_dict,
+                pfm=pfm,
                 # ref_orient_ls=(-2, 3, 1),
                 # ref_z_trim=(None, None, None),
                 # ref_y_trim=(None, None, None),
@@ -80,32 +80,32 @@ if __name__ == "__main__":
             )
             # Preparing image itself
             img_rough_pipeline(
-                proj_fp_dict,
+                pfm,
                 # z_rough=3,
                 # y_rough=6,
                 # x_rough=6,
             )
             img_fine_pipeline(
-                proj_fp_dict,
+                pfm,
                 # z_fine=1,
                 # y_fine=0.6,
                 # x_fine=0.6,
             )
             img_trim_pipeline(
-                proj_fp_dict,
+                pfm,
                 # z_trim=(None, None, None),
                 # y_trim=(None, None, None),
                 # x_trim=(None, None, None),
             )
             # Running Elastix registration
-            registration_pipeline(proj_fp_dict)
+            registration_pipeline(pfm)
 
-            # if not os.path.exists(proj_fp_dict["cells_raw_df"]):
+            # if not os.path.exists(pfm.cells_raw_df):
             #     # Making overlapped chunks images for processing
-            #     img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+            #     img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH)
             #     # Cell counting
             #     img_proc_pipeline(
-            #         proj_fp_dict=proj_fp_dict,
+            #         pfm=pfm,
             #         d=DEPTH,
             #         tophat_sigma=10,
             #         dog_sigma1=1,
@@ -119,17 +119,17 @@ if __name__ == "__main__":
             #         max_wshed=700,
             #     )
             #     # Patch to fix extra smb column error
-            #     cells_df_smb_field_patch(proj_fp_dict["cells_raw_df"])
+            #     cells_df_smb_field_patch(pfm.cells_raw_df)
 
-            # if not os.path.exists(proj_fp_dict["cells_trfm_df"]):
+            # if not os.path.exists(pfm.cells_trfm_df):
             # Converting maxima from raw space to refernce atlas space
-            transform_coords(proj_fp_dict)
+            transform_coords(pfm)
             # Getting ID mappings
-            get_cell_mappings(proj_fp_dict)
+            get_cell_mappings(pfm)
             # Grouping cells
-            grouping_cells(proj_fp_dict)
+            grouping_cells(pfm)
             # Saving cells to csv
-            cells2csv(proj_fp_dict)
+            cells2csv(pfm)
             print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")

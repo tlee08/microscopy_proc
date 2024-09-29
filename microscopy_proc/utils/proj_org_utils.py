@@ -178,10 +178,10 @@ def make_proj_dirs(proj_dir):
         os.makedirs(os.path.join(proj_dir, folder.value), exist_ok=True)
 
 
-def init_configs(proj_fp_dict, **kwargs):
+def init_configs(pfm, **kwargs):
     # Making registration params json
     try:  # If file exists
-        rp = ConfigParamsModel.model_validate(read_json(proj_fp_dict["config_params"]))
+        rp = ConfigParamsModel.model_validate(read_json(pfm["config_params"]))
     except FileNotFoundError as e:  # If file does not exist
         logging.info(e)
         logging.info("Making new params json")
@@ -191,6 +191,6 @@ def init_configs(proj_fp_dict, **kwargs):
         # Update registration params json
         rp = rp.model_validate(rp.model_copy(update=kwargs))
         # Writing registration params json
-        write_json(proj_fp_dict["config_params"], rp.model_dump())
+        write_json(pfm["config_params"], rp.model_dump())
     # Returning the registration params
     return rp

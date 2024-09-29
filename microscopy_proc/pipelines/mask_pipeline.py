@@ -23,7 +23,7 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 def make_mask_for_ref(
-    proj_fp_dict: dict,
+    pfm: dict,
     **kwargs,
 ):
     """
@@ -32,15 +32,15 @@ def make_mask_for_ref(
     for each region.
     """
     # Update registration params json
-    rp = ConfigParamsModel.update_params_file(proj_fp_dict["config_params"], **kwargs)
+    rp = ConfigParamsModel.update_params_file(pfm["config_params"], **kwargs)
     # Reading ref and trimmed imgs
-    arr_ref = tifffile.imread(proj_fp_dict["ref"])
-    arr_trimmed = tifffile.imread(proj_fp_dict["trimmed"])
+    arr_ref = tifffile.imread(pfm["ref"])
+    arr_trimmed = tifffile.imread(pfm["trimmed"])
     # Making mask
     arr_blur = Gf.gauss_blur_filt(arr_trimmed, rp.mask_gaus_blur)
-    tifffile.imwrite(proj_fp_dict["premask_blur"], arr_blur)
+    tifffile.imwrite(pfm["premask_blur"], arr_blur)
     arr_mask = Gf.manual_thresh(arr_blur, rp.mask_thresh)
-    tifffile.imwrite(proj_fp_dict["mask"], arr_mask)
+    tifffile.imwrite(pfm["mask"], arr_mask)
 
     # Make outline
     outline_df = make_outline(arr_mask)
@@ -48,8 +48,8 @@ def make_mask_for_ref(
     outline_df[["z", "y", "x"]] = (
         transformation_coords(
             outline_df,
-            proj_fp_dict["ref"],
-            proj_fp_dict["regresult"],
+            pfm["ref"],
+            pfm["regresult"],
         )[["z", "y", "x"]]
         .round(0)
         .astype(np.int32)
@@ -63,16 +63,16 @@ def make_mask_for_ref(
     coords2points(
         outline_df[outline_df["is_in"] == 1],
         arr_ref.shape,
-        proj_fp_dict["outline"],
+        pfm["outline"],
     )
-    outline_in = tifffile.imread(proj_fp_dict["outline"])
+    outline_in = tifffile.imread(pfm["outline"])
     coords2points(
         outline_df[outline_df["is_in"] == 0],
         arr_ref.shape,
-        proj_fp_dict["outline"],
+        pfm["outline"],
     )
-    outline_out = tifffile.imread(proj_fp_dict["outline"])
-    tifffile.imwrite(proj_fp_dict["outline"], outline_in + outline_out * 2)
+    outline_out = tifffile.imread(pfm["outline"])
+    tifffile.imwrite(pfm["outline"], outline_in + outline_out * 2)
 
     # Fill in outline to recreate mask (not perfect)
     arr_mask_reg = fill_outline(arr_ref, outline_df)
@@ -80,11 +80,11 @@ def make_mask_for_ref(
     arr_mask_reg = ndimage.binary_closing(arr_mask_reg, iterations=2).astype(np.uint8)
     arr_mask_reg = ndimage.binary_opening(arr_mask_reg, iterations=2).astype(np.uint8)
     # Saving
-    tifffile.imwrite(proj_fp_dict["mask_reg"], arr_mask_reg)
+    tifffile.imwrite(pfm["mask_reg"], arr_mask_reg)
 
     # Counting mask voxels in each region
-    arr_annot = tifffile.imread(proj_fp_dict["annot"])
-    with open(proj_fp_dict["map"], "r") as f:
+    arr_annot = tifffile.imread(pfm["annot"])
+    with open(pfm["map"], "r") as f:
         annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
     # Getting the annotation name for every cell (zyx coord)
     mask_counts_df = pd.merge(
@@ -102,18 +102,18 @@ def make_mask_for_ref(
         mask_counts_df["volume_mask"] / mask_counts_df["volume_annot"]
     )
     # Saving
-    mask_counts_df.to_parquet(proj_fp_dict["mask_counts_df"])
+    mask_counts_df.to_parquet(pfm["mask_counts_df"])
 
     # # View images
     # view_imgs(
     #     [
-    #         proj_fp_dict["ref"],
-    #         # proj_fp_dict["trimmed"],
-    #         # proj_fp_dict["smoothed"],
-    #         # proj_fp_dict["mask"],
-    #         proj_fp_dict["outline"],
-    #         # proj_fp_dict["outline_reg"],
-    #         proj_fp_dict["mask_reg"],
+    #         pfm["ref"],
+    #         # pfm["trimmed"],
+    #         # pfm["smoothed"],
+    #         # pfm["mask"],
+    #         pfm["outline"],
+    #         # pfm["outline_reg"],
+    #         pfm["mask_reg"],
     #     ],
     #     [5, 5, 5, 5, 5, 5],
     #     [slice(None, None), slice(None, None), slice(None, None)],
@@ -124,11 +124,11 @@ if __name__ == "__main__":
     # # Filenames
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     # # Getting file paths
-    # proj_fp_dict = get_proj_fp_model(proj_dir)
+    # pfm = get_proj_fp_model(proj_dir)
     # Making project folders
     # make_proj_dirs(proj_dir)
     # # Running mask pipeline
-    # make_mask_for_ref(proj_fp_dict)
+    # make_mask_for_ref(pfm)
 
     # Filenames
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
@@ -145,13 +145,13 @@ if __name__ == "__main__":
             # Filenames
             proj_dir = os.path.join(batch_proj_dir, i)
             # Getting file paths
-            proj_fp_dict = get_proj_fp_model(proj_dir)
+            pfm = get_proj_fp_model(proj_dir)
 
             # Making project folders
             make_proj_dirs(os.path.join(batch_proj_dir, i))
 
             # Running mask pipeline
-            make_mask_for_ref(proj_fp_dict)
+            make_mask_for_ref(pfm)
             print()
         except Exception as e:
             print(f"Error: {e}")

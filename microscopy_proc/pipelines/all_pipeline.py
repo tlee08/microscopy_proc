@@ -41,20 +41,20 @@ if __name__ == "__main__":
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     ref_fp_dict = get_ref_fp_model()
-    proj_fp_dict = get_proj_fp_model(proj_dir)
+    pfm = get_proj_fp_model(proj_dir)
     # Making project folders
     make_proj_dirs(proj_dir)
 
     # Making params json
-    init_configs(proj_fp_dict)
+    init_configs(pfm)
 
     # Making zarr from tiff file(s)
-    tiff2zarr(in_fp, proj_fp_dict["raw"], chunks=PROC_CHUNKS)
+    tiff2zarr(in_fp, pfm.raw, chunks=PROC_CHUNKS)
 
     # Preparing reference images
     ref_prepare_pipeline(
         ref_fp_dict=ref_fp_dict,
-        proj_fp_dict=proj_fp_dict,
+        pfm=pfm,
         ref_orient_ls=(-2, 3, 1),
         ref_z_trim=(None, None, None),
         ref_y_trim=(None, -110, None),
@@ -63,31 +63,31 @@ if __name__ == "__main__":
 
     # Preparing image itself
     img_rough_pipeline(
-        proj_fp_dict,
+        pfm,
         z_rough=3,
         y_rough=6,
         x_rough=6,
     )
     img_fine_pipeline(
-        proj_fp_dict,
+        pfm,
         z_fine=1,
         y_fine=0.6,
         x_fine=0.6,
     )
     img_trim_pipeline(
-        proj_fp_dict,
+        pfm,
         # z_trim=(None, -5, None),
         # y_trim=(80, -75, None),
         # x_trim=(None, None, None),
     )
 
     # Running Elastix registration
-    registration_pipeline(proj_fp_dict)
+    registration_pipeline(pfm)
 
-    img_overlap_pipeline(proj_fp_dict, chunks=PROC_CHUNKS, d=DEPTH)
+    img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH)
 
     img_proc_pipeline(
-        proj_fp_dict=proj_fp_dict,
+        pfm=pfm,
         d=DEPTH,
         tophat_sigma=10,
         dog_sigma1=1,
@@ -102,10 +102,10 @@ if __name__ == "__main__":
     )
 
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(proj_fp_dict)
+    transform_coords(pfm)
 
-    get_cell_mappings(proj_fp_dict)
+    get_cell_mappings(pfm)
 
-    grouping_cells(proj_fp_dict)
+    grouping_cells(pfm)
 
-    cells2csv(proj_fp_dict)
+    cells2csv(pfm)

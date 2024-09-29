@@ -15,35 +15,35 @@ if __name__ == "__main__":
     # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
     proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/P11_agg_2.5x_1xzoom_02072024"
 
-    proj_fp_dict = get_proj_fp_model(proj_dir)
+    pfm = get_proj_fp_model(proj_dir)
 
     with cluster_proc_contxt(LocalCluster()):
-        # df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        # df = dd.read_parquet(pfm["cells_raw_df"]).compute()
         # coords2heatmaps(
         #     df,
         #     5,
-        #     da.from_zarr(proj_fp_dict["raw"]).shape,
-        #     proj_fp_dict["heatmap_check"],
+        #     da.from_zarr(pfm["raw"]).shape,
+        #     pfm["heatmap_check"],
         # )
 
-        # df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        # df = dd.read_parquet(pfm["cells_raw_df"]).compute()
         # coords2points(
         #     df,
-        #     da.from_zarr(proj_fp_dict["raw"]).shape,
-        #     proj_fp_dict["points_check"],
+        #     da.from_zarr(pfm["raw"]).shape,
+        #     pfm["points_check"],
         # )
 
-        df = dd.read_parquet(proj_fp_dict["cells_trfm_df"])
+        df = dd.read_parquet(pfm["cells_trfm_df"])
         coords2heatmaps(
             df,
             3,
-            tifffile.imread(proj_fp_dict["ref"]).shape,
-            proj_fp_dict["heatmap_trfm_check"],
+            tifffile.imread(pfm["ref"]).shape,
+            pfm["heatmap_trfm_check"],
         )
 
-        df = dd.read_parquet(proj_fp_dict["cells_trfm_df"])
+        df = dd.read_parquet(pfm["cells_trfm_df"])
         coords2points(
             df,
-            tifffile.imread(proj_fp_dict["ref"]).shape,
-            proj_fp_dict["points_trfm_check"],
+            tifffile.imread(pfm["ref"]).shape,
+            pfm["points_trfm_check"],
         )

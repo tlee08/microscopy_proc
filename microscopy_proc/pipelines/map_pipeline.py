@@ -25,7 +25,7 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 # @flow
-def transform_coords(proj_fp_dict: dict):
+def transform_coords(pfm: dict):
     """
     `in_id` and `out_id` are either maxima or region
 
@@ -33,10 +33,10 @@ def transform_coords(proj_fp_dict: dict):
     """
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # Getting registration parameters
-        rp = ConfigParamsModel.model_validate(read_json(proj_fp_dict["config_params"]))
+        rp = ConfigParamsModel.model_validate(read_json(pfm["config_params"]))
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
-        cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
+        cells_df = dd.read_parquet(pfm["cells_raw_df"]).compute()
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Taking only "z", "y", "x" coord columns
@@ -51,9 +51,7 @@ def transform_coords(proj_fp_dict: dict):
             [s[0] if s[0] else 0 for s in (rp.z_trim, rp.y_trim, rp.x_trim)]
         )
 
-        cells_df = transformation_coords(
-            cells_df, proj_fp_dict["ref"], proj_fp_dict["regresult"]
-        )
+        cells_df = transformation_coords(cells_df, pfm["ref"], pfm["regresult"])
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_df = dd.from_pandas(cells_df, npartitions=1)
         # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
@@ -61,13 +59,13 @@ def transform_coords(proj_fp_dict: dict):
         #     npartitions=int(np.ceil(cells_df.shape[0].compute() / ROWSPPART))
         # )
         # cells_df = cells_df.map_partitions(
-        #     transformation_coords, proj_fp_dict["ref"], proj_fp_dict["regresult"]
+        #     transformation_coords, pfm["ref"], pfm["regresult"]
         # )
-        cells_df.to_parquet(proj_fp_dict["cells_trfm_df"])
+        cells_df.to_parquet(pfm["cells_trfm_df"])
 
 
 # @flow
-def get_cell_mappings(proj_fp_dict: dict):
+def get_cell_mappings(pfm: dict):
     """
     Using the transformed cell coordinates, get the region ID and name for each cell
     corresponding to the reference atlas.
@@ -76,8 +74,8 @@ def get_cell_mappings(proj_fp_dict: dict):
     """
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells_raw and cells_trfm dataframes
-        cells_df = dd.read_parquet(proj_fp_dict["cells_raw_df"]).compute()
-        coords_trfm = pd.read_parquet(proj_fp_dict["cells_trfm_df"])
+        cells_df = dd.read_parquet(pfm["cells_raw_df"]).compute()
+        coords_trfm = pd.read_parquet(pfm["cells_trfm_df"])
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         coords_trfm = sanitise_smb_df(coords_trfm)
@@ -89,7 +87,7 @@ def get_cell_mappings(proj_fp_dict: dict):
         cells_df["x_trfm"] = coords_trfm["x"].values
 
         # Reading annotation image
-        arr_annot = tifffile.imread(proj_fp_dict["annot"])
+        arr_annot = tifffile.imread(pfm["annot"])
         # Getting the annotation ID for every cell (zyx coord)
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
         s = arr_annot.shape
@@ -109,17 +107,17 @@ def get_cell_mappings(proj_fp_dict: dict):
         ).fillna(-1)
 
         # Reading annotation mappings dataframe
-        with open(proj_fp_dict["map"], "r") as f:
+        with open(pfm["map"], "r") as f:
             annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
         # Getting the annotation name for every cell (zyx coord)
         cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_df = dd.from_pandas(cells_df)
-        cells_df.to_parquet(proj_fp_dict["cells_df"])
+        cells_df.to_parquet(pfm["cells_df"])
 
 
-def grouping_cells(proj_fp_dict: dict):
+def grouping_cells(pfm: dict):
     """
     Grouping cells by region name and aggregating total cell volume
     and cell count for each region.
@@ -128,7 +126,7 @@ def grouping_cells(proj_fp_dict: dict):
     """
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells dataframe
-        cells_df = pd.read_parquet(proj_fp_dict["cells_df"])
+        cells_df = pd.read_parquet(pfm["cells_df"])
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Grouping cells by region name
@@ -139,7 +137,7 @@ def grouping_cells(proj_fp_dict: dict):
         )
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
-        with open(proj_fp_dict["map"], "r") as f:
+        with open(pfm["map"], "r") as f:
             annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
         # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
         cells_grouped_df = combine_nested_regions(cells_grouped_df, annot_df)
@@ -151,16 +149,16 @@ def grouping_cells(proj_fp_dict: dict):
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_grouped = dd.from_pandas(cells_grouped)
-        cells_grouped_df.to_parquet(proj_fp_dict["cells_agg_df"])
+        cells_grouped_df.to_parquet(pfm["cells_agg_df"])
 
 
-def cells2csv(proj_fp_dict: dict):
+def cells2csv(pfm: dict):
     # Reading cells dataframe
-    cells_df = pd.read_parquet(proj_fp_dict["cells_df"])
+    cells_df = pd.read_parquet(pfm["cells_df"])
     # Sanitising (removing smb columns)
     cells_df = sanitise_smb_df(cells_df)
     # Saving to csv
-    cells_df.to_csv(proj_fp_dict["cells_csv"])
+    cells_df.to_csv(pfm["cells_csv"])
 
 
 if __name__ == "__main__":
@@ -168,17 +166,17 @@ if __name__ == "__main__":
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
     proj_dir = r"/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images/R18_agg_2.5x_1xzoom_03072024"
 
-    proj_fp_dict = get_proj_fp_model(proj_dir)
+    pfm = get_proj_fp_model(proj_dir)
     make_proj_dirs(proj_dir)
 
     # Making params json
-    init_configs(proj_fp_dict)
+    init_configs(pfm)
 
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(proj_fp_dict)
+    transform_coords(pfm)
 
-    # get_cell_mappings(proj_fp_dict)
+    # get_cell_mappings(pfm)
 
-    # grouping_cells(proj_fp_dict)
+    # grouping_cells(pfm)
 
-    # cells2csv(proj_fp_dict)
+    # cells2csv(pfm)
