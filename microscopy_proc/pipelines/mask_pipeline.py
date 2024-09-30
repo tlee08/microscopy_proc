@@ -96,7 +96,7 @@ def make_mask_for_ref(
         right_index=True,
         suffixes=("_annot", "_mask"),
     ).fillna(0)
-    # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
+    # Combining (summing) the cells_agg_df values for parent regions using the annot_df
     mask_counts_df = combine_nested_regions(mask_counts_df, annot_df)
     # Calculating proportion of mask volume in each region
     mask_counts_df.volume_prop = (

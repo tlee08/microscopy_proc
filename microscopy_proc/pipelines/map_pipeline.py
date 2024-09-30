@@ -131,35 +131,32 @@ def grouping_cells(pfm: ProjFpModel):
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Grouping cells by region name
-        cells_grouped_df = (
-            cells_df.groupby("id")
-            .agg(CELL_AGG_MAPPING)
-            .rename(columns=[i.value for i in CellMeasures])
-        )
+        cells_agg_df = cells_df.groupby("id").agg(CELL_AGG_MAPPING)
+        cells_agg_df.columns = list(CELL_AGG_MAPPING.keys())
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
         with open(pfm.map, "r") as f:
             annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
-        # Combining (summing) the cells_grouped_df values for parent regions using the annot_df
-        cells_grouped_df = combine_nested_regions(cells_grouped_df, annot_df)
+        # Combining (summing) the cells_groagg values for parent regions using the annot_df
+        cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)
-        cells_grouped_df[CellMeasures.iov.value] = (
-            cells_grouped_df[CellMeasures.size.value]
-            / cells_grouped_df[CellMeasures.volume.value]
+        cells_agg_df[CellMeasures.iov.value] = (
+            cells_agg_df[CellMeasures.sum_intensity.value]
+            / cells_agg_df[CellMeasures.volume.value]
         )
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
-        # cells_grouped = dd.from_pandas(cells_grouped)
-        cells_grouped_df.to_parquet(pfm.cells_agg_df)
+        # cells_agg = dd.from_pandas(cells_agg)
+        cells_agg_df.to_parquet(pfm.cells_agg_df)
 
 
 def cells2csv(pfm: ProjFpModel):
     # Reading cells dataframe
-    cells_df = pd.read_parquet(pfm.cells_df)
+    cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
     # Sanitising (removing smb columns)
-    cells_df = sanitise_smb_df(cells_df)
+    cells_agg_df = sanitise_smb_df(cells_agg_df)
     # Saving to csv
-    cells_df.to_csv(pfm.cells_csv)
+    cells_agg_df.to_csv(pfm.cells_agg_csv)
 
 
 if __name__ == "__main__":
