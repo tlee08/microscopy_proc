@@ -1,5 +1,4 @@
 import dask.array as da
-import dask.dataframe as dd
 from dask.distributed import LocalCluster
 from dask_cuda import LocalCUDACluster
 
@@ -127,19 +126,6 @@ def img2coords_pipeline(pfm):
         coords_df.to_parquet(pfm.maxima_df, overwrite=True)
 
 
-def cells_df_smb_field_patch(fp):
-    """
-    Patch for some error that makes another column called
-    smb-share:server. I don't know where the error is happening
-    but this is a patch to fix it after the fact.
-    """
-    cells_df = dd.read_parquet(fp)
-    if "smb-share:server" in cells_df.columns:
-        print("IN")
-        cells_df = cells_df.drop(columns=.smb-share:server)
-        cells_df.to_parquet(fp, overwrite=True)
-
-
 if __name__ == "__main__":
     # Filenames
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
@@ -167,7 +153,5 @@ if __name__ == "__main__":
         min_wshed=1,
         max_wshed=700,
     )
-
-    cells_df_smb_field_patch(pfm.cells_raw_df)
 
     # img2coords_pipeline(pfm)

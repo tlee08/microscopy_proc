@@ -36,19 +36,14 @@ if __name__ == "__main__":
         if i not in [
             "G5_agg_2.5x_1xzoom_05072024",
             "G13_2.5x_1x_zoom_07082024",
-            # "P8_2.5x_1x_zoom_07082024",
-            # "P12_2.5x_1x_zoom_07082024",
-            # "P13_2.5x_1x_zoom_05082024",
-            # "P14_2.5x_1x_zoom_08082024",
-            # "P15_2.5x_1x_zoom_07082024",
-            # "P16_2.5x_1x_zoom_06082024",
-            # "R5_agg_2.5x_1xzoom_03072024",
-            # "R6_agg_2.5x_1xzoom_05072024",
-            # "R13_agg_2.5x_1xzoom_04072024",
-            # "R14_agg_2.5x_1xzoom_02072024",
-            # "R15_agg_2.5x_1xzoom_04072024",
-            # "R16_reimage_agg_2.5x_1xzoom_05072024",
-            # "R18_agg_2.5x_1xzoom_03072024",
+            "P8_2.5x_1x_zoom_07082024",
+            "P12_2.5x_1x_zoom_07082024",
+            "P13_2.5x_1x_zoom_05082024",
+            "P15_2.5x_1x_zoom_07082024",
+            "P16_2.5x_1x_zoom_06082024",
+            "R13_agg_2.5x_1xzoom_04072024",
+            "R14_agg_2.5x_1xzoom_02072024",
+            "R15_agg_2.5x_1xzoom_04072024",
         ]:
             continue
         # Checking if it is a directory

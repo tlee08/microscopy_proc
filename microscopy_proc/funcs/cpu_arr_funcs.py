@@ -333,7 +333,7 @@ class CpuArrFuncs:
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).
         """
-        # Asserting arr sizes
+        # Asserting arr sizes match between arr_raw, arr_overlap, and d
         assert arr_raw.shape == tuple(i - 2 * d for i in arr_overlap.shape)
         logging.debug("Trimming maxima labels array to raw array dimensions using `d`")
         slicer = slice(d, -d) if d > 0 else slice(None)
@@ -353,6 +353,7 @@ class CpuArrFuncs:
             .astype(np.uint16)
         )
         logging.debug("Watershed of arr_overlap, seeds arr_maxima, mask arr_mask")
+        # NOTE: padding arr_maxima_l because we previously trimmed arr_maxima
         arr_maxima_l = np.pad(
             arr_cp2np(arr_maxima_l), d, mode="constant", constant_values=0
         )
@@ -367,14 +368,15 @@ class CpuArrFuncs:
             weights=cls.xp.asarray(arr_overlap[arr_wshed > 0].ravel()),
             minlength=len(ids_w),
         )
+        # NOTE: excluding 0 valued elements means sum_intensity matches with ids_w
         sum_intensity = arr_cp2np(sum_intensity[sum_intensity > 0])
         logging.debug("Adding sizes and intensities to DataFrame")
         idx = pd.Index(ids_w, name="label")
         df[CellMeasures.volume.value] = pd.Series(counts, index=idx)
         df[CellMeasures.sum_intensity.value] = pd.Series(sum_intensity, index=idx)
         # df["max_intensity"] = pd.Series(max_intensity, index=idx)
-        # Filtering out rows with NaNs in z, y, or x columns
-        df = df[df[["z", "y", "x"]].isna().mean(axis=1) == 0]
+        # Filtering out rows with NaNs in z, y, or x columns (i.e. no na values)
+        df = df[df[["z", "y", "x"]].isna().sum(axis=1) == 0]
         # Returning
         return df
 
