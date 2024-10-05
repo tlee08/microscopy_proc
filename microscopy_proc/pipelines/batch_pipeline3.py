@@ -1,13 +1,13 @@
 import logging
 import os
 
-import dask.dataframe as dd
 from natsort import natsorted
 
 from microscopy_proc.pipelines.map_pipeline import (
     cells2csv,
     get_cell_mappings,
     grouping_cells,
+    transform_coords,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
@@ -52,9 +52,9 @@ if __name__ == "__main__":
             pfm = get_proj_fp_model(proj_dir)
             # Making project folders
             make_proj_dirs(proj_dir)
+            # print(dd.read_parquet(pfm.cells_raw_df))
             # Converting maxima from raw space to refernce atlas space
-            # transform_coords(pfm)
-            print(dd.read_parquet(pfm.cells_raw_df))
+            transform_coords(pfm)
             # Getting ID mappings
             get_cell_mappings(pfm)
             # Grouping cells

@@ -86,12 +86,14 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     )
     # Making a children list column in cells_agg
     cells_agg_df["children"] = [[] for i in range(cells_agg_df.shape[0])]
+    # For each row (i.e. region), adding the current row ID to the parent's (by ID)
+    # children column list
     for i in cells_agg_df.index:
         i_parent = cells_agg_df.loc[i, "parent_structure_id"]
         if not np.isnan(i_parent):
             cells_agg_df.loc[i_parent, "children"].append(i)
 
-    # Summing the cell count and volume for each region
+    # Recursively summing the cells_agg_df columns with each child's and current value
     def r(i):
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
@@ -100,10 +102,11 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
         )
         return cells_agg_df.loc[i, sum_cols]
 
-    # Start from each root (i.e. nodes with no parent region)
+    # Filling NaN values with 0
     cells_agg_df[sum_cols] = cells_agg_df[sum_cols].fillna(0)
+    # Start from each root (i.e. nodes with no parent region)
     [r(i) for i in cells_agg_df[cells_agg_df["parent_structure_id"].isna()].index]
-    # Removing unnecessary columns
+    # Removing unnecessary columns ("children" column)
     cells_agg_df = cells_agg_df.drop(columns=["children"])
     # Returning
     return cells_agg_df

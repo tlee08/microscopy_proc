@@ -52,7 +52,7 @@ def mask2region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFr
     returns a dataframe with region IDs (from annotation array)
     and their corresponding voxel counts that are True in the array mask.
 
-    The dataframe index is the ID and the columns are:
+    The dataframe index is the region ID and the columns are:
     - volume: the number of voxels in the mask for that region ID.
     """
     # Convert arr_mask to binary
