@@ -10,6 +10,7 @@ from microscopy_proc.pipelines.map_pipeline import (
     transform_coords,
 )
 from microscopy_proc.pipelines.reg_pipeline import (
+    img_fine_pipeline,
     img_trim_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
@@ -36,11 +37,10 @@ if __name__ == "__main__":
         if i not in [
             "G5_agg_2.5x_1xzoom_05072024",
             "G13_2.5x_1x_zoom_07082024",
-            # "P8_2.5x_1x_zoom_07082024",
-            # "P12_2.5x_1x_zoom_07082024",
-            # "P13_2.5x_1x_zoom_05082024",
-            # "P15_2.5x_1x_zoom_07082024",
-            # "P16_2.5x_1x_zoom_06082024",
+            "P12_2.5x_1x_zoom_07082024",
+            "P13_2.5x_1x_zoom_05082024",
+            "P15_2.5x_1x_zoom_07082024",
+            "P16_2.5x_1x_zoom_06082024",
         ]:
             continue
         # Checking if it is a directory
@@ -79,18 +79,18 @@ if __name__ == "__main__":
                 # ref_x_trim=(None, None, None),
             )
             # Preparing image itself
-            # prepare_img_rough(
+            # img_rough_pipeline(
             #     pfm,
             #     # z_rough=3,
             #     # y_rough=6,
             #     # x_rough=6,
             # )
-            # prepare_img_fine(
-            #     pfm,
-            #     # z_fine=1,
-            #     # y_fine=0.6,
-            #     # x_fine=0.6,
-            # )
+            img_fine_pipeline(
+                pfm,
+                # z_fine=1,
+                # y_fine=0.6,
+                # x_fine=0.6,
+            )
             img_trim_pipeline(
                 pfm,
                 # z_trim=(None, None, None),

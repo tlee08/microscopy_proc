@@ -36,10 +36,10 @@ def fill_outline(arr: np.ndarray, coords_df: pd.DataFrame) -> np.ndarray:
     coords_df = coords_df.sort_values(by=["z", "y", "x"]).reset_index(drop=True)
     # For each outline coord
     for i, x in coords_df.iterrows():
-        # If type is 1, fill in (from current voxel)
+        # is_in = 1, fill in (from current voxel)
         if x["is_in"] == 1:
             res[x["z"], x["y"], x["x"] :] = 1
-        # If type is 0, stop filling in (after current voxel)
+        # is_in = 0, stop filling in (after current voxel)
         elif x["is_in"] == 0:
             res[x["z"], x["y"], x["x"] + 1 :] = 0
     # Returning

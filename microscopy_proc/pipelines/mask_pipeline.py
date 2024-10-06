@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import tifffile
+from natsort import natsorted
 from scipy import ndimage
 
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
@@ -51,7 +52,7 @@ def make_mask_for_ref(
             outline_df,
             pfm.ref,
             pfm.regresult,
-        )["z", "y", "x"]
+        )[["z", "y", "x"]]
         .round(0)
         .astype(np.int32)
     )
@@ -105,21 +106,6 @@ def make_mask_for_ref(
     # Saving
     mask_counts_df.to_parquet(pfm.mask_counts_df)
 
-    # # View images
-    # view_imgs(
-    #     [
-    #         pfm.ref,
-    #         # pfm.trimmed,
-    #         # pfm.smoothed,
-    #         # pfm.mask,
-    #         pfm.outline,
-    #         # pfm.outline_reg,
-    #         pfm.mask_reg,
-    #     ],
-    #     [5, 5, 5, 5, 5, 5],
-    #     [slice(None, None), slice(None, None), slice(None, None)],
-    # )
-
 
 if __name__ == "__main__":
     # # Filenames
@@ -134,26 +120,25 @@ if __name__ == "__main__":
     # Filenames
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
 
-    for i in os.listdir(batch_proj_dir):
-        # Only running specific files
-        if i not in [
-            "G3_agg_2.5x_1xzoom_03072024",
-        ]:
-            continue
+    for i in natsorted(os.listdir(batch_proj_dir)):
+        # # Only running specific files
+        # if i not in [
+        #     "G3_agg_2.5x_1xzoom_03072024",
+        # ]:
+        #     continue
         # Logging which file is being processed
         print(f"Running: {i}")
-        try:
-            # Filenames
-            proj_dir = os.path.join(batch_proj_dir, i)
-            # Getting file paths
-            pfm = get_proj_fp_model(proj_dir)
+        # try:
+        # Filenames
+        proj_dir = os.path.join(batch_proj_dir, i)
+        # Getting file paths
+        pfm = get_proj_fp_model(proj_dir)
 
-            # Making project folders
-            make_proj_dirs(os.path.join(batch_proj_dir, i))
+        # Making project folders
+        make_proj_dirs(os.path.join(batch_proj_dir, i))
 
-            # Running mask pipeline
-            make_mask_for_ref(pfm)
-            print()
-        except Exception as e:
-            print(f"Error: {e}")
-            continue
+        # Running mask pipeline
+        make_mask_for_ref(pfm)
+        print()
+        # except Exception as e:
+        #     print(f"Error: {e}")
