@@ -121,11 +121,15 @@ if __name__ == "__main__":
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
 
     for i in natsorted(os.listdir(batch_proj_dir)):
-        # # Only running specific files
-        # if i not in [
-        #     "G3_agg_2.5x_1xzoom_03072024",
-        # ]:
-        #     continue
+        # Only running specific files
+        if i not in [
+            "G13_2.5x_1x_zoom_07082024",
+            "P12_2.5x_1x_zoom_07082024",
+            "P13_2.5x_1x_zoom_05082024",
+            "P15_2.5x_1x_zoom_07082024",
+            "P16_2.5x_1x_zoom_06082024",
+        ]:
+            continue
         # Logging which file is being processed
         print(f"Running: {i}")
         # try:

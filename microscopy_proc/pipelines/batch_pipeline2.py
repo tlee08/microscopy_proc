@@ -35,7 +35,6 @@ if __name__ == "__main__":
     for i in natsorted(os.listdir(in_fp_dir)):
         # Only given files
         if i not in [
-            "G5_agg_2.5x_1xzoom_05072024",
             "G13_2.5x_1x_zoom_07082024",
             "P12_2.5x_1x_zoom_07082024",
             "P13_2.5x_1x_zoom_05082024",
