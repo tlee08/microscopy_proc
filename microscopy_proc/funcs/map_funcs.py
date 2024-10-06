@@ -49,20 +49,22 @@ def nested_tree_dict2df(data_dict: dict):
     return df
 
 
-def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
+def annot_df_get_parents(annot_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Combine (sum) children regions in their parent regions in the cells_agg dataframe.
+    Get the parent region information for all regions
+    in the annotation mappings dataframe.
 
-    Done recursively.
-
-    Notes
-    -----
-    - The `annot_df` is the annotation mappings dataframe.
-    - The `cells_agg` is the cells dataframe grouped by region ID (so ID is the index).
+    Returns a new dataframe with index as region ID
+    and the columns:
+    - NAME
+    - ACRONYM
+    - COLOR_HEX_TRIPLET
+    - PARENT_STRUCTURE_ID
+    - PARENT_ACRONYM
     """
-    # Getting the sum column names (i.e. all columns in cells_agg_d)
-    sum_cols = cells_agg_df.columns
-    # For each region, storing the parent region name in `annot_df`
+    # For each region (i.e. row), storing the parent region name in a column
+    # by merging the annot_df on parent_structure_id
+    # with the annot_df (as parent copy, so own id)
     annot_df = (
         pd.merge(
             left=annot_df,
@@ -75,9 +77,7 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
             left_on=AnnotColumns.PARENT_STRUCTURE_ID.value,
             right_on=AnnotExtraColumns.PARENT_ID.value,
             how="left",
-        )
-        # .drop(columns=[AnnotExtraColumns.PARENT_ID.value])
-        .set_index(AnnotColumns.ID.value)
+        ).set_index(AnnotColumns.ID.value)
     )[
         [
             AnnotColumns.NAME.value,
@@ -87,6 +87,28 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
             AnnotExtraColumns.PARENT_ACRONYM.value,
         ]
     ]
+    return annot_df
+
+
+def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
+    """
+    Combine (sum) children regions in their parent regions in the cells_agg dataframe.
+
+    Done recursively.
+
+    Returns a new dataframe with index as region ID,
+    the annotation columns, and the
+    same columns as the input cells_agg dataframe.
+
+    Notes
+    -----
+    - The `annot_df` is the annotation mappings dataframe.
+    - The `cells_agg` is the cells dataframe grouped by region ID (so ID is the index).
+    """
+    # Getting the sum column names (i.e. all columns in cells_agg_d)
+    sum_cols = cells_agg_df.columns
+    # Getting df with parent region information for all regions
+    annot_df = annot_df_get_parents(annot_df)
     # Merging the cells_agg df with the annot_df
     # NOTE: we are setting the annot_df index as ID
     # and assuming cells_agg index is ID (via groupby)
@@ -109,20 +131,23 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
             cells_agg_df.loc[i_parent, AnnotExtraColumns.CHILDREN.value].append(i)
 
     # Recursively summing the cells_agg_df columns with each child's and current value
-    def r(i):
+    def recursive_sum(i):
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
         cells_agg_df.loc[i, sum_cols] += np.sum(
-            [r(j) for j in cells_agg_df.loc[i, AnnotExtraColumns.CHILDREN.value]],
+            [
+                recursive_sum(j)
+                for j in cells_agg_df.loc[i, AnnotExtraColumns.CHILDREN.value]
+            ],
             axis=0,
         )
         return cells_agg_df.loc[i, sum_cols]
 
     # Filling NaN values with 0
     cells_agg_df[sum_cols] = cells_agg_df[sum_cols].fillna(0)
-    # Start from each root (i.e. nodes with no parent region)
+    # For each root (i.e. nodes with no parent region), running recursive summing
     [
-        r(i)
+        recursive_sum(i)
         for i in cells_agg_df[
             cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
         ].index
