@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from microscopy_proc.constants import AnnotColumns
+from microscopy_proc.constants import AnnotColumns, AnnotExtraColumns
 
 
 def nested_tree_dict2df(data_dict: dict):
@@ -33,7 +33,7 @@ def nested_tree_dict2df(data_dict: dict):
         ignore_index=True,
     )
     # Recursively get the region information for all children
-    for i in data_dict["children"]:
+    for i in data_dict[AnnotExtraColumns.CHILDREN.value]:
         df = pd.concat(
             [
                 df,
@@ -68,15 +68,15 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
             left=annot_df,
             right=annot_df[[AnnotColumns.ID.value, AnnotColumns.ACRONYM.value]].rename(
                 columns={
-                    AnnotColumns.ID.value: "parent_id",
-                    AnnotColumns.ACRONYM.value: "parent_acronym",
+                    AnnotColumns.ID.value: AnnotExtraColumns.PARENT_ID.value,
+                    AnnotColumns.ACRONYM.value: AnnotExtraColumns.PARENT_ACRONYM.value,
                 }
             ),
             left_on=AnnotColumns.PARENT_STRUCTURE_ID.value,
-            right_on="parent_id",
+            right_on=AnnotExtraColumns.PARENT_ID.value,
             how="left",
         )
-        # .drop(columns=["parent_id"])
+        # .drop(columns=[AnnotExtraColumns.PARENT_ID.value])
         .set_index(AnnotColumns.ID.value)
     )[
         [
@@ -84,7 +84,7 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
             AnnotColumns.ACRONYM.value,
             AnnotColumns.COLOR_HEX_TRIPLET.value,
             AnnotColumns.PARENT_STRUCTURE_ID.value,
-            "parent_acronym",
+            AnnotExtraColumns.PARENT_ACRONYM.value,
         ]
     ]
     # Merging the cells_agg df with the annot_df
@@ -98,20 +98,23 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
         how="outer",
     )
     # Making a children list column in cells_agg
-    cells_agg_df["children"] = [[] for i in range(cells_agg_df.shape[0])]
+    cells_agg_df[AnnotExtraColumns.CHILDREN.value] = [
+        [] for i in range(cells_agg_df.shape[0])
+    ]
     # For each row (i.e. region), adding the current row ID to the parent's (by ID)
     # children column list
     for i in cells_agg_df.index:
         i_parent = cells_agg_df.loc[i, AnnotColumns.PARENT_STRUCTURE_ID.value]
         if not np.isnan(i_parent):
-            cells_agg_df.loc[i_parent, "children"].append(i)
+            cells_agg_df.loc[i_parent, AnnotExtraColumns.CHILDREN.value].append(i)
 
     # Recursively summing the cells_agg_df columns with each child's and current value
     def r(i):
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
         cells_agg_df.loc[i, sum_cols] += np.sum(
-            [r(j) for j in cells_agg_df.loc[i, "children"]], axis=0
+            [r(j) for j in cells_agg_df.loc[i, AnnotExtraColumns.CHILDREN.value]],
+            axis=0,
         )
         return cells_agg_df.loc[i, sum_cols]
 
@@ -124,8 +127,8 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
             cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
         ].index
     ]
-    # Removing unnecessary columns ("children" column)
-    cells_agg_df = cells_agg_df.drop(columns=["children"])
+    # Removing unnecessary columns (AnnotExtraColumns.CHILDREN.value column)
+    cells_agg_df = cells_agg_df.drop(columns=[AnnotExtraColumns.CHILDREN.value])
     # Returning
     return cells_agg_df
 
@@ -133,25 +136,27 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
 def df2nested_tree_dict(df: pd.DataFrame) -> dict:
     # Adding children list to each region
     df = df.copy()
-    df["children"] = [[] for i in range(df.shape[0])]
+    df[AnnotExtraColumns.CHILDREN.value] = [[] for i in range(df.shape[0])]
     for i in df.index:
         i_parent = df.loc[i, AnnotColumns.PARENT_STRUCTURE_ID.value]
         if np.isnan(i_parent):
             continue
         if i_parent is None:
-            df.loc[i_parent, "children"] = []
-        df.loc[i_parent, "children"].append(i)
+            df.loc[i_parent, AnnotExtraColumns.CHILDREN.value] = []
+        df.loc[i_parent, AnnotExtraColumns.CHILDREN.value].append(i)
 
     # Converting to dict
     def r(i):
         # Storing info of current region in dict
         tree = df.loc[i].to_dict()
         # BASE CASE: no children
-        if df.loc[i, "children"] == []:
+        if df.loc[i, AnnotExtraColumns.CHILDREN.value] == []:
             pass
         # REC CASE: has children - recursively get children info
         else:
-            tree["children"] = [r(j) for j in df.loc[i, "children"]]
+            tree[AnnotExtraColumns.CHILDREN.value] = [
+                r(j) for j in df.loc[i, AnnotExtraColumns.CHILDREN.value]
+            ]
         return tree
 
     tree = r(df[df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index[0], {})

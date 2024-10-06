@@ -35,6 +35,12 @@ class AnnotColumns(Enum):
     PARENT_STRUCTURE_ID = "parent_structure_id"
 
 
+class AnnotExtraColumns(Enum):
+    PARENT_ID = "parent_id"
+    PARENT_ACRONYM = "parent_acronym"
+    CHILDREN = "children"
+
+
 class CellMeasures(Enum):
     Z = "z"
     VOLUME = "volume"
