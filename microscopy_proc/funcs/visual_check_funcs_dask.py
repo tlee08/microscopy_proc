@@ -6,14 +6,16 @@ import pandas as pd
 import seaborn as sns
 
 # from prefect import flow, task
-from microscopy_proc.constants import PROC_CHUNKS, Coords
+from microscopy_proc.constants import PROC_CHUNKS, AnnotColumns, Coords
 from microscopy_proc.utils.dask_utils import coords2block
 
 
 # @task
 def make_scatter(df):
     fig, ax = plt.subplots(figsize=(5, 10))
-    sns.scatterplot(x=df[Coords.X.value], y=df[Coords.Y.value], marker=".", alpha=0.2, s=10, ax=ax)
+    sns.scatterplot(
+        x=df[Coords.X.value], y=df[Coords.Y.value], marker=".", alpha=0.2, s=10, ax=ax
+    )
     ax.invert_yaxis()
 
 
@@ -26,7 +28,7 @@ def make_img(arr, **kwargs):
 
 # @task
 def cell_counts_plot(df):
-    id_counts = df["id"].value_counts()
+    id_counts = df[AnnotColumns.ID.value].value_counts()
     id_counts = id_counts.compute() if isinstance(id_counts, dd.Series) else id_counts
     id_counts = id_counts.sort_values()
     sns.scatterplot(id_counts.values)
@@ -59,11 +61,15 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
     coords = coords.compute() if isinstance(coords, dd.DataFrame) else coords
     # Groupby and counts, so we don't drop duplicates
     coords = (
-        coords.groupby([Coords.Z.value, Coords.Y.value, Coords.X.value]).size().reset_index(name="counts")
+        coords.groupby([Coords.Z.value, Coords.Y.value, Coords.X.value])
+        .size()
+        .reset_index(name="counts")
     )
     # Incrementing the coords inCoords.Y.valuee array
     if coords.shape[0] > 0:
-        arr[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += coords["counts"]
+        arr[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += (
+            coords["counts"]
+        )
     # Return arr
     return arr
 
@@ -96,7 +102,7 @@ def coords2sphere_workers(
     # Adding coords to image
     for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
         if t:
-            coords_i Coords.Y.valueoords.copy()
+            coords_i = coords.copy()
             coords_i[Coords.Z.value] += z
             coords_i[Coords.Y.value] += y
             coords_i[Coords.X.value] += x
@@ -181,8 +187,12 @@ def coords2regions(coords, shape, arr_out_fp):
         if np.all((coord >= 0) & (coord < shape)):
             z, y, x, _id = coord
             arr[z, y, x] = _id
-Coords.Y.value
+
     # Formatting coord values as (z, y, x) and rounding to integers
-    coords = coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, "id"]].round(0).astype(np.int16)
+    coords = (
+        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, AnnotColumns.ID.value]]
+        .round(0)
+        .astype(np.int16)
+    )
     if coords.shape[0] > 0:
         np.apply_along_axis(f, 1, coords)

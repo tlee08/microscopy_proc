@@ -7,7 +7,13 @@ import tifffile
 from dask.distributed import LocalCluster
 
 # from prefect import flow
-from microscopy_proc.constants import CELL_AGG_MAPPING, TRFM, CellMeasures, Coords
+from microscopy_proc.constants import (
+    CELL_AGG_MAPPING,
+    TRFM,
+    AnnotColumns,
+    CellMeasures,
+    Coords,
+)
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
@@ -108,7 +114,7 @@ def get_cell_mappings(pfm: ProjFpModel):
         )
         # Getting the pixel values of each valid transformed coord (hence the specified index).
         # Invalids are set to -1
-        cells_df["id"] = pd.Series(
+        cells_df[AnnotColumns.ID.value] = pd.Series(
             arr_annot[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
         ).fillna(-1)
@@ -137,7 +143,7 @@ def grouping_cells(pfm: ProjFpModel):
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Grouping cells by region name
-        cells_agg_df = cells_df.groupby("id").agg(CELL_AGG_MAPPING)
+        cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPING)
         cells_agg_df.columns = list(CELL_AGG_MAPPING.keys())
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
@@ -146,9 +152,9 @@ def grouping_cells(pfm: ProjFpModel):
         # Combining (summing) the cells_groagg values for parent regions using the annot_df
         cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)
-        cells_agg_df[CellMeasures.iov.value] = (
-            cells_agg_df[CellMeasures.sum_intensity.value]
-            / cells_agg_df[CellMeasures.volume.value]
+        cells_agg_df[CellMeasures.IOV.value] = (
+            cells_agg_df[CellMeasures.SUM_INTENSITY.value]
+            / cells_agg_df[CellMeasures.VOLUME.value]
         )
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet

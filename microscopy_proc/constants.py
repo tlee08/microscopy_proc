@@ -47,7 +47,7 @@ CELL_AGG_MAPPING = {
     CellMeasures.Z.value: "count",
     CellMeasures.VOLUME.value: "sum",
     CellMeasures.SUM_INTENSITY.value: "sum",
-    # CellMeasures.max_intensity.value: "max",
+    # CellMeasures.MAX_INTENSITY.value: "max",
 }
 
 

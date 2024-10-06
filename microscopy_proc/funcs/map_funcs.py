@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from microscopy_proc.constants import AnnotColumns
+
 
 def nested_tree_dict2df(data_dict: dict):
     """
@@ -8,16 +10,16 @@ def nested_tree_dict2df(data_dict: dict):
     """
     # Column names
     names = [
-        ("id", np.float64),
-        ("atlas_id", np.float64),
-        ("ontology_id", np.float64),
-        ("acronym", str),
-        ("name", str),
-        ("color_hex_triplet", str),
-        ("graph_order", np.float64),
-        ("st_level", np.float64),
-        ("hemisphere_id", np.float64),
-        ("parent_structure_id", np.float64),
+        (AnnotColumns.ID.value, np.float64),
+        (AnnotColumns.ATLAS_ID.value, np.float64),
+        (AnnotColumns.ONTOLOGY_ID.value, np.float64),
+        (AnnotColumns.ACRONYM.value, str),
+        (AnnotColumns.NAME.value, str),
+        (AnnotColumns.COLOR_HEX_TRIPLET.value, str),
+        (AnnotColumns.GRAPH_ORDER.value, np.float64),
+        (AnnotColumns.ST_LEVEL.value, np.float64),
+        (AnnotColumns.HEMISPHERE_ID.value, np.float64),
+        (AnnotColumns.PARENT_STRUCTURE_ID.value, np.float64),
     ]
     # Making regions ID dataframe
     df = pd.DataFrame(columns=[i[0] for i in names])
@@ -64,16 +66,27 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     annot_df = (
         pd.merge(
             left=annot_df,
-            right=annot_df[["id", "acronym"]].rename(
-                columns={"id": "parent_id", "acronym": "parent_acronym"}
+            right=annot_df[[AnnotColumns.ID.value, AnnotColumns.ACRONYM.value]].rename(
+                columns={
+                    AnnotColumns.ID.value: "parent_id",
+                    AnnotColumns.ACRONYM.value: "parent_acronym",
+                }
             ),
-            left_on="parent_structure_id",
+            left_on=AnnotColumns.PARENT_STRUCTURE_ID.value,
             right_on="parent_id",
             how="left",
         )
         # .drop(columns=["parent_id"])
-        .set_index("id")
-    )[["name", "acronym", "color_hex_triplet", "parent_structure_id", "parent_acronym"]]
+        .set_index(AnnotColumns.ID.value)
+    )[
+        [
+            AnnotColumns.NAME.value,
+            AnnotColumns.ACRONYM.value,
+            AnnotColumns.COLOR_HEX_TRIPLET.value,
+            AnnotColumns.PARENT_STRUCTURE_ID.value,
+            "parent_acronym",
+        ]
+    ]
     # Merging the cells_agg df with the annot_df
     # NOTE: we are setting the annot_df index as ID
     # and assuming cells_agg index is ID (via groupby)
@@ -89,7 +102,7 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     # For each row (i.e. region), adding the current row ID to the parent's (by ID)
     # children column list
     for i in cells_agg_df.index:
-        i_parent = cells_agg_df.loc[i, "parent_structure_id"]
+        i_parent = cells_agg_df.loc[i, AnnotColumns.PARENT_STRUCTURE_ID.value]
         if not np.isnan(i_parent):
             cells_agg_df.loc[i_parent, "children"].append(i)
 
@@ -105,7 +118,12 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     # Filling NaN values with 0
     cells_agg_df[sum_cols] = cells_agg_df[sum_cols].fillna(0)
     # Start from each root (i.e. nodes with no parent region)
-    [r(i) for i in cells_agg_df[cells_agg_df["parent_structure_id"].isna()].index]
+    [
+        r(i)
+        for i in cells_agg_df[
+            cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
+        ].index
+    ]
     # Removing unnecessary columns ("children" column)
     cells_agg_df = cells_agg_df.drop(columns=["children"])
     # Returning
@@ -117,7 +135,7 @@ def df2nested_tree_dict(df: pd.DataFrame) -> dict:
     df = df.copy()
     df["children"] = [[] for i in range(df.shape[0])]
     for i in df.index:
-        i_parent = df.loc[i, "parent_structure_id"]
+        i_parent = df.loc[i, AnnotColumns.PARENT_STRUCTURE_ID.value]
         if np.isnan(i_parent):
             continue
         if i_parent is None:
@@ -136,7 +154,7 @@ def df2nested_tree_dict(df: pd.DataFrame) -> dict:
             tree["children"] = [r(j) for j in df.loc[i, "children"]]
         return tree
 
-    tree = r(df[df["parent_structure_id"].isna()].index[0], {})
+    tree = r(df[df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index[0], {})
     # Returning
     return tree
 
@@ -148,13 +166,19 @@ def df_map_ids(cells_df: pd.DataFrame, annot_df: pd.DataFrame) -> pd.DataFrame:
         left=cells_df,
         right=annot_df,
         how="left",
-        on="id",
+        on=AnnotColumns.ID.value,
     )
     # Setting points with ID == -1 as "invalid" label
-    cells_df.loc[cells_df["id"] == -1, "name"] = "invalid"
+    cells_df.loc[cells_df[AnnotColumns.ID.value] == -1, AnnotColumns.NAME.value] = (
+        "invalid"
+    )
     # Setting points with ID == 0 as "universe" label
-    cells_df.loc[cells_df["id"] == 0, "name"] = "universe"
+    cells_df.loc[cells_df[AnnotColumns.ID.value] == 0, AnnotColumns.NAME.value] = (
+        "universe"
+    )
     # Setting points with no region map name (but have a positive ID value) as "no label" label
-    cells_df.loc[cells_df["name"].isna(), "name"] = "no label"
+    cells_df.loc[cells_df[AnnotColumns.NAME.value].isna(), AnnotColumns.NAME.value] = (
+        "no label"
+    )
     # Returning
     return cells_df

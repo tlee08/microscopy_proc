@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import tifffile
 
-from microscopy_proc.constants import Coords
+from microscopy_proc.constants import AnnotColumns, Coords
 from microscopy_proc.utils.io_utils import silentremove
 
 #####################################################################
@@ -135,7 +135,7 @@ def coords2regions(coords, shape, arr_out_fp):
 
     # Formatting coord values as (z, y, x) and rounding to integers
     coords = (
-        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, "id"]]
+        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, AnnotColumns.ID.value]]
         .round(0)
         .astype(np.int16)
     )
