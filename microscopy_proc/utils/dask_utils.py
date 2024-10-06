@@ -8,7 +8,7 @@ import dask.dataframe as dd
 import numpy as np
 from dask.distributed import Client
 
-from microscopy_proc.constants import DEPTH
+from microscopy_proc.constants import DEPTH, Coords
 
 
 def block2coords(func, *args: list) -> dd.DataFrame:
@@ -27,9 +27,15 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     @dask.delayed
     def func_offsetted(args, z_offset, y_offset, x_offset):
         df = func(*args)
-        df.loc[:, "z"] = df["z"] + z_offset if "z" in df.columns else z_offset
-        df.loc[:, "y"] = df["y"] + y_offset if "y" in df.columns else y_offset
-        df.loc[:, "x"] = df["x"] + x_offset if "x" in df.columns else x_offset
+        df.loc[:, Coords.Z.value] = (
+            df[Coords.Z.value] + z_offset if Coords.Z.value in df.columns else z_offset
+        )
+        df.loc[:, Coords.Y.value] = (
+            df[Coords.Y.value] + y_offset if Coords.Y.value in df.columns else y_offset
+        )
+        df.loc[:, Coords.X.value] = (
+            df[Coords.X.value] + x_offset if Coords.X.value in df.columns else x_offset
+        )
         return df
 
     # Getting the first block in the args list
@@ -69,9 +75,9 @@ def coords2block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
     # Copying df
     df = df.copy()
     # Offsetting
-    df["z"] = df["z"] - z[0]
-    df["y"] = df["y"] - y[0]
-    df["x"] = df["x"] - x[0]
+    df[Coords.Z.value] = df[Coords.Z.value] - z[0]
+    df[Coords.Y.value] = df[Coords.Y.value] - y[0]
+    df[Coords.X.value] = df[Coords.X.value] - x[0]
     # Returning df
     return df
 

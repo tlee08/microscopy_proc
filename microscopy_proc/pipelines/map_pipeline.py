@@ -7,7 +7,7 @@ import tifffile
 from dask.distributed import LocalCluster
 
 # from prefect import flow
-from microscopy_proc.constants import CELL_AGG_MAPPING, CellMeasures
+from microscopy_proc.constants import CELL_AGG_MAPPING, TRFM, CellMeasures, Coords
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.map_funcs import (
     combine_nested_regions,
@@ -40,8 +40,8 @@ def transform_coords(pfm: ProjFpModel):
         cells_df = dd.read_parquet(pfm.cells_raw_df).compute()
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
-        # Taking only "z", "y", "x" coord columns
-        cells_df = cells_df[["z", "y", "x"]]
+        # Taking only Coords.Z.value, Coords.Y.value, Coords.X.value coord columns
+        cells_df = cells_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
         cells_df = cells_df / np.array((rp.z_rough, rp.y_rough, rp.x_rough))
@@ -83,9 +83,9 @@ def get_cell_mappings(pfm: ProjFpModel):
         # Making unique incrementing index
         cells_df = cells_df.reset_index(drop=True)
         # Setting the transformed coords
-        cells_df["z_trfm"] = coords_trfm.z.values
-        cells_df["y_trfm"] = coords_trfm.y.values
-        cells_df["x_trfm"] = coords_trfm.x.values
+        cells_df[f"{Coords.Z.value}_{TRFM}"] = coords_trfm.z.values
+        cells_df[f"{Coords.Y.value}_{TRFM}"] = coords_trfm.y.values
+        cells_df[f"{Coords.X.value}_{TRFM}"] = coords_trfm.x.values
 
         # Reading annotation image
         arr_annot = tifffile.imread(pfm.annot)
@@ -93,7 +93,13 @@ def get_cell_mappings(pfm: ProjFpModel):
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
         s = arr_annot.shape
         trfm_loc = (
-            cells_df[["z_trfm", "y_trfm", "x_trfm"]]
+            cells_df[
+                [
+                    f"{Coords.Z.value}_{TRFM}",
+                    f"{Coords.Y.value}_{TRFM}",
+                    f"{Coords.X.value}_{TRFM}",
+                ]
+            ]
             .round(0)
             .astype(np.int32)
             .query(

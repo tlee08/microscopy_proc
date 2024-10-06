@@ -6,14 +6,14 @@ import pandas as pd
 import seaborn as sns
 
 # from prefect import flow, task
-from microscopy_proc.constants import PROC_CHUNKS
+from microscopy_proc.constants import PROC_CHUNKS, Coords
 from microscopy_proc.utils.dask_utils import coords2block
 
 
 # @task
 def make_scatter(df):
     fig, ax = plt.subplots(figsize=(5, 10))
-    sns.scatterplot(x=df["x"], y=df["y"], marker=".", alpha=0.2, s=10, ax=ax)
+    sns.scatterplot(x=df[Coords.X.value], y=df[Coords.Y.value], marker=".", alpha=0.2, s=10, ax=ax)
     ax.invert_yaxis()
 
 
@@ -48,7 +48,7 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
     # rounding to integers, and
     # Filtering
     coords = (
-        coords[["z", "y", "x"]]
+        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int16)
         .query(
@@ -58,10 +58,12 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
     # Dask to numpy
     coords = coords.compute() if isinstance(coords, dd.DataFrame) else coords
     # Groupby and counts, so we don't drop duplicates
-    coords = coords.groupby(["z", "y", "x"]).size().reset_index(name="counts")
-    # Incrementing the coords in the array
+    coords = (
+        coords.groupby([Coords.Z.value, Coords.Y.value, Coords.X.value]).size().reset_index(name="counts")
+    )
+    # Incrementing the coords inCoords.Y.valuee array
     if coords.shape[0] > 0:
-        arr[coords["z"], coords["y"], coords["x"]] += coords["counts"]
+        arr[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += coords["counts"]
     # Return arr
     return arr
 
@@ -76,9 +78,9 @@ def coords2sphere_workers(
         coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
-    # Filtering for points within the image + radius padding bounds
+    # Filtering for pCoords.Y.valuets within the image + radius padding bounds
     coords = (
-        coords[["z", "y", "x"]]
+        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int16)
         .query(
@@ -94,10 +96,10 @@ def coords2sphere_workers(
     # Adding coords to image
     for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
         if t:
-            coords_i = coords.copy()
-            coords_i["z"] += z
-            coords_i["y"] += y
-            coords_i["x"] += x
+            coords_i Coords.Y.valueoords.copy()
+            coords_i[Coords.Z.value] += z
+            coords_i[Coords.Y.value] += y
+            coords_i[Coords.X.value] += x
             arr = coords2points_workers(arr, coords_i)
     # Return arr
     return arr
@@ -179,8 +181,8 @@ def coords2regions(coords, shape, arr_out_fp):
         if np.all((coord >= 0) & (coord < shape)):
             z, y, x, _id = coord
             arr[z, y, x] = _id
-
+Coords.Y.value
     # Formatting coord values as (z, y, x) and rounding to integers
-    coords = coords[["z", "y", "x", "id"]].round(0).astype(np.int16)
+    coords = coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, "id"]].round(0).astype(np.int16)
     if coords.shape[0] > 0:
         np.apply_along_axis(f, 1, coords)

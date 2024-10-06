@@ -7,6 +7,7 @@ import tifffile
 from natsort import natsorted
 from scipy import ndimage
 
+from microscopy_proc.constants import Coords
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
 from microscopy_proc.funcs.map_funcs import combine_nested_regions, nested_tree_dict2df
@@ -47,12 +48,12 @@ def make_mask_for_ref(
     # Make outline
     outline_df = make_outline(arr_mask)
     # Transformix on coords
-    outline_df[["z", "y", "x"]] = (
+    outline_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]] = (
         transformation_coords(
             outline_df,
             pfm.ref,
             pfm.regresult,
-        )[["z", "y", "x"]]
+        )[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int32)
     )
