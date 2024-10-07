@@ -52,18 +52,19 @@ if __name__ == "__main__":
             # # Saving cells to csv
             # cells2csv(pfm)
 
-            temp_fp = pfm.cells_raw_df
-
             try:
-                shutil.rmtree(f"{temp_fp}temp.parquet")
+                shutil.rmtree(f"{pfm.cells_raw_df}temp.parquet")
                 print("removed temp")
             except:
                 print("no temp")
 
-            x = dd.read_parquet(temp_fp)
+            x = dd.read_parquet(pfm.cells_df)
             # x = x.rename(columns={"size": "volume"})
             x["count"] = 1
-            x = x.drop(columns=["smb-share:server"])
+            try:
+                x = x.drop(columns=["smb-share:server"])
+            except:
+                print("no smb-share:server")
             # print(x)
             x = x.compute()
             x = dd.from_pandas(x, npartitions=1)
@@ -73,4 +74,4 @@ if __name__ == "__main__":
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
-        # break
+        break
