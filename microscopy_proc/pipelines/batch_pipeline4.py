@@ -69,7 +69,7 @@ if __name__ == "__main__":
                 print("no smb-share:server")
             # print(x)
             x = x.compute()
-            x = dd.from_pandas(x, npartitions=1)
+            # x = dd.from_pandas(x, npartitions=1)
             x.to_parquet(df_fp, overwrite=True)
 
             # cells2csv(pfm)
