@@ -113,7 +113,7 @@ def transformation_coords(
     )
     # Setting feedback and logging settings
     transformix_img_filt.LogToFileOff()
-    # transformix_img_filt.LogToConsoleOff()
+    transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
     transformix_img_filt.Execute()
     # Converting transformix output to df
@@ -202,6 +202,9 @@ def transformation_img(
             os.path.join(output_img_dir, "TransformParameters.1.txt")
         )
     )
+    # Setting feedback and logging settings
+    transformix_img_filt.LogToFileOff()
+    # transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
     transformix_img_filt.Execute()
     # Saving output file
