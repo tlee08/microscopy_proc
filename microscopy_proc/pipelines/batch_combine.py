@@ -18,8 +18,11 @@ if __name__ == "__main__":
     # Filenames
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
 
+    out_fp = os.path.join(batch_proj_dir, "combined_agg_df.parquet")
+
     # Get all experiments
     exp_ls = natsorted(os.listdir(batch_proj_dir))
+    exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(batch_proj_dir, i))]
 
     # Check if all experiments have cells_agg_df file
     for i in exp_ls:
@@ -78,5 +81,5 @@ if __name__ == "__main__":
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
     # Saving to disk
-    total_df.to_parquet(pfm.cells_raw_df, overwrite=True)
+    total_df.to_parquet(out_fp, overwrite=True)
     # break
