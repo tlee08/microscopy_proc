@@ -7,7 +7,6 @@ from natsort import natsorted
 
 from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellColumns, MaskColumns
 from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
-from microscopy_proc.pipelines.map_pipeline import cells2csv
 from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, get_ref_fp_model
@@ -21,6 +20,7 @@ if __name__ == "__main__":
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
 
     out_fp = os.path.join(batch_proj_dir, "combined_agg_df.parquet")
+    out_csv_fp = os.path.join(batch_proj_dir, "combined_agg_df.csv")
 
     # Get all experiments
     exp_ls = natsorted(os.listdir(batch_proj_dir))
@@ -84,8 +84,6 @@ if __name__ == "__main__":
                 right_index=True,
                 how="outer",
             )
-            # Exprting as csv
-            cells2csv(pfm)
             print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
@@ -94,4 +92,6 @@ if __name__ == "__main__":
     total_df.columns = total_df.columns.set_names(["specimen", "measure"])
     # Saving to disk
     total_df.to_parquet(out_fp)
+    # Also saving as csv to disk
+    total_df.to_csv(out_csv_fp)
     # break
