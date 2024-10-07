@@ -9,15 +9,14 @@ import tifffile
 
 from microscopy_proc.constants import TEMP_DIR, Coords
 from microscopy_proc.utils.io_utils import silentremove
-from microscopy_proc.utils.multiproc_utils import get_cpid
 
 
 def registration(
     fixed_img_fp: str,
     moving_img_fp: str,
     output_img_fp: str,
-    affine_fp: str = None,
-    bspline_fp: str = None,
+    affine_fp: None | str = None,
+    bspline_fp: None | str = None,
 ) -> np.ndarray:
     """
     Uses SimpleElastix (a plugin for SimpleITK)
@@ -87,10 +86,10 @@ def transformation_coords(
     # Loading coords into memory
     coords = coords.compute() if hasattr(coords, "compute") else coords
     # coords = coords.compute() if isinstance(coords, Delayed) else coords
-    # Getting the output image directory
+    # Getting the output image directory (i.e. where registration results are stored)
     reg_dir = os.path.dirname(output_img_fp)
     # Using TEMP_DIR in user home directory (faster than network drive)
-    out_dir = os.path.join(TEMP_DIR, f"transformed_coords_{get_cpid()}")
+    out_dir = os.path.join(TEMP_DIR, f"transformed_coords_{os.getpid()}")
     os.makedirs(out_dir, exist_ok=True)
     # Setting up Transformix object
     transformix_img_filt = sitk.TransformixImageFilter()
@@ -181,35 +180,37 @@ def transformation_img(
     Returns:
         A pd.DataFrame of the transformed coordinated from the fixed image space to the moving image space.
     """
-    output_img_dir = os.path.split(output_img_fp)[0]
+    # Getting the output image directory (i.e. where registration results are stored)
+    reg_dir = os.path.dirname(output_img_fp)
+    # Using TEMP_DIR in user home directory (faster than network drive)
+    out_dir = os.path.join(TEMP_DIR, f"transformed_coords_{os.getpid()}")
+    os.makedirs(out_dir, exist_ok=True)
     # Setting up Transformix object
     transformix_img_filt = sitk.TransformixImageFilter()
     # Setting the fixed points and moving and output image filepaths
     # Converting cells array to a fixed_points file
-    transformix_img_filt.SetFixedPointSetFileName(
-        os.path.join(output_img_dir, "temp.dat")
-    )
+    # transformix_img_filt.SetFixedPointSetFileName(
+    #     os.path.join(out_dir, "temp.dat")
+    # )
     transformix_img_filt.SetMovingImage(sitk.ReadImage(moving_img_fp))
-    transformix_img_filt.SetOutputDirectory(output_img_dir)
+    transformix_img_filt.SetOutputDirectory(out_dir)
     # Transform parameter maps: from registration - affine, bspline
     transformix_img_filt.SetTransformParameterMap(
-        sitk.ReadParameterFile(
-            os.path.join(output_img_dir, "TransformParameters.0.txt")
-        )
+        sitk.ReadParameterFile(os.path.join(reg_dir, "TransformParameters.0.txt"))
     )
     transformix_img_filt.AddTransformParameterMap(
-        sitk.ReadParameterFile(
-            os.path.join(output_img_dir, "TransformParameters.1.txt")
-        )
+        sitk.ReadParameterFile(os.path.join(reg_dir, "TransformParameters.1.txt"))
     )
     # Setting feedback and logging settings
     transformix_img_filt.LogToFileOff()
-    # transformix_img_filt.LogToConsoleOff()
+    transformix_img_filt.LogToConsoleOff()
     # Execute cell transformation
     transformix_img_filt.Execute()
     # Saving output file
     res_img = transformix_img_filt.GetResultImage()
     # # sitk.WriteImage(res_img, output_img_fp)
     # tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
+    # Removing temporary and unecessary transformix files
+    silentremove(out_dir)
     # return coords_transformed
     return sitk.GetArrayFromImage(res_img)

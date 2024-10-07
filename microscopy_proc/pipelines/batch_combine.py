@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from natsort import natsorted
 
-from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellColumns
+from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellColumns, MaskColumns
 from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
 from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.misc_utils import enum2list
@@ -62,16 +62,16 @@ if __name__ == "__main__":
             cells_agg_df = sanitise_smb_df(cells_agg_df)
             # Keeping only the required columns (not annot columns)
             cells_agg_df = cells_agg_df[enum2list(CellColumns)]
-            # mask_df
+            # MASK_DF
             # Reading experiment's mask_counts dataframe
             mask_df = pd.read_parquet(pfm.mask_df)
             # Keeping only the required columns
-            # mask_df = mask_df[[CellMeasures.VOLUME.value]]
+            mask_df = mask_df[enum2list(MaskColumns)]
             # Making columns a multindex with levels as
             # (specimen name, cell agg columns)
             cells_agg_df = pd.concat(
-                [cells_agg_df],
-                keys=[i],
+                [cells_agg_df, mask_df],
+                keys=[i, i],
                 names=["specimen"],
                 axis=1,
             )
@@ -87,6 +87,8 @@ if __name__ == "__main__":
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
+    # Setting column MultiIndex's level names
+    total_df.columns = total_df.columns.set_names(["specimen", "measure"])
     # Saving to disk
     total_df.to_parquet(out_fp)
     # break

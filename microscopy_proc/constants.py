@@ -37,6 +37,12 @@ class AnnotColumns(Enum):
     PARENT_STRUCTURE_ID = "parent_structure_id"
 
 
+class AnnotExtraColumns(Enum):
+    PARENT_ID = "parent_id"
+    PARENT_ACRONYM = "parent_acronym"
+    CHILDREN = "children"
+
+
 ANNOT_COLUMNS_TYPES = {
     AnnotColumns.ID.value: np.float64,
     AnnotColumns.ATLAS_ID.value: np.float64,
@@ -49,13 +55,6 @@ ANNOT_COLUMNS_TYPES = {
     AnnotColumns.HEMISPHERE_ID.value: np.float64,
     AnnotColumns.PARENT_STRUCTURE_ID.value: np.float64,
 }
-
-
-class AnnotExtraColumns(Enum):
-    PARENT_ID = "parent_id"
-    PARENT_ACRONYM = "parent_acronym"
-    CHILDREN = "children"
-
 
 ANNOT_COLUMNS_FINAL = [
     AnnotColumns.NAME.value,
