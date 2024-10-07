@@ -80,7 +80,7 @@ class ProjFpModel(BaseModel):
     mask: str
     outline: str
     mask_reg: str
-    mask_counts_df: str
+    mask_df: str
     # CELL COUNTING ARR FILES
     overlap: str
     bgrm: str
@@ -131,7 +131,7 @@ class ProjFpModel(BaseModel):
             mask=os.path.join(proj_dir, "mask", "2_mask_trimmed.tif"),
             outline=os.path.join(proj_dir, "mask", "3_outline_reg.tif"),
             mask_reg=os.path.join(proj_dir, "mask", "4_mask_reg.tif"),
-            mask_counts_df=os.path.join(proj_dir, "mask", "5_mask_counts.parquet"),
+            mask_df=os.path.join(proj_dir, "mask", "5_mask.parquet"),
             # CELL COUNTING ARR FILES
             overlap=os.path.join(proj_dir, "cellcount", "0_overlap.zarr"),
             bgrm=os.path.join(proj_dir, "cellcount", "1_bgrm.zarr"),

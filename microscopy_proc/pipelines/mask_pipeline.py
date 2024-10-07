@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -91,7 +92,7 @@ def make_mask_for_ref(
     with open(pfm.map, "r") as f:
         annot_df = annot_dict2df(json.load(f))
     # Getting the annotation name for every cell (zyx coord)
-    mask_counts_df = pd.merge(
+    mask_df = pd.merge(
         left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),
         right=mask2region_counts(arr_mask_reg, arr_annot),
         how="left",
@@ -100,16 +101,15 @@ def make_mask_for_ref(
         suffixes=("_annot", "_mask"),
     ).fillna(0)
     # Combining (summing) the cells_agg_df values for parent regions using the annot_df
-    mask_counts_df = combine_nested_regions(mask_counts_df, annot_df)
+    mask_df = combine_nested_regions(mask_df, annot_df)
     # Calculating proportion of mask volume in each region
-    mask_counts_df[MaskColumns.VOLUME_PROP.value] = (
-        mask_counts_df[MaskColumns.VOLUME_MASK.value]
-        / mask_counts_df[MaskColumns.VOLUME_ANNOT.value]
+    mask_df[MaskColumns.VOLUME_PROP.value] = (
+        mask_df[MaskColumns.VOLUME_MASK.value] / mask_df[MaskColumns.VOLUME_ANNOT.value]
     )
     # Selecting and ordering relevant columns
-    mask_counts_df = mask_counts_df[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]
+    mask_df = mask_df[[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]]
     # Saving
-    mask_counts_df.to_parquet(pfm.mask_counts_df)
+    mask_df.to_parquet(pfm.mask_df)
 
 
 if __name__ == "__main__":
@@ -143,8 +143,13 @@ if __name__ == "__main__":
         # Getting file paths
         pfm = get_proj_fp_model(proj_dir)
 
+        try:
+            shutil.rmtree(os.path.join(proj_dir, "mask"))
+        except:
+            print("did not delete")
+            pass
         # Making project folders
-        make_proj_dirs(os.path.join(batch_proj_dir, i))
+        make_proj_dirs(proj_dir)
 
         # Running mask pipeline
         make_mask_for_ref(pfm)

@@ -62,11 +62,11 @@ if __name__ == "__main__":
             cells_agg_df = sanitise_smb_df(cells_agg_df)
             # Keeping only the required columns (not annot columns)
             cells_agg_df = cells_agg_df[enum2list(CellColumns)]
-            # MASK_COUNTS_DF
+            # mask_df
             # Reading experiment's mask_counts dataframe
-            mask_counts_df = pd.read_parquet(pfm.mask_counts_df)
+            mask_df = pd.read_parquet(pfm.mask_df)
             # Keeping only the required columns
-            # mask_counts_df = mask_counts_df[[CellMeasures.VOLUME.value]]
+            # mask_df = mask_df[[CellMeasures.VOLUME.value]]
             # Making columns a multindex with levels as
             # (specimen name, cell agg columns)
             cells_agg_df = pd.concat(
