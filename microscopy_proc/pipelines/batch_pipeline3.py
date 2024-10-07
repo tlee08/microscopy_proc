@@ -42,28 +42,27 @@ if __name__ == "__main__":
         # Logging which file is being processed
         print(f"Running: {i}")
         logging.info(f"Running: {i}")
-        # try:
-        # Filenames
-        in_fp = os.path.join(in_fp_dir, i)
-        proj_dir = os.path.join(batch_proj_dir, i)
+        try:
+            # Filenames
+            in_fp = os.path.join(in_fp_dir, i)
+            proj_dir = os.path.join(batch_proj_dir, i)
 
-        # Getting file paths
-        rfm = get_ref_fp_model()
-        pfm = get_proj_fp_model(proj_dir)
-        # Making project folders
-        make_proj_dirs(proj_dir)
-        # print(dd.read_parquet(pfm.cells_raw_df))
-        # Converting maxima from raw space to refernce atlas space
-        transform_coords(pfm)
-        # Getting ID mappings
-        get_cell_mappings(pfm)
-        # Grouping cells
-        grouping_cells(pfm)
-        # Saving cells to csv
-        cells2csv(pfm)
-        print()
-        # except Exception as e:
-        #     logging.info(f"Error in {i}: {e}")
-        #     print(f"Error in {i}: {e}")
-        #     # continue
-        break
+            # Getting file paths
+            rfm = get_ref_fp_model()
+            pfm = get_proj_fp_model(proj_dir)
+            # Making project folders
+            make_proj_dirs(proj_dir)
+            # print(dd.read_parquet(pfm.cells_raw_df))
+            # Converting maxima from raw space to refernce atlas space
+            transform_coords(pfm)
+            # Getting ID mappings
+            get_cell_mappings(pfm)
+            # Grouping cells
+            grouping_cells(pfm)
+            # Saving cells to csv
+            cells2csv(pfm)
+            print()
+        except Exception as e:
+            logging.info(f"Error in {i}: {e}")
+            print(f"Error in {i}: {e}")
+        # break
