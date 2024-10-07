@@ -81,5 +81,5 @@ if __name__ == "__main__":
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
     # Saving to disk
-    total_df.to_parquet(out_fp, overwrite=True)
+    total_df.to_parquet(out_fp)
     # break
