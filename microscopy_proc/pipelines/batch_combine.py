@@ -6,7 +6,7 @@ import pandas as pd
 from natsort import natsorted
 
 from microscopy_proc.constants import CELL_AGG_MAPPING
-from microscopy_proc.funcs.map_funcs import annot_df_get_parents, nested_tree_dict2df
+from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
 from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, get_ref_fp_model
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # Making combined_agg_df with (annot_df)
     rfm = get_ref_fp_model()
     with open(pfm.map, "r") as f:
-        total_df = nested_tree_dict2df(json.load(f)["msg"][0])
+        total_df = annot_dict2df(json.load(f))
     total_df = annot_df_get_parents(total_df)
     # Get all experiments
     for i in exp_ls:

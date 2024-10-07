@@ -2,6 +2,8 @@ import os
 import pathlib
 from enum import Enum
 
+import numpy as np
+
 PROC_CHUNKS = (500, 1000, 1000)
 # PROC_CHUNKS = (500, 1200, 1200)
 
@@ -35,10 +37,33 @@ class AnnotColumns(Enum):
     PARENT_STRUCTURE_ID = "parent_structure_id"
 
 
+ANNOTCOLUMNSTYPES = {
+    AnnotColumns.ID.value: np.float64,
+    AnnotColumns.ATLAS_ID.value: np.float64,
+    AnnotColumns.ONTOLOGY_ID.value: np.float64,
+    AnnotColumns.ACRONYM.value: str,
+    AnnotColumns.NAME.value: str,
+    AnnotColumns.COLOR_HEX_TRIPLET.value: str,
+    AnnotColumns.GRAPH_ORDER.value: np.float64,
+    AnnotColumns.ST_LEVEL.value: np.float64,
+    AnnotColumns.HEMISPHERE_ID.value: np.float64,
+    AnnotColumns.PARENT_STRUCTURE_ID.value: np.float64,
+}
+
+
 class AnnotExtraColumns(Enum):
     PARENT_ID = "parent_id"
     PARENT_ACRONYM = "parent_acronym"
     CHILDREN = "children"
+
+
+ANNOTCOLUMNSFINAL = [
+    AnnotColumns.NAME.value,
+    AnnotColumns.ACRONYM.value,
+    AnnotColumns.COLOR_HEX_TRIPLET.value,
+    AnnotColumns.PARENT_STRUCTURE_ID.value,
+    AnnotExtraColumns.PARENT_ACRONYM.value,
+]
 
 
 class CellMeasures(Enum):
