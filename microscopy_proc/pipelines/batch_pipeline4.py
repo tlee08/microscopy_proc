@@ -57,8 +57,10 @@ if __name__ == "__main__":
             # except:
             #     print("no temp")
 
+            df_fp = pfm.cells_df
+
             pfm.cells_agg_df
-            x = dd.read_parquet(pfm.cells_df)
+            x = dd.read_parquet(df_fp)
             x = x.rename(columns={"z": "count"})
             # x["count"] = 1
             try:
@@ -68,7 +70,7 @@ if __name__ == "__main__":
             # print(x)
             x = x.compute()
             x = dd.from_pandas(x, npartitions=1)
-            x.to_parquet(pfm.cells_raw_df, overwrite=True)
+            x.to_parquet(df_fp, overwrite=True)
 
             # cells2csv(pfm)
 
