@@ -66,3 +66,4 @@ if __name__ == "__main__":
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
             continue
+        break
