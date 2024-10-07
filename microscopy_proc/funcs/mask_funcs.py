@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from microscopy_proc.constants import AnnotColumns, Coords
+
 
 def make_outline(arr: np.ndarray) -> pd.DataFrame:
     # Shifting along last axis
@@ -13,16 +15,18 @@ def make_outline(arr: np.ndarray) -> pd.DataFrame:
         [
             pd.DataFrame(
                 np.asarray(np.where((arr == 1) & (r_shift == 0))).T,
-                columns=["z", "y", "x"],
+                columns=[Coords.Z.value, Coords.Y.value, Coords.X.value],
             ).assign(is_in=1),
             pd.DataFrame(
                 np.asarray(np.where((arr == 1) & (l_shift == 0))).T,
-                columns=["z", "y", "x"],
+                columns=[Coords.Z.value, Coords.Y.value, Coords.X.value],
             ).assign(is_in=0),
         ]
     )
     # Ordering by z, y, x, so fill outline works
-    coords_df = coords_df.sort_values(by=["z", "y", "x"]).reset_index(drop=True)
+    coords_df = coords_df.sort_values(
+        by=[Coords.Z.value, Coords.Y.value, Coords.X.value]
+    ).reset_index(drop=True)
     # Returning
     return coords_df
 
@@ -33,15 +37,17 @@ def fill_outline(arr: np.ndarray, coords_df: pd.DataFrame) -> np.ndarray:
     # Checking that type is 0 or 1
     assert coords_df["is_in"].isin([0, 1]).all()
     # Ordering by z, y, x, so fill outline works
-    coords_df = coords_df.sort_values(by=["z", "y", "x"]).reset_index(drop=True)
+    coords_df = coords_df.sort_values(
+        by=[Coords.Z.value, Coords.Y.value, Coords.X.value]
+    ).reset_index(drop=True)
     # For each outline coord
     for i, x in coords_df.iterrows():
         # is_in = 1, fill in (from current voxel)
         if x["is_in"] == 1:
-            res[x["z"], x["y"], x["x"] :] = 1
+            res[x[Coords.Z.value], x[Coords.Y.value], x[Coords.X.value] :] = 1
         # is_in = 0, stop filling in (after current voxel)
         elif x["is_in"] == 0:
-            res[x["z"], x["y"], x["x"] + 1 :] = 0
+            res[x[Coords.Z.value], x[Coords.Y.value], x[Coords.X.value] + 1 :] = 0
     # Returning
     return res
 
@@ -65,5 +71,5 @@ def mask2region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFr
     # NOTE: dropping the 0 index (background)
     return pd.DataFrame(
         {"volume": id_counts},
-        index=pd.Index(id_labels, name="id"),
+        index=pd.Index(id_labels, name=AnnotColumns.ID.value),
     ).drop(index=0)

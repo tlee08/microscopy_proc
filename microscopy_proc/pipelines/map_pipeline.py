@@ -7,12 +7,18 @@ import tifffile
 from dask.distributed import LocalCluster
 
 # from prefect import flow
-from microscopy_proc.constants import CELL_AGG_MAPPING, CellMeasures
+from microscopy_proc.constants import (
+    CELL_AGG_MAPPING,
+    TRFM,
+    AnnotColumns,
+    CellMeasures,
+    Coords,
+)
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.map_funcs import (
+    annot_dict2df,
     combine_nested_regions,
     df_map_ids,
-    nested_tree_dict2df,
 )
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
@@ -40,8 +46,8 @@ def transform_coords(pfm: ProjFpModel):
         cells_df = dd.read_parquet(pfm.cells_raw_df).compute()
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
-        # Taking only "z", "y", "x" coord columns
-        cells_df = cells_df[["z", "y", "x"]]
+        # Taking only Coords.Z.value, Coords.Y.value, Coords.X.value coord columns
+        cells_df = cells_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         # Scaling to resampled rough space
         # NOTE: this downsampling uses slicing so must be computed differently
         cells_df = cells_df / np.array((rp.z_rough, rp.y_rough, rp.x_rough))
@@ -83,9 +89,9 @@ def get_cell_mappings(pfm: ProjFpModel):
         # Making unique incrementing index
         cells_df = cells_df.reset_index(drop=True)
         # Setting the transformed coords
-        cells_df["z_trfm"] = coords_trfm.z.values
-        cells_df["y_trfm"] = coords_trfm.y.values
-        cells_df["x_trfm"] = coords_trfm.x.values
+        cells_df[f"{Coords.Z.value}_{TRFM}"] = coords_trfm[Coords.Z.value].values
+        cells_df[f"{Coords.Y.value}_{TRFM}"] = coords_trfm[Coords.Y.value].values
+        cells_df[f"{Coords.X.value}_{TRFM}"] = coords_trfm[Coords.X.value].values
 
         # Reading annotation image
         arr_annot = tifffile.imread(pfm.annot)
@@ -93,23 +99,32 @@ def get_cell_mappings(pfm: ProjFpModel):
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
         s = arr_annot.shape
         trfm_loc = (
-            cells_df[["z_trfm", "y_trfm", "x_trfm"]]
+            cells_df[
+                [
+                    f"{Coords.Z.value}_{TRFM}",
+                    f"{Coords.Y.value}_{TRFM}",
+                    f"{Coords.X.value}_{TRFM}",
+                ]
+            ]
             .round(0)
             .astype(np.int32)
             .query(
-                f"z_trfm >= 0 & z_trfm < {s[0]} & y_trfm >= 0 & y_trfm < {s[1]} & x_trfm >= 0 & x_trfm < {s[2]}"
+                f"{Coords.Z.value}_{TRFM} >= 0 & {Coords.Z.value}_{TRFM} < {s[0]} & "
+                + f"{Coords.Y.value}_{TRFM} >= 0 & {Coords.Y.value}_{TRFM} < {s[1]} & "
+                + f"{Coords.X.value}_{TRFM} >= 0 & {Coords.X.value}_{TRFM} < {s[2]}"
             )
         )
-        # Getting the pixel values of each valid transformed coord (hence the specified index).
-        # Invalids are set to -1
-        cells_df["id"] = pd.Series(
+        # Getting the pixel values of each valid transformed coord (hence the specified index)
+        # By complex array indexing on arr_annot's (z, y, x) dimensions.
+        # nulls are imputed with -1
+        cells_df[AnnotColumns.ID.value] = pd.Series(
             arr_annot[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
         ).fillna(-1)
 
         # Reading annotation mappings dataframe
         with open(pfm.map, "r") as f:
-            annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
+            annot_df = annot_dict2df(json.load(f))
         # Getting the annotation name for every cell (zyx coord)
         cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
@@ -131,18 +146,18 @@ def grouping_cells(pfm: ProjFpModel):
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Grouping cells by region name
-        cells_agg_df = cells_df.groupby("id").agg(CELL_AGG_MAPPING)
+        cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPING)
         cells_agg_df.columns = list(CELL_AGG_MAPPING.keys())
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
         with open(pfm.map, "r") as f:
-            annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
+            annot_df = annot_dict2df(json.load(f))
         # Combining (summing) the cells_groagg values for parent regions using the annot_df
         cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)
-        cells_agg_df[CellMeasures.iov.value] = (
-            cells_agg_df[CellMeasures.sum_intensity.value]
-            / cells_agg_df[CellMeasures.volume.value]
+        cells_agg_df[CellMeasures.IOV.value] = (
+            cells_agg_df[CellMeasures.SUM_INTENSITY.value]
+            / cells_agg_df[CellMeasures.VOLUME.value]
         )
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet

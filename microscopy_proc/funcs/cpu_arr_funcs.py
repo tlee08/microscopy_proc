@@ -9,7 +9,7 @@ import seaborn as sns
 from scipy import ndimage as sc_ndimage
 from skimage.segmentation import watershed
 
-from microscopy_proc.constants import DEPTH, CellMeasures
+from microscopy_proc.constants import CELL_IDX_NAME, DEPTH, CellMeasures, Coords
 
 
 class CpuArrFuncs:
@@ -227,7 +227,7 @@ class CpuArrFuncs:
         cls,
         arr: np.ndarray,
         sigma: int = 10,
-        arr_mask: np.ndarray = None,
+        arr_mask: None | np.ndarray = None,
     ):
         """
         Getting local maxima (no connectivity) in a 3D tensor.
@@ -310,8 +310,8 @@ class CpuArrFuncs:
         ids = arr[z, y, x]
         logging.debug("Making dataframe")
         df = pd.DataFrame(
-            {"z": z, "y": y, "x": x},
-            index=pd.Index(ids.astype(np.uint32), name="label"),
+            {Coords.Z.value: z, Coords.Y.value: y, Coords.X.value: x},
+            index=pd.Index(ids.astype(np.uint32), name=CELL_IDX_NAME),
         ).astype(np.uint16)
         df["size"] = -1  # TODO: placeholder
         df["sum_intensity"] = -1  # TODO: placeholder
@@ -346,8 +346,12 @@ class CpuArrFuncs:
         z, y, x = cls.xp.unravel_index(ind, arr_maxima_l.shape)
         df = (
             pd.DataFrame(
-                {"z": arr_cp2np(z), "y": arr_cp2np(y), "x": arr_cp2np(x)},
-                index=pd.Index(arr_cp2np(ids_m).astype(np.uint32), name="label"),
+                {
+                    Coords.Z.value: arr_cp2np(z),
+                    Coords.Y.value: arr_cp2np(y),
+                    Coords.X.value: arr_cp2np(x),
+                },
+                index=pd.Index(arr_cp2np(ids_m).astype(np.uint32), name=CELL_IDX_NAME),
             )
             .drop(index=0)
             .astype(np.uint16)
@@ -371,12 +375,14 @@ class CpuArrFuncs:
         # NOTE: excluding 0 valued elements means sum_intensity matches with ids_w
         sum_intensity = arr_cp2np(sum_intensity[sum_intensity > 0])
         logging.debug("Adding sizes and intensities to DataFrame")
-        idx = pd.Index(ids_w, name="label")
-        df[CellMeasures.volume.value] = pd.Series(counts, index=idx)
-        df[CellMeasures.sum_intensity.value] = pd.Series(sum_intensity, index=idx)
+        idx = pd.Index(ids_w, name=CELL_IDX_NAME)
+        df[CellMeasures.VOLUME.value] = pd.Series(counts, index=idx)
+        df[CellMeasures.SUM_INTENSITY.value] = pd.Series(sum_intensity, index=idx)
         # df["max_intensity"] = pd.Series(max_intensity, index=idx)
         # Filtering out rows with NaNs in z, y, or x columns (i.e. no na values)
-        df = df[df[["z", "y", "x"]].isna().sum(axis=1) == 0]
+        df = df[
+            df[[Coords.Z.value, Coords.Y.value, Coords.X.value]].isna().sum(axis=1) == 0
+        ]
         # Returning
         return df
 

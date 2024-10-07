@@ -7,7 +7,7 @@ import pandas as pd
 import SimpleITK as sitk
 import tifffile
 
-from microscopy_proc.constants import TEMP_DIR
+from microscopy_proc.constants import TEMP_DIR, Coords
 from microscopy_proc.utils.io_utils import silentremove
 from microscopy_proc.utils.multiproc_utils import get_cpid
 
@@ -98,7 +98,8 @@ def transformation_coords(
     # Converting cells array to a fixed_points file
     # NOTE: xyz, NOT zyx
     make_fixed_points_file(
-        coords[["x", "y", "z"]].values, os.path.join(out_dir, "temp.dat")
+        coords[[Coords.X.value, Coords.Y.value, Coords.Z.value]].values,
+        os.path.join(out_dir, "temp.dat"),
     )
     transformix_img_filt.SetFixedPointSetFileName(os.path.join(out_dir, "temp.dat"))
     transformix_img_filt.SetMovingImage(sitk.ReadImage(moving_img_fp))
@@ -153,13 +154,15 @@ def transformix_file2coords(output_points_fp):
     except pd.errors.EmptyDataError:
         # If there are no points, then return empty df
         # print(open(output_points_fp).read())
-        return pd.DataFrame(columns=["z", "y", "x"])
+        return pd.DataFrame(columns=[Coords.Z.value, Coords.Y.value, Coords.X.value])
     df.columns = df.loc[0].str.strip().str.split(r"\s").str[0]
     # Try either "OutputIndexFixed" or "OutputPoint"
     df = df["OutputPoint"].apply(
         lambda x: [float(i) for i in x.replace(" ]", "").split("[ ")[1].split()]
     )
-    return pd.DataFrame(df.values.tolist(), columns=["x", "y", "z"])[["z", "y", "x"]]
+    return pd.DataFrame(
+        df.values.tolist(), columns=[Coords.X.value, Coords.Y.value, Coords.Z.value]
+    )[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
 
 
 def transformation_img(

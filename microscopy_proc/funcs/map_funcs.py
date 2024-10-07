@@ -1,50 +1,110 @@
 import numpy as np
 import pandas as pd
 
+from microscopy_proc.constants import ANNOTCOLUMNSTYPES, AnnotColumns, AnnotExtraColumns
 
-def nested_tree_dict2df(data_dict: dict):
+
+def annot_dict2df(data_dict: dict) -> pd.DataFrame:
     """
     Recursively find the region information for all nested objects.
+
+    Returns a new dataframe with index as the region ID
+    and the columns:
+    - ATLAS_ID
+    - ONTOLOGY_ID
+    - ACRONYM
+    - NAME
+    - COLOR_HEX_TRIPLET
+    - GRAPH_ORDER
+    - ST_LEVEL
+    - HEMISPHERE_ID
+    - PARENT_STRUCTURE_ID
     """
-    # Column names
-    names = [
-        ("id", np.float64),
-        ("atlas_id", np.float64),
-        ("ontology_id", np.float64),
-        ("acronym", str),
-        ("name", str),
-        ("color_hex_triplet", str),
-        ("graph_order", np.float64),
-        ("st_level", np.float64),
-        ("hemisphere_id", np.float64),
-        ("parent_structure_id", np.float64),
-    ]
-    # Making regions ID dataframe
-    df = pd.DataFrame(columns=[i[0] for i in names])
-    # Adding current region info to df
-    df = pd.concat(
-        [
-            df,
-            pd.DataFrame([data_dict[i[0]] for i in names], index=df.columns).T,
-        ],
-        axis=0,
-        ignore_index=True,
-    )
-    # Recursively get the region information for all children
-    for i in data_dict["children"]:
-        df = pd.concat(
-            [
-                df,
-                nested_tree_dict2df(i),
-            ],
-            axis=0,
-            ignore_index=True,
+
+    def recursive_gen(annot_dict):
+        # Initialising current region as a df with a single row
+        curr_row = pd.DataFrame(
+            {i.value: [annot_dict[i.value]] for i in AnnotColumns},
         )
-    # Casting columns to given types
-    for i in names:
-        df[i[0]] = df[i[0]].astype(i[1])
-    # Returning the region info df
-    return df
+        # Recursively concatenating all children as well
+        return pd.concat(
+            [
+                curr_row,
+                *[
+                    recursive_gen(i)
+                    for i in annot_dict[AnnotExtraColumns.CHILDREN.value]
+                ],
+            ]
+        )
+
+    # Recursively get the region information for all children from roots
+    # using function defined in this block
+    annot_df = pd.concat([recursive_gen(i) for i in data_dict["msg"]])
+    # Cast columns to given types
+    for k, v in ANNOTCOLUMNSTYPES.items():
+        annot_df[k] = annot_df[k].astype(v)
+    # Set region ID as index
+    annot_df = annot_df.set_index(AnnotColumns.ID.value)
+    # Returning the df
+    return annot_df
+
+
+def annot_df_get_parents(annot_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Get the parent region information for all regions
+    in the annotation mappings dataframe.
+
+    Returns a new dataframe with index as region ID,
+    all original columns, and the new columns:
+    - PARENT_ACRONYM
+    """
+    # For each region (i.e. row), storing the parent region name in a column
+    # by merging the annot_df on parent_structure_id
+    # with the annot_df (as parent copy, so own id)
+    annot_df = pd.merge(
+        left=annot_df,
+        right=annot_df[[AnnotColumns.ACRONYM.value]].rename(
+            columns={
+                AnnotColumns.ACRONYM.value: AnnotExtraColumns.PARENT_ACRONYM.value,
+            }
+        ),
+        left_on=AnnotColumns.PARENT_STRUCTURE_ID.value,
+        right_index=True,
+        # right_on=AnnotExtraColumns.PARENT_ID.value,
+        how="left",
+    )
+    # Returning annot_df
+    return annot_df
+
+
+def annot_df_get_children(annot_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Get the children region information for all regions
+    in the annotation mappings dataframe.
+
+    NOTE: assumes
+
+    Returns a new dataframe with index as region ID
+    and the columns:
+    - NAME
+    - ACRONYM
+    - COLOR_HEX_TRIPLET
+    - PARENT_STRUCTURE_ID
+    - PARENT_ACRONYM
+    - CHILDREN
+    """
+    # Making copy
+    annot_df = annot_df.copy()
+    # Making a children list column in cells_agg
+    annot_df[AnnotExtraColumns.CHILDREN.value] = [[] for i in range(annot_df.shape[0])]
+    # For each row (i.e. region), adding the current row ID to the parent's (by ID)
+    # children column list
+    for i in annot_df.index:
+        i_parent = annot_df.loc[i, AnnotColumns.PARENT_STRUCTURE_ID.value]
+        if not pd.isna(i_parent):
+            annot_df.at[i_parent, AnnotExtraColumns.CHILDREN.value].append(i)
+    # Returning annot_df
+    return annot_df
 
 
 def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
@@ -53,27 +113,21 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
 
     Done recursively.
 
+    Returns a new dataframe with index as region ID,
+    the annotation columns, and the
+    same columns as the input cells_agg dataframe.
+
     Notes
     -----
     - The `annot_df` is the annotation mappings dataframe.
     - The `cells_agg` is the cells dataframe grouped by region ID (so ID is the index).
     """
     # Getting the sum column names (i.e. all columns in cells_agg_d)
-    sum_cols = cells_agg_df.columns
-    # For each region, storing the parent region name in `annot_df`
-    annot_df = (
-        pd.merge(
-            left=annot_df,
-            right=annot_df[["id", "acronym"]].rename(
-                columns={"id": "parent_id", "acronym": "parent_acronym"}
-            ),
-            left_on="parent_structure_id",
-            right_on="parent_id",
-            how="left",
-        )
-        # .drop(columns=["parent_id"])
-        .set_index("id")
-    )[["name", "acronym", "color_hex_triplet", "parent_structure_id", "parent_acronym"]]
+    sum_cols = cells_agg_df.columns.to_list()
+    # Getting annot_df with parent region information for all regions
+    annot_df = annot_df_get_parents(annot_df)
+    # Getting annot_df with list of children for each region
+    annot_df = annot_df_get_children(annot_df)
     # Merging the cells_agg df with the annot_df
     # NOTE: we are setting the annot_df index as ID
     # and assuming cells_agg index is ID (via groupby)
@@ -84,59 +138,67 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
         right_index=True,
         how="outer",
     )
-    # Making a children list column in cells_agg
-    cells_agg_df["children"] = [[] for i in range(cells_agg_df.shape[0])]
-    # For each row (i.e. region), adding the current row ID to the parent's (by ID)
-    # children column list
-    for i in cells_agg_df.index:
-        i_parent = cells_agg_df.loc[i, "parent_structure_id"]
-        if not np.isnan(i_parent):
-            cells_agg_df.loc[i_parent, "children"].append(i)
 
     # Recursively summing the cells_agg_df columns with each child's and current value
-    def r(i):
+    def recursive_sum(i):
+        # NOTE: updates the cells_agg_df in place
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
         cells_agg_df.loc[i, sum_cols] += np.sum(
-            [r(j) for j in cells_agg_df.loc[i, "children"]], axis=0
+            [
+                recursive_sum(j)
+                for j in cells_agg_df.at[i, AnnotExtraColumns.CHILDREN.value]
+            ],
+            axis=0,
         )
         return cells_agg_df.loc[i, sum_cols]
 
     # Filling NaN values with 0
     cells_agg_df[sum_cols] = cells_agg_df[sum_cols].fillna(0)
-    # Start from each root (i.e. nodes with no parent region)
-    [r(i) for i in cells_agg_df[cells_agg_df["parent_structure_id"].isna()].index]
-    # Removing unnecessary columns ("children" column)
-    cells_agg_df = cells_agg_df.drop(columns=["children"])
+    # For each root (i.e. nodes with no parent region), recursively summing
+    # (i.e. top-down recursive approach)
+    [
+        recursive_sum(i)
+        for i in cells_agg_df[
+            cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
+        ].index
+    ]
+    # Removing unnecessary columns (AnnotExtraColumns.CHILDREN.value column)
+    cells_agg_df = cells_agg_df.drop(columns=[AnnotExtraColumns.CHILDREN.value])
     # Returning
     return cells_agg_df
 
 
-def df2nested_tree_dict(df: pd.DataFrame) -> dict:
+def annot_df2dict(annot_df: pd.DataFrame) -> list:
+    """
+    Converts an annotation DataFrame into a nested dictionary structure.
+    This function takes an annotation DataFrame, adds a list of children to each region,
+    and then recursively converts the DataFrame into a nested dictionary format. Each
+    dictionary represents a region and contains its information along with its children.
+
+    NOTE: the outputted dict is actually a list as there
+    can be multiple roots.
+    """
     # Adding children list to each region
-    df = df.copy()
-    df["children"] = [[] for i in range(df.shape[0])]
-    for i in df.index:
-        i_parent = df.loc[i, "parent_structure_id"]
-        if np.isnan(i_parent):
-            continue
-        if i_parent is None:
-            df.loc[i_parent, "children"] = []
-        df.loc[i_parent, "children"].append(i)
+    annot_df = annot_df_get_children(annot_df)
 
     # Converting to dict
-    def r(i):
-        # Storing info of current region in dict
-        tree = df.loc[i].to_dict()
-        # BASE CASE: no children
-        if df.loc[i, "children"] == []:
-            pass
-        # REC CASE: has children - recursively get children info
-        else:
-            tree["children"] = [r(j) for j in df.loc[i, "children"]]
+    def recursive_gen(i):
+        # Storing info of current region (i.e. row) in dict
+        tree = annot_df.loc[i].to_dict()
+        # RECURSIVE CASE: has children - recursively get children info
+        # NOTE: also covers base case (no children)
+        tree[AnnotExtraColumns.CHILDREN.value] = [
+            recursive_gen(j) for j in annot_df.at[i, AnnotExtraColumns.CHILDREN.value]
+        ]
         return tree
 
-    tree = r(df[df["parent_structure_id"].isna()].index[0], {})
+    # For each root (i.e. nodes with no parent region), recursively storing
+    # (i.e. top-down recursive approach)
+    tree = [
+        recursive_gen(i)
+        for i in annot_df[annot_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index
+    ]
     # Returning
     return tree
 
@@ -148,13 +210,19 @@ def df_map_ids(cells_df: pd.DataFrame, annot_df: pd.DataFrame) -> pd.DataFrame:
         left=cells_df,
         right=annot_df,
         how="left",
-        on="id",
+        on=AnnotColumns.ID.value,
     )
     # Setting points with ID == -1 as "invalid" label
-    cells_df.loc[cells_df["id"] == -1, "name"] = "invalid"
+    cells_df.loc[cells_df[AnnotColumns.ID.value] == -1, AnnotColumns.NAME.value] = (
+        "invalid"
+    )
     # Setting points with ID == 0 as "universe" label
-    cells_df.loc[cells_df["id"] == 0, "name"] = "universe"
+    cells_df.loc[cells_df[AnnotColumns.ID.value] == 0, AnnotColumns.NAME.value] = (
+        "universe"
+    )
     # Setting points with no region map name (but have a positive ID value) as "no label" label
-    cells_df.loc[cells_df["name"].isna(), "name"] = "no label"
+    cells_df.loc[cells_df[AnnotColumns.NAME.value].isna(), AnnotColumns.NAME.value] = (
+        "no label"
+    )
     # Returning
     return cells_df

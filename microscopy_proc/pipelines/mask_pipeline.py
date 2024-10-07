@@ -7,9 +7,10 @@ import tifffile
 from natsort import natsorted
 from scipy import ndimage
 
+from microscopy_proc.constants import Coords
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
-from microscopy_proc.funcs.map_funcs import combine_nested_regions, nested_tree_dict2df
+from microscopy_proc.funcs.map_funcs import annot_dict2df, combine_nested_regions
 from microscopy_proc.funcs.mask_funcs import (
     fill_outline,
     make_outline,
@@ -47,12 +48,12 @@ def make_mask_for_ref(
     # Make outline
     outline_df = make_outline(arr_mask)
     # Transformix on coords
-    outline_df[["z", "y", "x"]] = (
+    outline_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]] = (
         transformation_coords(
             outline_df,
             pfm.ref,
             pfm.regresult,
-        )[["z", "y", "x"]]
+        )[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int32)
     )
@@ -87,7 +88,7 @@ def make_mask_for_ref(
     # Counting mask voxels in each region
     arr_annot = tifffile.imread(pfm.annot)
     with open(pfm.map, "r") as f:
-        annot_df = nested_tree_dict2df(json.load(f)["msg"][0])
+        annot_df = annot_dict2df(json.load(f))
     # Getting the annotation name for every cell (zyx coord)
     mask_counts_df = pd.merge(
         left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),

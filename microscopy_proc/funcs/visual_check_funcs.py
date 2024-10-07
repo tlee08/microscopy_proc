@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import tifffile
 
+from microscopy_proc.constants import AnnotColumns, Coords
 from microscopy_proc.utils.io_utils import silentremove
 
 #####################################################################
@@ -16,7 +17,7 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
     # rounding to integers, and
     # Filtering
     coords = (
-        coords[["z", "y", "x"]]
+        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int16)
         .query(
@@ -101,9 +102,9 @@ def coords2heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
     for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
         if t:
             coords_i = coords.copy()
-            coords_i["z"] += z
-            coords_i["y"] += y
-            coords_i["x"] += x
+            coords_i[Coords.Z.value] += z
+            coords_i[Coords.Y.value] += y
+            coords_i[Coords.X.value] += x
             coords2points_workers(arr, coords_i)
 
     # Saving the subsampled array
@@ -133,7 +134,11 @@ def coords2regions(coords, shape, arr_out_fp):
             arr[z, y, x] = _id
 
     # Formatting coord values as (z, y, x) and rounding to integers
-    coords = coords[["z", "y", "x", "id"]].round(0).astype(np.int16)
+    coords = (
+        coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, AnnotColumns.ID.value]]
+        .round(0)
+        .astype(np.int16)
+    )
     if coords.shape[0] > 0:
         np.apply_along_axis(f, 1, coords)
 
