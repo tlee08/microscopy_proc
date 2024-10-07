@@ -54,7 +54,8 @@ if __name__ == "__main__":
             temp_fp = pfm.cells_raw_df
 
             x = dd.read_parquet(temp_fp)
-            x = x.rename(columns={"size": "volume"})
+            # x = x.rename(columns={"size": "volume"})
+            x["count"] = 1
             x = x.drop(columns=["smb-share:server"])
             # print(x)
             x = x.compute()
@@ -65,4 +66,4 @@ if __name__ == "__main__":
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
-        # break
+        break

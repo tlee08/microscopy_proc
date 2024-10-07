@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from natsort import natsorted
 
-from microscopy_proc.constants import CELL_AGG_MAPPING
+from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CELL_AGG_MAPPINGS
 from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
 from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, get_ref_fp_model
@@ -32,6 +32,16 @@ if __name__ == "__main__":
     with open(pfm.map, "r") as f:
         total_df = annot_dict2df(json.load(f))
     total_df = annot_df_get_parents(total_df)
+    # Keeping only the required columns
+    total_df = total_df[ANNOT_COLUMNS_FINAL]
+    # Making columns a multindex with levels as
+    # ("annotations", annot columns)
+    total_df = pd.concat(
+        [total_df],
+        keys=["annotations"],
+        names=["specimen"],
+        axis=1,
+    )
     # Get all experiments
     for i in exp_ls:
         # Logging which file is being processed
@@ -46,7 +56,15 @@ if __name__ == "__main__":
             # Sanitising (removing smb columns)
             cells_agg_df = sanitise_smb_df(cells_agg_df)
             # Keeping only the required columns (not annot columns)
-            cells_agg_df = cells_agg_df[list(CELL_AGG_MAPPING.keys())]
+            cells_agg_df = cells_agg_df[list(CELL_AGG_MAPPINGS.keys())]
+            # Making columns a multindex with levels as
+            # (specimen name, cell agg columns)
+            cells_agg_df = pd.concat(
+                [cells_agg_df],
+                keys=[i],
+                names=["specimen"],
+                axis=1,
+            )
             # Merging with comb_agg_df (ID is index for both dfs)
             total_df = pd.merge(
                 left=total_df,

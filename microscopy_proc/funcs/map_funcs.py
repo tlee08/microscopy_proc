@@ -1,7 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from microscopy_proc.constants import ANNOTCOLUMNSTYPES, AnnotColumns, AnnotExtraColumns
+from microscopy_proc.constants import (
+    ANNOT_COLUMNS_TYPES,
+    AnnotColumns,
+    AnnotExtraColumns,
+)
 
 
 def annot_dict2df(data_dict: dict) -> pd.DataFrame:
@@ -41,7 +45,7 @@ def annot_dict2df(data_dict: dict) -> pd.DataFrame:
     # using function defined in this block
     annot_df = pd.concat([recursive_gen(i) for i in data_dict["msg"]])
     # Cast columns to given types
-    for k, v in ANNOTCOLUMNSTYPES.items():
+    for k, v in ANNOT_COLUMNS_TYPES.items():
         annot_df[k] = annot_df[k].astype(v)
     # Set region ID as index
     annot_df = annot_df.set_index(AnnotColumns.ID.value)

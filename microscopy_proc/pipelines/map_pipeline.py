@@ -8,7 +8,8 @@ from dask.distributed import LocalCluster
 
 # from prefect import flow
 from microscopy_proc.constants import (
-    CELL_AGG_MAPPING,
+    ANNOT_COLUMNS_FINAL,
+    CELL_AGG_MAPPINGS,
     TRFM,
     AnnotColumns,
     CellMeasures,
@@ -23,6 +24,7 @@ from microscopy_proc.funcs.map_funcs import (
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
+from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     get_proj_fp_model,
@@ -146,8 +148,8 @@ def grouping_cells(pfm: ProjFpModel):
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Grouping cells by region name
-        cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPING)
-        cells_agg_df.columns = list(CELL_AGG_MAPPING.keys())
+        cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPINGS)
+        cells_agg_df.columns = list(CELL_AGG_MAPPINGS.keys())
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
         with open(pfm.map, "r") as f:
@@ -159,6 +161,8 @@ def grouping_cells(pfm: ProjFpModel):
             cells_agg_df[CellMeasures.SUM_INTENSITY.value]
             / cells_agg_df[CellMeasures.VOLUME.value]
         )
+        # Selecting and ordering relevant columns
+        cells_agg_df = cells_agg_df[[*ANNOT_COLUMNS_FINAL, *enum2list(CellMeasures)]]
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_agg = dd.from_pandas(cells_agg)

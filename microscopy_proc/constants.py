@@ -10,7 +10,7 @@ PROC_CHUNKS = (500, 1000, 1000)
 # DEPTH = 10
 DEPTH = 50
 
-ROWSPPARTITION = 10000000
+ROWS_PARTITION = 10000000
 
 
 class Coords(Enum):
@@ -37,7 +37,7 @@ class AnnotColumns(Enum):
     PARENT_STRUCTURE_ID = "parent_structure_id"
 
 
-ANNOTCOLUMNSTYPES = {
+ANNOT_COLUMNS_TYPES = {
     AnnotColumns.ID.value: np.float64,
     AnnotColumns.ATLAS_ID.value: np.float64,
     AnnotColumns.ONTOLOGY_ID.value: np.float64,
@@ -57,7 +57,7 @@ class AnnotExtraColumns(Enum):
     CHILDREN = "children"
 
 
-ANNOTCOLUMNSFINAL = [
+ANNOT_COLUMNS_FINAL = [
     AnnotColumns.NAME.value,
     AnnotColumns.ACRONYM.value,
     AnnotColumns.COLOR_HEX_TRIPLET.value,
@@ -67,15 +67,15 @@ ANNOTCOLUMNSFINAL = [
 
 
 class CellMeasures(Enum):
-    Z = "z"
+    COUNT = "count"
     VOLUME = "volume"
     SUM_INTENSITY = "sum_intensity"
     # MAX_INTENSITY = "max_intensity"
     IOV = "iov"
 
 
-CELL_AGG_MAPPING = {
-    CellMeasures.Z.value: "count",
+CELL_AGG_MAPPINGS = {
+    CellMeasures.COUNT.value: "sum",
     CellMeasures.VOLUME.value: "sum",
     CellMeasures.SUM_INTENSITY.value: "sum",
     # CellMeasures.MAX_INTENSITY.value: "max",
