@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 
 from natsort import natsorted
 
@@ -52,15 +51,16 @@ if __name__ == "__main__":
             # # Saving cells to csv
             # cells2csv(pfm)
 
-            try:
-                shutil.rmtree(f"{pfm.cells_raw_df}temp.parquet")
-                print("removed temp")
-            except:
-                print("no temp")
+            # try:
+            #     shutil.rmtree(f"{pfm.cells_raw_df}temp.parquet")
+            #     print("removed temp")
+            # except:
+            #     print("no temp")
 
+            pfm.cells_agg_df
             x = dd.read_parquet(pfm.cells_df)
-            # x = x.rename(columns={"size": "volume"})
-            x["count"] = 1
+            x = x.rename(columns={"z": "count"})
+            # x["count"] = 1
             try:
                 x = x.drop(columns=["smb-share:server"])
             except:
@@ -69,6 +69,8 @@ if __name__ == "__main__":
             x = x.compute()
             x = dd.from_pandas(x, npartitions=1)
             x.to_parquet(pfm.cells_raw_df, overwrite=True)
+
+            # cells2csv(pfm)
 
             print()
         except Exception as e:
