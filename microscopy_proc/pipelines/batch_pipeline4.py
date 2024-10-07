@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 from natsort import natsorted
 
@@ -52,6 +53,12 @@ if __name__ == "__main__":
             # cells2csv(pfm)
 
             temp_fp = pfm.cells_raw_df
+
+            try:
+                shutil.rmtree(f"{temp_fp}temp.parquet")
+                print("removed temp")
+            except:
+                print("no temp")
 
             x = dd.read_parquet(temp_fp)
             # x = x.rename(columns={"size": "volume"})
