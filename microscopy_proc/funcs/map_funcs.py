@@ -145,9 +145,6 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     # in the cells_agg_df regions (e.g. name is NaN, no-label or universal)
     cells_agg_df = annot_df_get_children(cells_agg_df)
 
-    # TODO: remove
-    print(cells_agg_df[["name", "children"]])
-
     # Recursively summing the cells_agg_df columns with each child's and current value
     def recursive_sum(i):
         # NOTE: updates the cells_agg_df in place
