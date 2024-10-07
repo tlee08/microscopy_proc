@@ -125,9 +125,9 @@ if __name__ == "__main__":
         # Only running specific files
         if i not in [
             "G13_2.5x_1x_zoom_07082024",
-            "P12_2.5x_1x_zoom_07082024",
+            # "P12_2.5x_1x_zoom_07082024",
             "P13_2.5x_1x_zoom_05082024",
-            "P15_2.5x_1x_zoom_07082024",
+            # "P15_2.5x_1x_zoom_07082024",
             "P16_2.5x_1x_zoom_06082024",
         ]:
             continue
