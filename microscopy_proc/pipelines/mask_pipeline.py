@@ -125,7 +125,11 @@ if __name__ == "__main__":
     # Filenames
     batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
 
-    for i in natsorted(os.listdir(batch_proj_dir)):
+    # Get all experiments
+    exp_ls = natsorted(os.listdir(batch_proj_dir))
+    exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(batch_proj_dir, i))]
+
+    for i in exp_ls:
         # Only running specific files
         # if i not in [
         #     "G13_2.5x_1x_zoom_07082024",

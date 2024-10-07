@@ -33,7 +33,11 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_fp_dir != batch_proj_dir
 
-    for i in natsorted(os.listdir(in_fp_dir)):
+    # Get all experiments
+    exp_ls = natsorted(os.listdir(in_fp_dir))
+    exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(in_fp_dir, i))]
+
+    for i in exp_ls:
         # Only given files
         if i not in [
             "B3_2.5x_1x_zoom_08082024",
