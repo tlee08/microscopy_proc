@@ -66,7 +66,7 @@ ANNOT_COLUMNS_FINAL = [
 ]
 
 
-class CellMeasures(Enum):
+class CellColumns(Enum):
     COUNT = "count"
     VOLUME = "volume"
     SUM_INTENSITY = "sum_intensity"
@@ -75,11 +75,19 @@ class CellMeasures(Enum):
 
 
 CELL_AGG_MAPPINGS = {
-    CellMeasures.COUNT.value: "sum",
-    CellMeasures.VOLUME.value: "sum",
-    CellMeasures.SUM_INTENSITY.value: "sum",
+    CellColumns.COUNT.value: "sum",
+    CellColumns.VOLUME.value: "sum",
+    CellColumns.SUM_INTENSITY.value: "sum",
     # CellMeasures.MAX_INTENSITY.value: "max",
 }
+
+MASK_VOLUME = "volume"
+
+
+class MaskColumns(Enum):
+    VOLUME_ANNOT = f"{MASK_VOLUME}_annot"
+    VOLUME_MASK = f"{MASK_VOLUME}_mask"
+    VOLUME_PROP = f"{MASK_VOLUME}_prop"
 
 
 class ProjFolders(Enum):

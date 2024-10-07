@@ -12,7 +12,7 @@ from microscopy_proc.constants import (
     CELL_AGG_MAPPINGS,
     TRFM,
     AnnotColumns,
-    CellMeasures,
+    CellColumns,
     Coords,
 )
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
@@ -157,12 +157,12 @@ def grouping_cells(pfm: ProjFpModel):
         # Combining (summing) the cells_groagg values for parent regions using the annot_df
         cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)
-        cells_agg_df[CellMeasures.IOV.value] = (
-            cells_agg_df[CellMeasures.SUM_INTENSITY.value]
-            / cells_agg_df[CellMeasures.VOLUME.value]
+        cells_agg_df[CellColumns.IOV.value] = (
+            cells_agg_df[CellColumns.SUM_INTENSITY.value]
+            / cells_agg_df[CellColumns.VOLUME.value]
         )
         # Selecting and ordering relevant columns
-        cells_agg_df = cells_agg_df[[*ANNOT_COLUMNS_FINAL, *enum2list(CellMeasures)]]
+        cells_agg_df = cells_agg_df[[*ANNOT_COLUMNS_FINAL, *enum2list(CellColumns)]]
         # Saving to disk
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_agg = dd.from_pandas(cells_agg)

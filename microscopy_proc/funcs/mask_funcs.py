@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from microscopy_proc.constants import AnnotColumns, Coords
+from microscopy_proc.constants import MASK_VOLUME, AnnotColumns, Coords
 
 
 def make_outline(arr: np.ndarray) -> pd.DataFrame:
@@ -70,6 +70,6 @@ def mask2region_counts(arr_mask: np.ndarray, arr_annot: np.ndarray) -> pd.DataFr
     # Returning region IDs and counts as dataframe
     # NOTE: dropping the 0 index (background)
     return pd.DataFrame(
-        {"volume": id_counts},
+        {MASK_VOLUME: id_counts},
         index=pd.Index(id_labels, name=AnnotColumns.ID.value),
     ).drop(index=0)

@@ -5,7 +5,7 @@ import os
 import pandas as pd
 from natsort import natsorted
 
-from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellMeasures
+from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellColumns
 from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
 from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.misc_utils import enum2list
@@ -55,12 +55,18 @@ if __name__ == "__main__":
         proj_dir = os.path.join(batch_proj_dir, i)
         pfm = get_proj_fp_model(proj_dir)
         try:
+            # CELL_AGG_DF
             # Reading experiment's cells_agg dataframe
             cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
             # Sanitising (removing smb columns)
             cells_agg_df = sanitise_smb_df(cells_agg_df)
             # Keeping only the required columns (not annot columns)
-            cells_agg_df = cells_agg_df[enum2list(CellMeasures)]
+            cells_agg_df = cells_agg_df[enum2list(CellColumns)]
+            # MASK_COUNTS_DF
+            # Reading experiment's mask_counts dataframe
+            mask_counts_df = pd.read_parquet(pfm.mask_counts_df)
+            # Keeping only the required columns
+            # mask_counts_df = mask_counts_df[[CellMeasures.VOLUME.value]]
             # Making columns a multindex with levels as
             # (specimen name, cell agg columns)
             cells_agg_df = pd.concat(

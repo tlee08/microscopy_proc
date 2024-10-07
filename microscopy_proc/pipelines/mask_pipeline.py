@@ -7,7 +7,7 @@ import tifffile
 from natsort import natsorted
 from scipy import ndimage
 
-from microscopy_proc.constants import Coords
+from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, Coords, MaskColumns
 from microscopy_proc.funcs.elastix_funcs import transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
 from microscopy_proc.funcs.map_funcs import annot_dict2df, combine_nested_regions
@@ -18,6 +18,7 @@ from microscopy_proc.funcs.mask_funcs import (
 )
 from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
+from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     get_proj_fp_model,
@@ -101,9 +102,12 @@ def make_mask_for_ref(
     # Combining (summing) the cells_agg_df values for parent regions using the annot_df
     mask_counts_df = combine_nested_regions(mask_counts_df, annot_df)
     # Calculating proportion of mask volume in each region
-    mask_counts_df.volume_prop = (
-        mask_counts_df.volume_mask / mask_counts_df.volume_annot
+    mask_counts_df[MaskColumns.VOLUME_PROP.value] = (
+        mask_counts_df[MaskColumns.VOLUME_MASK.value]
+        / mask_counts_df[MaskColumns.VOLUME_ANNOT.value]
     )
+    # Selecting and ordering relevant columns
+    mask_counts_df = mask_counts_df[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]
     # Saving
     mask_counts_df.to_parquet(pfm.mask_counts_df)
 
