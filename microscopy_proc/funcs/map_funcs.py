@@ -130,8 +130,6 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     sum_cols = cells_agg_df.columns.to_list()
     # Getting annot_df with parent region information for all regions
     annot_df = annot_df_get_parents(annot_df)
-    # Getting annot_df with list of children for each region
-    annot_df = annot_df_get_children(annot_df)
     # Merging the cells_agg df with the annot_df
     # NOTE: we are setting the annot_df index as ID
     # and assuming cells_agg index is ID (via groupby)
@@ -142,6 +140,10 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
         right_index=True,
         how="outer",
     )
+    # Getting annot_df with list of children for each region
+    # NOTE: we do this after the merge, in case there are NaN's
+    # in the cells_agg_df regions (e.g. name is NaN, no-label or universal)
+    cells_agg_df = annot_df_get_children(cells_agg_df)
 
     # TODO: remove
     print(cells_agg_df[["name", "children"]])
