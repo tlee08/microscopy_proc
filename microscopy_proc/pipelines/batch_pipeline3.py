@@ -65,5 +65,5 @@ if __name__ == "__main__":
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             print(f"Error in {i}: {e}")
-            continue
+            # continue
         break
