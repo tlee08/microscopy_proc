@@ -18,7 +18,6 @@ from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     RefFpModel,
     get_proj_fp_model,
-    get_ref_fp_model,
     init_configs,
     make_proj_dirs,
 )
@@ -26,12 +25,18 @@ from microscopy_proc.utils.proj_org_utils import (
 
 # @flow
 def ref_prepare_pipeline(
-    rfm: RefFpModel,
     pfm: ProjFpModel,
     **kwargs,
 ):
     # Update registration params json
     configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+    # Making ref_fp_model of original atlas images filepaths
+    rfm = RefFpModel.get_ref_fp_model(
+        configs.atlas_dir,
+        configs.ref_v,
+        configs.annot_v,
+        configs.map_v,
+    )
     # Making atlas images
     for fp_i, fp_o in [
         (rfm.ref, pfm.ref),
@@ -114,7 +119,6 @@ if __name__ == "__main__":
     atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
 
-    rfm = get_ref_fp_model()
     pfm = get_proj_fp_model(proj_dir)
     make_proj_dirs(proj_dir)
 
@@ -123,7 +127,6 @@ if __name__ == "__main__":
 
     # # Preparing reference images
     # prepare_ref(
-    #     rfm=rfm,
     #     pfm=pfm,
     #     ref_orient_ls=(-2, 3, 1),
     #     ref_z_trim=(None, None, None),

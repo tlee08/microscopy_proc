@@ -5,7 +5,6 @@ from natsort import natsorted
 
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    get_ref_fp_model,
     make_proj_dirs,
 )
 
@@ -41,7 +40,6 @@ if __name__ == "__main__":
         proj_dir = os.path.join(batch_proj_dir, i)
 
         # Getting file paths
-        rfm = get_ref_fp_model()
         pfm = get_proj_fp_model(proj_dir)
         try:
             # Making project folders

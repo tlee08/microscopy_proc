@@ -26,8 +26,9 @@ class RefFpModel(BaseModel):
     @classmethod
     def get_ref_fp_model(cls, atlas_dir=None, ref_v=None, annot_v=None, map_v=None):
         """
-        # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
-        # Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
+        atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
+
+        Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
         """
         # NAMES OF ATLAS FILES USED
         atlas_dir = RESOURCES_DIR if atlas_dir is None else atlas_dir
@@ -165,11 +166,7 @@ class ProjFpModel(BaseModel):
         )
 
 
-def get_ref_fp_model(atlas_dir=None, ref_v=None, annot_v=None, map_v=None):
-    return RefFpModel.get_ref_fp_model(atlas_dir, ref_v, annot_v, map_v)
-
-
-def get_proj_fp_model(proj_dir):
+def get_proj_fp_model(proj_dir: str):
     return ProjFpModel.get_proj_fp_model(proj_dir)
 
 

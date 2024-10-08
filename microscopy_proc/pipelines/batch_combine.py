@@ -9,7 +9,7 @@ from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellColumns, MaskColu
 from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
 from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.misc_utils import enum2list
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, get_ref_fp_model
+from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 # logging.basicConfig(level=logging.INFO)
 logging.disable(logging.CRITICAL)
@@ -33,7 +33,6 @@ if __name__ == "__main__":
         assert os.path.exists(pfm.cells_agg_df), f"Missing cells_agg_df for {i}"
 
     # Making combined_agg_df with (annot_df)
-    rfm = get_ref_fp_model()
     with open(pfm.map, "r") as f:
         total_df = annot_dict2df(json.load(f))
     total_df = annot_df_get_parents(total_df)

@@ -21,7 +21,6 @@ from microscopy_proc.pipelines.reg_pipeline import (
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    get_ref_fp_model,
     init_configs,
     make_proj_dirs,
 )
@@ -40,7 +39,6 @@ if __name__ == "__main__":
     proj_dir = os.path.join(proj_dir, exp_name)
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
-    rfm = get_ref_fp_model()
     pfm = get_proj_fp_model(proj_dir)
     # Making project folders
     make_proj_dirs(proj_dir)
@@ -49,11 +47,10 @@ if __name__ == "__main__":
     init_configs(pfm)
 
     # Making zarr from tiff file(s)
-    tiff2zarr(in_fp, pfm.raw, chunks=PROC_CHUNKS)
+    tiff2zarr(in_fp, pfm, chunks=PROC_CHUNKS)
 
     # Preparing reference images
     ref_prepare_pipeline(
-        rfm=rfm,
         pfm=pfm,
         ref_orient_ls=(-2, 3, 1),
         ref_z_trim=(None, None, None),
