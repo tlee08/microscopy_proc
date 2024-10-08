@@ -65,6 +65,8 @@ from microscopy_proc.utils.proj_org_utils import (
     RefFpModel,
 )
 
+# TODO: include overwrite funcionality in each pipeline
+
 
 # @flow
 def tiff2zarr_pipeline(in_fp: str, pfm: ProjFpModel):
