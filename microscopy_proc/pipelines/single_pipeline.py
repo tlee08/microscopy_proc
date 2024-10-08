@@ -20,14 +20,7 @@ from microscopy_proc.pipelines.pipeline_funcs import (
     cellc11_pipeline,
     cells2csv_pipeline,
     group_cells_pipeline,
-    img_fine_pipeline,
     img_overlap_pipeline,
-    img_rough_pipeline,
-    img_trim_pipeline,
-    make_mask_pipeline,
-    ref_prepare_pipeline,
-    registration_pipeline,
-    tiff2zarr_pipeline,
     transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
@@ -87,18 +80,18 @@ if __name__ == "__main__":
         max_wshed=700,
     )
 
-    # Making zarr from tiff file(s)
-    tiff2zarr_pipeline(in_fp, pfm)
-    # Preparing reference images
-    ref_prepare_pipeline(pfm)
-    # Preparing image itself
-    img_rough_pipeline(pfm)
-    img_fine_pipeline(pfm)
-    img_trim_pipeline(pfm)
-    # Running Elastix registration
-    registration_pipeline(pfm)
-    # Running mask pipeline
-    make_mask_pipeline(pfm)
+    # # Making zarr from tiff file(s)
+    # tiff2zarr_pipeline(in_fp, pfm)
+    # # Preparing reference images
+    # ref_prepare_pipeline(pfm)
+    # # Preparing image itself
+    # img_rough_pipeline(pfm)
+    # img_fine_pipeline(pfm)
+    # img_trim_pipeline(pfm)
+    # # Running Elastix registration
+    # registration_pipeline(pfm)
+    # # Running mask pipeline
+    # make_mask_pipeline(pfm)
     # Making overlap chunks in preparation for cell counting
     img_overlap_pipeline(pfm)
     # Counting cells
