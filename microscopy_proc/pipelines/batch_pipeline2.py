@@ -102,11 +102,15 @@ if __name__ == "__main__":
 
             # if not os.path.exists(pfm.cells_raw_df):
             #     # Making overlapped chunks images for processing
-            #     img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH)
+            #     img_overlap_pipeline(
+            #         pfm,
+            #         chunksize=PROC_CHUNKS,
+            #         depth=DEPTH,
+            #     )
             #     # Cell counting
             #     img_proc_pipeline(
             #         pfm=pfm,
-            #         d=DEPTH,
+            #         depth=DEPTH,
             #         tophat_sigma=10,
             #         dog_sigma1=1,
             #         dog_sigma2=4,

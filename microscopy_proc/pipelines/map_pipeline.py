@@ -74,13 +74,16 @@ def transform_coords(pfm: ProjFpModel):
 
 
 # @flow
-def get_cell_mappings(pfm: ProjFpModel):
+def get_cell_mappings(pfm: ProjFpModel, **kwargs):
     """
     Using the transformed cell coordinates, get the region ID and name for each cell
     corresponding to the reference atlas.
 
     NOTE: saves the cells dataframe as pandas parquet.
     """
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells_raw and cells_trfm dataframes
         cells_df = dd.read_parquet(pfm.cells_raw_df).compute()
@@ -135,13 +138,16 @@ def get_cell_mappings(pfm: ProjFpModel):
         cells_df.to_parquet(pfm.cells_df)
 
 
-def grouping_cells(pfm: ProjFpModel):
+def grouping_cells(pfm: ProjFpModel, **kwargs):
     """
     Grouping cells by region name and aggregating total cell volume
     and cell count for each region.
 
     NOTE: saves the cells_agg dataframe as pandas parquet.
     """
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells dataframe
         cells_df = pd.read_parquet(pfm.cells_df)

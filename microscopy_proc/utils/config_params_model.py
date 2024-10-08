@@ -27,8 +27,9 @@ class ConfigParamsModel(BaseModel):
     z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
+    # Overlap
+    depth: int = DEPTH
     # Cell counting
-    d: int = DEPTH
     tophat_sigma: int = 10
     dog_sigma1: int = 1
     dog_sigma2: int = 4

@@ -84,7 +84,11 @@ if __name__ == "__main__":
     # Running Elastix registration
     registration_pipeline(pfm)
 
-    img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH)
+    img_overlap_pipeline(
+        pfm,
+        chunksize=PROC_CHUNKS,
+        depth=DEPTH,
+    )
 
     img_proc_pipeline(
         pfm=pfm,

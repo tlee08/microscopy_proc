@@ -3,7 +3,7 @@ from dask.distributed import LocalCluster
 from dask_cuda import LocalCUDACluster
 
 # from prefect import flow
-from microscopy_proc.constants import DEPTH, PROC_CHUNKS
+from microscopy_proc.constants import DEPTH
 from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs as Cf
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
@@ -15,6 +15,7 @@ from microscopy_proc.utils.dask_utils import (
     disk_cache,
 )
 from microscopy_proc.utils.proj_org_utils import (
+    ProjFpModel,
     get_proj_fp_model,
     init_configs,
     make_proj_dirs,
@@ -22,17 +23,21 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 # @flow
-def img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH):
+def img_overlap_pipeline(pfm: ProjFpModel, **kwargs):
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+    # Making overlap image
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
-        arr_raw = da.from_zarr(pfm.raw, chunks=chunks)
-        arr_overlap = da_overlap(arr_raw, d=d)
+        arr_raw = da.from_zarr(pfm.raw, chunks=rp.chunksize)
+        arr_overlap = da_overlap(arr_raw, d=rp.de)
         arr_overlap = disk_cache(arr_overlap, pfm.overlap)
 
 
 # @flow
-def img_proc_pipeline(pfm, **kwargs):
+def img_proc_pipeline(pfm: ProjFpModel, **kwargs):
     # Update registration params json
     rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+
     # Reading raw image
     arr_raw = da.from_zarr(pfm.raw)
     # Reading overlapped image
@@ -117,7 +122,10 @@ def img_proc_pipeline(pfm, **kwargs):
         cells_df.to_parquet(pfm.cells_raw_df, overwrite=True)
 
 
-def img2coords_pipeline(pfm):
+def img2coords_pipeline(pfm: ProjFpModel, **kwargs):
+    # Update registration params json
+    rp = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+    # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
         arr_maxima_f = da.from_zarr(pfm.maxima_final)
@@ -137,7 +145,11 @@ if __name__ == "__main__":
     # Making params json
     init_configs(pfm)
 
-    img_overlap_pipeline(pfm, chunks=PROC_CHUNKS, d=DEPTH)
+    img_overlap_pipeline(
+        pfm,
+        chunksize=PROC_CHUNKS,
+        depth=DEPTH,
+    )
 
     img_proc_pipeline(
         pfm=pfm,
