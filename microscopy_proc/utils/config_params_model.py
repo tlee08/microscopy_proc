@@ -18,14 +18,14 @@ class ConfigParamsModel(BaseModel):
 
     model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
 
-    # Reference
+    # REFERENCE
     atlas_dir: str = RESOURCES_DIR
     ref_v: str = RefVersions.AVERAGE_TEMPLATE_25.value
     annot_v: str = AnnotVersions.CCF_2016_25.value
     map_v: str = MapVersions.ABA_ANNOTATIONS.value
-    # Raw
+    # RAW
     chunksize: tuple[int, int, int] = PROC_CHUNKS
-    # Registration
+    # REGISTRATION
     ref_orient_ls: tuple[int, int, int] = (1, 2, 3)
     ref_z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     ref_y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
@@ -39,9 +39,12 @@ class ConfigParamsModel(BaseModel):
     z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
-    # Overlap
+    # MASK
+    mask_gaus_blur: int = 1
+    mask_thresh: int = 300
+    # OVERLAP
     depth: int = DEPTH
-    # Cell counting
+    # CELL COUNTING
     tophat_sigma: int = 10
     dog_sigma1: int = 1
     dog_sigma2: int = 4
@@ -52,9 +55,6 @@ class ConfigParamsModel(BaseModel):
     maxima_sigma: int = 10
     min_wshed: int = 1
     max_wshed: int = 1000
-    # Masking
-    mask_gaus_blur: int = 1
-    mask_thresh: int = 300
 
     @model_validator(mode="after")
     def validate_trims(self):

@@ -4,14 +4,14 @@ import os
 from natsort import natsorted
 
 from microscopy_proc.pipelines.pipeline_funcs import (
-    cells2csv,
-    get_cell_mappings,
-    grouping_cells,
+    cell_mapping_pipeline,
+    cells2csv_pipeline,
+    group_cells_pipeline,
     img_fine_pipeline,
     img_trim_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
-    transform_coords,
+    transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
@@ -122,13 +122,13 @@ if __name__ == "__main__":
 
             # if not os.path.exists(pfm.cells_trfm_df):
             # Converting maxima from raw space to refernce atlas space
-            transform_coords(pfm)
+            transform_coords_pipeline(pfm)
             # Getting ID mappings
-            get_cell_mappings(pfm)
+            cell_mapping_pipeline(pfm)
             # Grouping cells
-            grouping_cells(pfm)
+            group_cells_pipeline(pfm)
             # Saving cells to csv
-            cells2csv(pfm)
+            cells2csv_pipeline(pfm)
             print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")

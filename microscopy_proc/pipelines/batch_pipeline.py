@@ -4,19 +4,24 @@ import os
 from natsort import natsorted
 
 from microscopy_proc.pipelines.pipeline_funcs import (
-    cells2csv,
-    get_cell_mappings,
-    grouping_cells,
+    cell_mapping_pipeline,
+    cellc_pipeline,
+    cells2csv_pipeline,
+    group_cells_pipeline,
     img_fine_pipeline,
+    img_overlap_pipeline,
     img_rough_pipeline,
     img_trim_pipeline,
+    make_mask_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
-    transform_coords,
+    tiff2zarr_pipeline,
+    transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     make_proj_dirs,
+    update_configs,
 )
 
 # logging.basicConfig(level=logging.INFO)
@@ -60,81 +65,70 @@ if __name__ == "__main__":
             # Making project folders
             make_proj_dirs(proj_dir)
 
-            # # Making params json
-            # init_configs(pfm)
+            # Making params json
+            update_configs(
+                pfm,
+                # REFERENCE
+                # RAW
+                # REGISTRATION
+                ref_orient_ls=(-2, 3, 1),
+                ref_z_trim=(None, None, None),
+                ref_y_trim=(None, None, None),
+                ref_x_trim=(None, None, None),
+                z_rough=3,
+                y_rough=6,
+                x_rough=6,
+                z_fine=1,
+                y_fine=0.6,
+                x_fine=0.6,
+                z_trim=(None, None, None),
+                y_trim=(None, None, None),
+                x_trim=(None, None, None),
+                # MASK
+                # OVERLAP
+                # CELL COUNTING
+                tophat_sigma=10,
+                dog_sigma1=1,
+                dog_sigma2=4,
+                gauss_sigma=101,
+                thresh_p=60,
+                min_threshd=100,
+                max_threshd=9000,
+                maxima_sigma=10,
+                min_wshed=1,
+                max_wshed=700,
+            )
 
-            # if not os.path.exists(pfm.raw):
-            #     print("Making zarr")
-            #     # Making zarr from tiff file(s)
-            #     tiff2zarr(in_fp, pfm.raw)
+            if not os.path.exists(pfm.raw):
+                # Making zarr from tiff file(s)
+                tiff2zarr_pipeline(in_fp, pfm)
 
             # if not os.path.exists(pfm.regresult"]):
             # Preparing reference images
-            ref_prepare_pipeline(
-                pfm=pfm,
-                # ref_orient_ls=(-2, 3, 1),
-                # ref_z_trim=(None, None, None),
-                # ref_y_trim=(None, None, None),
-                # ref_x_trim=(None, None, None),
-            )
+            ref_prepare_pipeline(pfm)
             # Preparing image itself
-            img_rough_pipeline(
-                pfm,
-                # z_rough=3,
-                # y_rough=6,
-                # x_rough=6,
-            )
-            img_fine_pipeline(
-                pfm,
-                # z_fine=1,
-                # y_fine=0.6,
-                # x_fine=0.6,
-            )
-            img_trim_pipeline(
-                pfm,
-                # z_trim=(None, None, None),
-                # y_trim=(None, None, None),
-                # x_trim=(None, None, None),
-            )
+            img_rough_pipeline(pfm)
+            img_fine_pipeline(pfm)
+            img_trim_pipeline(pfm)
             # Running Elastix registration
             registration_pipeline(pfm)
-
             # Running mask pipeline
             make_mask_pipeline(pfm)
 
-            # if not os.path.exists(pfm.cells_raw_df):
-            #     # Making overlapped chunks images for processing
-            #     img_overlap_pipeline(
-            #         pfm,
-            #         chunksize=PROC_CHUNKS,
-            #         depth=DEPTH,
-            #     )
-            #     # Cell counting
-            #     img_proc_pipeline(
-            #         pfm=pfm,
-            #         tophat_sigma=10,
-            #         dog_sigma1=1,
-            #         dog_sigma2=4,
-            #         gauss_sigma=101,
-            #         thresh_p=60,
-            #         min_threshd=50,
-            #         max_threshd=9000,
-            #         maxima_sigma=10,
-            #         min_wshed=1,
-            #         max_wshed=700,
-            #     )
-            #     # Patch to fix extra smb column error
-            #     cells_df_smb_field_patch(pfm.cells_raw_df)
+            if not os.path.exists(pfm.cells_raw_df):
+                # Making overlapped chunks images for processing
+                img_overlap_pipeline(pfm)
+                # Cell counting
+                cellc_pipeline(pfm)
 
-            # if not os.path.exists(pfm.cells_trfm_df):
             # Converting maxima from raw space to refernce atlas space
-            transform_coords(pfm)
-            # Getting ID mappings
-            get_cell_mappings(pfm)
+            transform_coords_pipeline(pfm)
+            # Getting Region ID mappings for each cell
+            cell_mapping_pipeline(pfm)
             # Grouping cells
-            grouping_cells(pfm)
-            # Saving cells to csv
-            cells2csv(pfm)
+            group_cells_pipeline(pfm)
+            # Exporting cells_agg parquet as csv
+            cells2csv_pipeline(pfm)
             print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")

@@ -244,7 +244,9 @@ class CpuArrFuncs:
         res = arr - max_arr == 1
         # If a mask is given, then keep only the maxima within the mask
         if arr_mask is not None:
-            logging.debug("Mask provided. Maxima will only be found within regions.")
+            logging.debug(
+                "Mask provided. Maxima will only be found within mask regions."
+            )
             arr_mask = (cls.xp.asarray(arr_mask) > 0).astype(cls.xp.uint8)
             res = res * arr_mask
         # Returning

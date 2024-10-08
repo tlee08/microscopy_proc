@@ -54,7 +54,7 @@ class ProjFpModel(BaseModel):
 
     # CONFIGS
     config_params: str
-    # MY ATLAS AND ELASTIX PARAMS FILES
+    # ATLAS AND ELASTIX PARAMS FILES
     ref: str
     annot: str
     map: str
@@ -166,7 +166,14 @@ def make_proj_dirs(proj_dir):
         os.makedirs(os.path.join(proj_dir, folder.value), exist_ok=True)
 
 
-def init_configs(pfm: ProjFpModel, **kwargs):
+def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
+    """
+    If config_params file does not exist, make a new one.
+
+    Then updates the config_params file with the kwargs.
+    If there are no kwargs, will not update the file
+    (other than making it if it did not exist).
+    """
     # Making registration params json
     try:  # If file exists
         rp = ConfigParamsModel.model_validate(read_json(pfm.config_params))
@@ -174,11 +181,10 @@ def init_configs(pfm: ProjFpModel, **kwargs):
         logging.info(e)
         logging.info("Making new params json")
         rp = ConfigParamsModel()
-    # If there are any updates
-    if kwargs != {}:
-        # Update registration params json
-        rp = rp.model_validate(rp.model_copy(update=kwargs))
-        # Writing registration params json
         write_json(pfm.config_params, rp.model_dump())
-    # Returning the registration params
+    # Updating and saving configs if kwargs is not empty
+    if kwargs != {}:
+        rp = rp.model_validate(rp.model_copy(update=kwargs))
+        write_json(pfm.config_params, rp.model_dump())
+    # and returning the configs
     return rp

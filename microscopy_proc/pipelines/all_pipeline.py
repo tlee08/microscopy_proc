@@ -1,24 +1,24 @@
 import os
 
-from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.pipelines.pipeline_funcs import (
-    cell_count_pipeline,
-    cells2csv,
-    get_cell_mappings,
-    grouping_cells,
+    cell_mapping_pipeline,
+    cellc_pipeline,
+    cells2csv_pipeline,
+    group_cells_pipeline,
     img_fine_pipeline,
     img_overlap_pipeline,
     img_rough_pipeline,
     img_trim_pipeline,
+    make_mask_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
     tiff2zarr_pipeline,
-    transform_coords,
+    transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    init_configs,
     make_proj_dirs,
+    update_configs,
 )
 
 if __name__ == "__main__":
@@ -40,51 +40,27 @@ if __name__ == "__main__":
     make_proj_dirs(proj_dir)
 
     # Making params json
-    init_configs(pfm)
-
-    # Making zarr from tiff file(s)
-    tiff2zarr_pipeline(in_fp, pfm, chunks=PROC_CHUNKS)
-
-    # Preparing reference images
-    ref_prepare_pipeline(
-        pfm=pfm,
+    update_configs(
+        pfm,
+        # REFERENCE
+        # RAW
+        # REGISTRATION
         ref_orient_ls=(-2, 3, 1),
         ref_z_trim=(None, None, None),
-        ref_y_trim=(None, -110, None),
+        ref_y_trim=(None, None, None),
         ref_x_trim=(None, None, None),
-    )
-
-    # Preparing image itself
-    img_rough_pipeline(
-        pfm,
         z_rough=3,
         y_rough=6,
         x_rough=6,
-    )
-    img_fine_pipeline(
-        pfm,
         z_fine=1,
         y_fine=0.6,
         x_fine=0.6,
-    )
-    img_trim_pipeline(
-        pfm,
-        # z_trim=(None, -5, None),
-        # y_trim=(80, -75, None),
-        # x_trim=(None, None, None),
-    )
-
-    # Running Elastix registration
-    registration_pipeline(pfm)
-
-    img_overlap_pipeline(
-        pfm,
-        chunksize=PROC_CHUNKS,
-        depth=DEPTH,
-    )
-
-    cell_count_pipeline(
-        pfm=pfm,
+        z_trim=(None, None, None),
+        y_trim=(None, None, None),
+        x_trim=(None, None, None),
+        # MASK
+        # OVERLAP
+        # CELL COUNTING
         tophat_sigma=10,
         dog_sigma1=1,
         dog_sigma2=4,
@@ -97,11 +73,27 @@ if __name__ == "__main__":
         max_wshed=700,
     )
 
+    # Making zarr from tiff file(s)
+    tiff2zarr_pipeline(in_fp, pfm)
+    # Preparing reference images
+    ref_prepare_pipeline(pfm)
+    # Preparing image itself
+    img_rough_pipeline(pfm)
+    img_fine_pipeline(pfm)
+    img_trim_pipeline(pfm)
+    # Running Elastix registration
+    registration_pipeline(pfm)
+    # Running mask pipeline
+    make_mask_pipeline(pfm)
+    # Making overlap chunks in preparation for cell counting
+    img_overlap_pipeline(pfm)
+    # Counting cells
+    cellc_pipeline(pfm)
     # Converting maxima from raw space to refernce atlas space
-    transform_coords(pfm)
-
-    get_cell_mappings(pfm)
-
-    grouping_cells(pfm)
-
-    cells2csv(pfm)
+    transform_coords_pipeline(pfm)
+    # Getting Region ID mappings for each cell
+    cell_mapping_pipeline(pfm)
+    # Grouping cells
+    group_cells_pipeline(pfm)
+    # Exporting cells_agg parquet as csv
+    cells2csv_pipeline(pfm)

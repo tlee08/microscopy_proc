@@ -30,9 +30,6 @@ from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs as Cf
 # from prefect import flow
 from microscopy_proc.funcs.elastix_funcs import registration, transformation_coords
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
-
-# from prefect import flow
-from microscopy_proc.funcs.io_funcs import btiff2zarr, tiffs2zarr
 from microscopy_proc.funcs.map_funcs import (
     annot_dict2df,
     combine_nested_regions,
@@ -50,6 +47,9 @@ from microscopy_proc.funcs.reg_funcs import (
     downsmpl_rough_arr,
     reorient_arr,
 )
+
+# from prefect import flow
+from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
 from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
@@ -68,13 +68,9 @@ from microscopy_proc.utils.proj_org_utils import (
 
 
 # @flow
-def tiff2zarr_pipeline(
-    in_fp: str,
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def tiff2zarr_pipeline(in_fp: str, pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making zarr from tiff file(s)
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
         if os.path.isdir(in_fp):
@@ -100,12 +96,9 @@ def tiff2zarr_pipeline(
 
 
 # @flow
-def ref_prepare_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def ref_prepare_pipeline(pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making ref_fp_model of original atlas images filepaths
     rfm = RefFpModel.get_ref_fp_model(
         configs.atlas_dir,
@@ -138,12 +131,9 @@ def ref_prepare_pipeline(
 
 
 # @flow
-def img_rough_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def img_rough_pipeline(pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     with cluster_proc_contxt(LocalCluster()):
         # Reading
         arr_raw = da.from_zarr(pfm.raw)
@@ -157,12 +147,9 @@ def img_rough_pipeline(
 
 
 # @flow
-def img_fine_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def img_fine_pipeline(pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
     arr_downsmpl1 = tifffile.imread(pfm.downsmpl1)
     # Fine downsample
@@ -174,12 +161,9 @@ def img_fine_pipeline(
 
 
 # @flow
-def img_trim_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def img_trim_pipeline(pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
     arr_downsmpl2 = tifffile.imread(pfm.downsmpl2)
     # Trim
@@ -191,12 +175,9 @@ def img_trim_pipeline(
 
 
 # @flow
-def registration_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def registration_pipeline(pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Running Elastix registration
     registration(
         fixed_img_fp=pfm.trimmed,
@@ -208,17 +189,14 @@ def registration_pipeline(
 
 
 # @flow
-def make_mask_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
+def make_mask_pipeline(pfm: ProjFpModel):
     """
     Makes mask of actual image in reference space.
     Also stores # and proportion of existent voxels
     for each region.
     """
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading ref and trimmed imgs
     arr_ref = tifffile.imread(pfm.ref)
     arr_trimmed = tifffile.imread(pfm.trimmed)
@@ -294,12 +272,9 @@ def make_mask_pipeline(
 
 
 # @flow
-def img_overlap_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def img_overlap_pipeline(pfm: ProjFpModel):
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making overlap image
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
         arr_raw = da.from_zarr(pfm.raw, chunks=configs.chunksize)
@@ -308,130 +283,300 @@ def img_overlap_pipeline(
 
 
 # @flow
-def cell_count_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def cellc1_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 1
 
-    # Reading raw image
-    arr_raw = da.from_zarr(pfm.raw)
-    # Reading overlapped image
-    arr_overlap = da.from_zarr(pfm.overlap)
-
+    Top-hat filter (background subtraction)
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
-        # Step 1: Top-hat filter (background subtraction)
-        arr_bgrm = da.map_blocks(Gf.tophat_filt, arr_overlap, configs.tophat_sigma)
-        arr_bgrm = disk_cache(arr_bgrm, pfm.bgrm)
-
-        # Step 2: Difference of Gaussians (edge detection)
-        arr_dog = da.map_blocks(
-            Gf.dog_filt, arr_bgrm, configs.dog_sigma1, configs.dog_sigma2
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        overlap_ar = da.from_zarr(pfm.overlap)
+        # Declaring processing instructions
+        bgrm_ar = da.map_blocks(
+            Gf.tophat_filt,
+            overlap_ar,
+            configs.tophat_sigma,
         )
-        arr_dog = disk_cache(arr_dog, pfm.dog)
+        # Computing and saving
+        bgrm_ar = disk_cache(bgrm_ar, pfm.bgrm)
 
-        # Step 3: Gaussian subtraction with large sigma for adaptive thresholding
-        arr_adaptv = da.map_blocks(Gf.gauss_subt_filt, arr_dog, configs.gauss_sigma)
-        arr_adaptv = disk_cache(arr_adaptv, pfm.adaptv)
 
+def cellc2_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 2
+
+    Difference of Gaussians (edge detection)
+    """
+    # Making Dask cluster
+    with cluster_proc_contxt(LocalCUDACluster()):
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        bgrm_ar = da.from_zarr(pfm.bgrm)
+        # Declaring processing instructions
+        dog_ar = da.map_blocks(
+            Gf.dog_filt,
+            bgrm_ar,
+            configs.dog_sigma1,
+            configs.dog_sigma2,
+        )
+        # Computing and saving
+        dog_ar = disk_cache(dog_ar, pfm.dog)
+
+
+def cellc3_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 3
+
+    Gaussian subtraction with large sigma for adaptive thresholding
+    """
+    # Making Dask cluster
+    with cluster_proc_contxt(LocalCUDACluster()):
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        dog_ar = da.from_zarr(pfm.dog)
+        # Declaring processing instructions
+        adaptv_ar = da.map_blocks(
+            Gf.gauss_subt_filt,
+            dog_ar,
+            configs.gauss_sigma,
+        )
+        # Computing and saving
+        adaptv_ar = disk_cache(adaptv_ar, pfm.adaptv)
+
+
+def cellc4_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 4
+
+    Mean thresholding with standard deviation offset
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
-        # Step 4: Mean thresholding with standard deviation offset
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # # Visually inspect sd offset
         # t_p = arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
         # t_p = t_p.compute()
         # logging.debug(t_p)
-        arr_threshd = da.map_blocks(Cf.manual_thresh, arr_adaptv, configs.thresh_p)
-        arr_threshd = disk_cache(arr_threshd, pfm.threshd)
+        # Reading input images
+        adaptv_ar = da.from_zarr(pfm.adaptv)
+        # Declaring processing instructions
+        threshd_ar = da.map_blocks(
+            Cf.manual_thresh,
+            adaptv_ar,
+            configs.thresh_p,
+        )
+        # Computing and saving
+        threshd_ar = disk_cache(threshd_ar, pfm.threshd)
 
+
+def cellc5_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 5
+
+    Getting object sizes
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
-        # Step 5: Object sizes
-        arr_sizes = da.map_blocks(Cf.label_with_sizes, arr_threshd)
-        arr_sizes = disk_cache(arr_sizes, pfm.threshd_sizes)
+        # Reading input images
+        threshd_ar = da.from_zarr(pfm.threshd)
+        sizes_ar = da.map_blocks(
+            Cf.label_with_sizes,
+            threshd_ar,
+        )
+        sizes_ar = disk_cache(sizes_ar, pfm.threshd_sizes)
 
+
+def cellc6_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 6
+
+    Filter out large objects (likely outlines, not cells)
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
-        # Step 6: Filter out large objects (likely outlines, not cells)
-        arr_threshd_filt = da.map_blocks(
-            Cf.filt_by_size, arr_sizes, configs.min_threshd, configs.max_threshd
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        sizes_ar = da.from_zarr(pfm.threshd_sizes)
+        # Declaring processing instructions
+        threshd_filt_ar = da.map_blocks(
+            Cf.filt_by_size,
+            sizes_ar,
+            configs.min_threshd,
+            configs.max_threshd,
         )
-        arr_threshd_filt = disk_cache(arr_threshd_filt, pfm.threshd_filt)
+        # Computing and saving
+        threshd_filt_ar = disk_cache(threshd_filt_ar, pfm.threshd_filt)
 
+
+def cellc7_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 7
+
+    Get maxima of image masked by labels
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
-        # Step 7: Get maxima of image masked by labels
-        arr_maxima = da.map_blocks(
-            Gf.get_local_maxima, arr_overlap, configs.maxima_sigma, arr_threshd_filt
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        overlap_ar = da.from_zarr(pfm.overlap)
+        threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
+        # Declaring processing instructions
+        maxima_ar = da.map_blocks(
+            Gf.get_local_maxima,
+            overlap_ar,
+            configs.maxima_sigma,
+            threshd_filt_ar,
         )
-        arr_maxima = disk_cache(arr_maxima, pfm.maxima)
+        # Computing and saving
+        maxima_ar = disk_cache(maxima_ar, pfm.maxima)
 
+
+def cellc8_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 8
+
+    Watershed segmentation sizes
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
         # n_workers=2
-        # Step 8: Watershed segmentation sizes
-        arr_wshed_sizes = da.map_blocks(
-            Cf.wshed_segm_sizes, arr_overlap, arr_maxima, arr_threshd_filt
+        # Reading input images
+        overlap_ar = da.from_zarr(pfm.overlap)
+        maxima_ar = da.from_zarr(pfm.maxima)
+        threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
+        # Declaring processing instructions
+        wshed_sizes_ar = da.map_blocks(
+            Cf.wshed_segm_sizes,
+            overlap_ar,
+            maxima_ar,
+            threshd_filt_ar,
         )
-        arr_wshed_sizes = disk_cache(arr_wshed_sizes, pfm.wshed_sizes)
+        # Computing and saving
+        wshed_sizes_ar = disk_cache(wshed_sizes_ar, pfm.wshed_sizes)
 
+
+def cellc9_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 9
+
+    Filter out large watershed objects (again likely outlines, not cells)
+    """
+    # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
-        # Step 9: Filter out large watershed objects (again likely outlines, not cells)
-        arr_wshed_filt = da.map_blocks(
-            Cf.filt_by_size, arr_wshed_sizes, configs.min_wshed, configs.max_wshed
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        wshed_sizes_ar = da.from_zarr(pfm.wshed_sizes)
+        # Declaring processing instructions
+        wshed_filt_ar = da.map_blocks(
+            Cf.filt_by_size,
+            wshed_sizes_ar,
+            configs.min_wshed,
+            configs.max_wshed,
         )
-        arr_wshed_filt = disk_cache(arr_wshed_filt, pfm.wshed_filt)
+        # Computing and saving
+        wshed_filt_ar = disk_cache(wshed_filt_ar, pfm.wshed_filt)
 
-        # Step 10: Trimming filtered regions overlaps
-        # Trimming maxima points overlaps
-        arr_maxima_f = da_trim(arr_maxima, d=configs.d)
-        disk_cache(arr_maxima_f, pfm.maxima_final)
-        # Trimming filtered regions overlaps
-        arr_threshd_final = da_trim(arr_threshd_filt, d=configs.d)
-        disk_cache(arr_threshd_final, pfm.threshd_final)
-        # Trimming watershed sizes overlaps
-        arr_wshed_final = da_trim(arr_wshed_sizes, d=configs.d)
-        disk_cache(arr_wshed_final, pfm.wshed_final)
 
+def cellc10_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 10
+
+    Trimming filtered regions overlaps to make:
+    - Trimmed maxima image
+    - Trimmed threshold image
+    - Trimmed watershed image
+    """
+    # Making Dask cluster
+    with cluster_proc_contxt(LocalCluster()):
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        maxima_ar = da.from_zarr(pfm.maxima)
+        threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
+        wshed_sizes_ar = da.from_zarr(pfm.wshed_sizes)
+        # Declaring processing instructions
+        maxima_f_ar = da_trim(maxima_ar, d=configs.d)
+        threshd_final_ar = da_trim(threshd_filt_ar, d=configs.d)
+        wshed_final_ar = da_trim(wshed_sizes_ar, d=configs.d)
+        # Computing and saving
+        disk_cache(maxima_f_ar, pfm.maxima_final)
+        disk_cache(threshd_final_ar, pfm.threshd_final)
+        disk_cache(wshed_final_ar, pfm.wshed_final)
+
+
+def cellc11_pipeline(pfm: ProjFpModel):
+    """
+    Cell counting pipeline - Step 11
+
+    From maxima and watershed, save the cells.
+    """
     with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
         # n_workers=2
-        # Step 11: From maxima and watershed, save the cells
+        # Getting configs
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        # Reading input images
+        raw_ar = tifffile.imread(pfm.raw)
+        overlap_ar = tifffile.imread(pfm.overlap)
+        maxima_ar = tifffile.imread(pfm.maxima_final)
+        wshed_filt_ar = tifffile.imread(pfm.wshed_final)
+        # Declaring processing instructions
         # (coords, size, and intensity) to a df
         # Getting maxima coords and corresponding watershed sizes in table
         cells_df = block2coords(
-            Cf.get_cells, arr_raw, arr_overlap, arr_maxima, arr_wshed_filt, configs.d
+            Cf.get_cells,
+            raw_ar,
+            overlap_ar,
+            maxima_ar,
+            wshed_filt_ar,
+            configs.depth,
         )
         # Filtering out by size
         cells_df = cells_df.query(
             f"size >= {configs.min_wshed} and size <= {configs.max_wshed}"
         )
-        # Saving to parquet
+        # Computing and saving as parquet
         cells_df.to_parquet(pfm.cells_raw_df, overwrite=True)
 
 
-def cell_count_coords_only_pipeline(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def cellc_coords_only_pipeline(pfm: ProjFpModel):
+    """
+    Get coords of maxima and get corresponding sizes from watershed.
+    """
     # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
         arr_maxima_f = da.from_zarr(pfm.maxima_final)
-        # Step 10a: Get coords of maxima and get corresponding sizes from watershed
-        coords_df = block2coords(Gf.get_coords, arr_maxima_f)
+        # Declaring processing instructions
+        # Storing coords of each maxima in df
+        coords_df = block2coords(
+            Gf.get_coords,
+            arr_maxima_f,
+        )
+        # Computing and saving as parquet
         coords_df.to_parquet(pfm.maxima_df, overwrite=True)
 
 
 # @flow
-def transform_coords(
-    pfm: ProjFpModel,
-):
+def transform_coords_pipeline(pfm: ProjFpModel):
     """
     `in_id` and `out_id` are either maxima or region
 
     NOTE: saves the cells_trfm dataframe as pandas parquet.
     """
+    # Getting configs
+    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
-        # Getting registration parameters
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
         cells_df = dd.read_parquet(pfm.cells_raw_df).compute()
@@ -468,18 +613,13 @@ def transform_coords(
 
 
 # @flow
-def get_cell_mappings(
-    pfm: ProjFpModel,
-    **kwargs,
-):
+def cell_mapping_pipeline(pfm: ProjFpModel):
     """
     Using the transformed cell coordinates, get the region ID and name for each cell
     corresponding to the reference atlas.
 
     NOTE: saves the cells dataframe as pandas parquet.
     """
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Getting region for each detected cell (i.e. row) in cells_df
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells_raw and cells_trfm dataframes
@@ -535,18 +675,13 @@ def get_cell_mappings(
         cells_df.to_parquet(pfm.cells_df)
 
 
-def grouping_cells(
-    pfm: ProjFpModel,
-    **kwargs,
-):
+def group_cells_pipeline(pfm: ProjFpModel):
     """
     Grouping cells by region name and aggregating total cell volume
     and cell count for each region.
 
     NOTE: saves the cells_agg dataframe as pandas parquet.
     """
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
     # Making cells_agg_df
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells dataframe
@@ -575,12 +710,7 @@ def grouping_cells(
         cells_agg_df.to_parquet(pfm.cells_agg_df)
 
 
-def cells2csv(
-    pfm: ProjFpModel,
-    **kwargs,
-):
-    # Update registration params json
-    configs = ConfigParamsModel.update_params_file(pfm.config_params, **kwargs)
+def cells2csv_pipeline(pfm: ProjFpModel):
     # Reading cells dataframe
     cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
     # Sanitising (removing smb columns)
