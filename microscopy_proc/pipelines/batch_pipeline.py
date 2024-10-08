@@ -9,6 +9,7 @@ from microscopy_proc.pipelines.map_pipeline import (
     grouping_cells,
     transform_coords,
 )
+from microscopy_proc.pipelines.mask_pipeline import make_mask_for_ref
 from microscopy_proc.pipelines.reg_pipeline import (
     img_fine_pipeline,
     img_rough_pipeline,
@@ -103,6 +104,9 @@ if __name__ == "__main__":
             )
             # Running Elastix registration
             registration_pipeline(pfm)
+
+            # Running mask pipeline
+            make_mask_for_ref(pfm)
 
             # if not os.path.exists(pfm.cells_raw_df):
             #     # Making overlapped chunks images for processing
