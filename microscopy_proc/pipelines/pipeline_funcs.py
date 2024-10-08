@@ -507,9 +507,9 @@ def cellc10_pipeline(pfm: ProjFpModel):
         threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
         wshed_sizes_ar = da.from_zarr(pfm.wshed_sizes)
         # Declaring processing instructions
-        maxima_f_ar = da_trim(maxima_ar, d=configs.d)
-        threshd_final_ar = da_trim(threshd_filt_ar, d=configs.d)
-        wshed_final_ar = da_trim(wshed_sizes_ar, d=configs.d)
+        maxima_f_ar = da_trim(maxima_ar, d=configs.depth)
+        threshd_final_ar = da_trim(threshd_filt_ar, d=configs.depth)
+        wshed_final_ar = da_trim(wshed_sizes_ar, d=configs.depth)
         # Computing and saving
         disk_cache(maxima_f_ar, pfm.maxima_final)
         disk_cache(threshd_final_ar, pfm.threshd_final)
