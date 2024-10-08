@@ -27,7 +27,7 @@ from microscopy_proc.utils.proj_org_utils import (
 )
 
 
-def make_mask_for_ref(
+def make_mask_pipeline(
     pfm: ProjFpModel,
     **kwargs,
 ):
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         make_proj_dirs(proj_dir)
 
         # Running mask pipeline
-        make_mask_for_ref(pfm)
+        make_mask_pipeline(pfm)
         print()
         # except Exception as e:
         #     print(f"Error: {e}")
