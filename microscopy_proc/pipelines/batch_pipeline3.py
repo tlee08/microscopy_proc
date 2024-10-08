@@ -1,17 +1,11 @@
 import logging
 import os
+import shutil
 
 from natsort import natsorted
 
-from microscopy_proc.pipelines.pipeline_funcs import (
-    cell_mapping_pipeline,
-    cells2csv_pipeline,
-    group_cells_pipeline,
-    transform_coords_pipeline,
-)
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    make_proj_dirs,
 )
 
 if __name__ == "__main__":
@@ -49,17 +43,27 @@ if __name__ == "__main__":
 
             # Getting file paths
             pfm = get_proj_fp_model(proj_dir)
-            # Making project folders
-            make_proj_dirs(proj_dir)
-            # print(dd.read_parquet(pfm.cells_raw_df))
-            # Converting maxima from raw space to refernce atlas space
-            transform_coords_pipeline(pfm)
-            # Getting ID mappings
-            cell_mapping_pipeline(pfm)
-            # Grouping cells
-            group_cells_pipeline(pfm)
-            # Saving cells to csv
-            cells2csv_pipeline(pfm)
+            # # Making project folders
+            # make_proj_dirs(proj_dir)
+            # # print(dd.read_parquet(pfm.cells_raw_df))
+            # # Converting maxima from raw space to refernce atlas space
+            # transform_coords_pipeline(pfm)
+            # # Getting ID mappings
+            # cell_mapping_pipeline(pfm)
+            # # Grouping cells
+            # group_cells_pipeline(pfm)
+            # # Saving cells to csv
+            # cells2csv_pipeline(pfm)
+
+            for i in os.listdir(os.path.join(proj_dir, "cellcount")):
+                if "sizes" in i:
+                    shutil.move(
+                        os.path.join(proj_dir, "cellcount", i),
+                        os.path.join(
+                            proj_dir, "cellcount", i.replace("sizes", "volumes")
+                        ),
+                    )
+
             print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
