@@ -220,8 +220,11 @@ def make_mask_pipeline(pfm: ProjFpModel):
         .astype(np.int32)
     )
     # Filtering out of bounds coords
+    s = ref_arr.shape
     outline_df = outline_df.query(
-        f"z >= 0 and z < {ref_arr.shape[0]} and y >= 0 and y < {ref_arr.shape[1]} and x >= 0 and x < {ref_arr.shape[2]}"
+        f"{Coords.Z.value} >= 0 & {Coords.Z.value} < {s[0]} & "
+        + f"{Coords.Y.value} >= 0 & {Coords.Y.value} < {s[1]} & "
+        + f"{Coords.X.value} >= 0 & {Coords.X.value} < {s[2]}"
     )
 
     # Make outline img (1 for in, 2 for out)

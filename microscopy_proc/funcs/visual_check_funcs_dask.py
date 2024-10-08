@@ -42,19 +42,21 @@ def cell_counts_plot(df):
 # @task
 def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
     arr = arr.copy()
-    shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
         coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering
+    s = arr.shape
     coords = (
         coords[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int16)
         .query(
-            f"z >= 0 and z < {shape[0]} and y >= 0 and y < {shape[1]} and x >= 0 and x < {shape[2]}"
+            f"{Coords.Z.value} >= 0 & {Coords.Z.value} < {s[0]} & "
+            + f"{Coords.Y.value} >= 0 & {Coords.Y.value} < {s[1]} & "
+            + f"{Coords.X.value} >= 0 & {Coords.X.value} < {s[2]}"
         )
     )
     # Dask to numpy
@@ -64,12 +66,14 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
         coords.groupby([Coords.Z.value, Coords.Y.value, Coords.X.value])
         .size()
         .reset_index(name="counts")
-    )
+    )  # type: ignore
     # Incrementing the coords inCoords.Y.valuee array
     if coords.shape[0] > 0:
-        arr[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += (
-            coords["counts"]
-        )
+        arr[
+            coords[Coords.Z.value],
+            coords[Coords.Y.value],
+            coords[Coords.X.value],
+        ] += coords["counts"]
     # Return arr
     return arr
 
@@ -78,19 +82,21 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
 def coords2sphere_workers(
     arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
 ):
-    shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
         coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering for pCoords.Y.valuets within the image + radius padding bounds
+    s = arr.shape
     coords = (
         coords[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int16)
         .query(
-            f"z > {-1*r} and z < {shape[0] + r} and y > {-1*r} and y < {shape[1]}+{r} and x > -1*{r} and x < {shape[2]}+{r}"
+            f"{Coords.Z.value} > {-1*r} & {Coords.Z.value} < {s[0] + r} & "
+            + f"{Coords.Y.value} > {-1*r} & {Coords.Y.value} < {s[1]}+{r} & "
+            + f"{Coords.X.value} > -1*{r} & {Coords.X.value} < {s[2]}+{r}"
         )
     )
     # Dask to pandas

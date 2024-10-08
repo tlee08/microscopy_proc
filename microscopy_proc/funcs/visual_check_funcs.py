@@ -12,19 +12,21 @@ from microscopy_proc.utils.io_utils import silentremove
 
 
 def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
-    shape = arr.shape  # noqa: F841
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering
+    s = arr.shape
     coords = (
         coords[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
         .round(0)
         .astype(np.int16)
         .query(
-            f"z >= 0 and z < {shape[0]} and y >= 0 and y < {shape[1]} and x >= 0 and x < {shape[2]}"
+            f"{Coords.Z.value} >= 0 & {Coords.Z.value} < {s[0]} & "
+            + f"{Coords.Y.value} >= 0 & {Coords.Y.value} < {s[1]} & "
+            + f"{Coords.X.value} >= 0 & {Coords.X.value} < {s[2]}"
         )
         .values
-    )
+    )  # type: ignore
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
         arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
