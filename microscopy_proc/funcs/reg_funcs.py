@@ -11,18 +11,18 @@ xdimage = ndimage
 
 
 def downsmpl_rough_arr(
-    arr: np.ndarray, z_scale: int, y_scale: int, x_scale: int
+    ar: np.ndarray, z_scale: int, y_scale: int, x_scale: int
 ) -> np.ndarray:
     """
     Expects scales to be ints
     """
-    res = arr[::z_scale, ::y_scale, ::x_scale]
+    res = ar[::z_scale, ::y_scale, ::x_scale]
     return res
 
 
 @clear_cuda_mem_dec
 def downsmpl_fine_arr(
-    arr: np.ndarray, z_scale: float, y_scale: float, x_scale: float
+    ar: np.ndarray, z_scale: float, y_scale: float, x_scale: float
 ) -> np.ndarray:
     """
     Expects scales to be floats
@@ -30,11 +30,11 @@ def downsmpl_fine_arr(
     # arr = xp.asarray(arr)
     # res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
     # return res.get()
-    res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
+    res = xdimage.zoom(ar, (z_scale, y_scale, x_scale))
     return res
 
 
-def reorient_arr(arr: np.ndarray, orient_ls: list):
+def reorient_arr(ar: np.ndarray, orient_ls: list):
     """
     Order of orient_ls is the axis order.
     Negative of an element in orient_ls means that axis is flipped
@@ -53,8 +53,8 @@ def reorient_arr(arr: np.ndarray, orient_ls: list):
         orient_ls[i] = ax_new
         # If the given axes dimension is negative, then flip the axis
         if ax < 0:
-            arr = np.flip(arr, ax_new)
+            ar = np.flip(ar, ax_new)
     # Reordering axes
-    arr = arr.transpose(orient_ls)
+    ar = ar.transpose(orient_ls)
     # Returning
-    return arr
+    return ar

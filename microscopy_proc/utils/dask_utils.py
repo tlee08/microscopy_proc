@@ -20,7 +20,7 @@ def block2coords(func, *args: list) -> dd.DataFrame:
 
     Process is:
         - Convert dask arrays to delayed object blocks
-        - Perform `func([arr1_blocki, arr2_blocki, ...], *args)` for each block
+        - Perform `func([ar1_blocki, ar2_blocki, ...], *args)` for each block
         - At each block, offset the coords by the block's location in the entire array.
     """
 

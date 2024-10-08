@@ -2,11 +2,11 @@ import cupy as cp
 from cupyx.scipy import ndimage as cp_ndimage
 
 # from prefect import task
-from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs
+from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs
 from microscopy_proc.utils.cp_utils import clear_cuda_mem_dec
 
 
-class GpuArrFuncs(CpuArrFuncs):
+class GpuCellcFuncs(CpuCellcFuncs):
     xp = cp
     xdimage = cp_ndimage
 

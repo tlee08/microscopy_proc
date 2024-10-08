@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import shutil
@@ -25,11 +24,11 @@ from microscopy_proc.constants import (
 )
 
 # from prefect import flow
-from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs as Cf
+from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs as Cf
 
 # from prefect import flow
 from microscopy_proc.funcs.elastix_funcs import registration, transformation_coords
-from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
+from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
 from microscopy_proc.funcs.map_funcs import (
     annot_dict2df,
     combine_nested_regions,
@@ -114,17 +113,17 @@ def ref_prepare_pipeline(pfm: ProjFpModel):
         (rfm.annot, pfm.annot),
     ]:
         # Reading
-        arr = tifffile.imread(fp_i)
+        ar = tifffile.imread(fp_i)
         # Reorienting
-        arr = reorient_arr(arr, configs.ref_orient_ls)
+        ar = reorient_arr(ar, configs.ref_orient_ls)
         # Slicing
-        arr = arr[
+        ar = ar[
             slice(*configs.ref_z_trim),
             slice(*configs.ref_y_trim),
             slice(*configs.ref_x_trim),
         ]
         # Saving
-        tifffile.imwrite(fp_o, arr)
+        tifffile.imwrite(fp_o, ar)
     # Copying region mapping json to project folder
     shutil.copyfile(rfm.map, pfm.map)
     # Copying transformation files
@@ -138,14 +137,14 @@ def img_rough_pipeline(pfm: ProjFpModel):
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     with cluster_proc_contxt(LocalCluster()):
         # Reading
-        arr_raw = da.from_zarr(pfm.raw)
+        raw_ar = da.from_zarr(pfm.raw)
         # Rough downsample
-        arr_downsmpl1 = downsmpl_rough_arr(
-            arr_raw, configs.z_rough, configs.y_rough, configs.x_rough
+        downsmpl1_ar = downsmpl_rough_arr(
+            raw_ar, configs.z_rough, configs.y_rough, configs.x_rough
         )
-        arr_downsmpl1 = arr_downsmpl1.compute()
+        downsmpl1_ar = downsmpl1_ar.compute()
         # Saving
-        tifffile.imwrite(pfm.downsmpl1, arr_downsmpl1)
+        tifffile.imwrite(pfm.downsmpl1, downsmpl1_ar)
 
 
 # @flow
@@ -153,13 +152,13 @@ def img_fine_pipeline(pfm: ProjFpModel):
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
-    arr_downsmpl1 = tifffile.imread(pfm.downsmpl1)
+    downsmpl1_ar = tifffile.imread(pfm.downsmpl1)
     # Fine downsample
-    arr_downsmpl2 = downsmpl_fine_arr(
-        arr_downsmpl1, configs.z_fine, configs.y_fine, configs.x_fine
+    downsmpl2_ar = downsmpl_fine_arr(
+        downsmpl1_ar, configs.z_fine, configs.y_fine, configs.x_fine
     )
     # Saving
-    tifffile.imwrite(pfm.downsmpl2, arr_downsmpl2)
+    tifffile.imwrite(pfm.downsmpl2, downsmpl2_ar)
 
 
 # @flow
@@ -167,13 +166,13 @@ def img_trim_pipeline(pfm: ProjFpModel):
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
-    arr_downsmpl2 = tifffile.imread(pfm.downsmpl2)
+    downsmpl2_ar = tifffile.imread(pfm.downsmpl2)
     # Trim
-    arr_trimmed = arr_downsmpl2[
+    trimmed_ar = downsmpl2_ar[
         slice(*configs.z_trim), slice(*configs.y_trim), slice(*configs.x_trim)
     ]
     # Saving
-    tifffile.imwrite(pfm.trimmed, arr_trimmed)
+    tifffile.imwrite(pfm.trimmed, trimmed_ar)
 
 
 # @flow
@@ -200,16 +199,16 @@ def make_mask_pipeline(pfm: ProjFpModel):
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading ref and trimmed imgs
-    arr_ref = tifffile.imread(pfm.ref)
-    arr_trimmed = tifffile.imread(pfm.trimmed)
+    ref_ar = tifffile.imread(pfm.ref)
+    trimmed_ar = tifffile.imread(pfm.trimmed)
     # Making mask
-    arr_blur = Gf.gauss_blur_filt(arr_trimmed, configs.mask_gaus_blur)
-    tifffile.imwrite(pfm.premask_blur, arr_blur)
-    arr_mask = Gf.manual_thresh(arr_blur, configs.mask_thresh)
-    tifffile.imwrite(pfm.mask, arr_mask)
+    blur_ar = Gf.gauss_blur_filt(trimmed_ar, configs.mask_gaus_blur)
+    tifffile.imwrite(pfm.premask_blur, blur_ar)
+    mask_ar = Gf.manual_thresh(blur_ar, configs.mask_thresh)
+    tifffile.imwrite(pfm.mask, mask_ar)
 
     # Make outline
-    outline_df = make_outline(arr_mask)
+    outline_df = make_outline(mask_ar)
     # Transformix on coords
     outline_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]] = (
         transformation_coords(
@@ -222,40 +221,40 @@ def make_mask_pipeline(pfm: ProjFpModel):
     )
     # Filtering out of bounds coords
     outline_df = outline_df.query(
-        f"z >= 0 and z < {arr_ref.shape[0]} and y >= 0 and y < {arr_ref.shape[1]} and x >= 0 and x < {arr_ref.shape[2]}"
+        f"z >= 0 and z < {ref_ar.shape[0]} and y >= 0 and y < {ref_ar.shape[1]} and x >= 0 and x < {ref_ar.shape[2]}"
     )
 
     # Make outline img (1 for in, 2 for out)
+    # TODO: convert to return np.array and save out-of-function
     coords2points(
         outline_df[outline_df.is_in == 1],
-        arr_ref.shape,
+        ref_ar.shape,
         pfm.outline,
     )
-    outline_in = tifffile.imread(pfm.outline)
+    in_ar = tifffile.imread(pfm.outline)
     coords2points(
         outline_df[outline_df.is_in == 0],
-        arr_ref.shape,
+        ref_ar.shape,
         pfm.outline,
     )
-    outline_out = tifffile.imread(pfm.outline)
-    tifffile.imwrite(pfm.outline, outline_in + outline_out * 2)
+    out_ar = tifffile.imread(pfm.outline)
+    tifffile.imwrite(pfm.outline, in_ar + out_ar * 2)
 
     # Fill in outline to recreate mask (not perfect)
-    arr_mask_reg = fill_outline(arr_ref, outline_df)
+    mask_reg_ar = fill_outline(outline_df, ref_ar.shape)
     # Opening (removes FP) and closing (fills FN)
-    arr_mask_reg = ndimage.binary_closing(arr_mask_reg, iterations=2).astype(np.uint8)
-    arr_mask_reg = ndimage.binary_opening(arr_mask_reg, iterations=2).astype(np.uint8)
+    mask_reg_ar = ndimage.binary_closing(mask_reg_ar, iterations=2).astype(np.uint8)
+    mask_reg_ar = ndimage.binary_opening(mask_reg_ar, iterations=2).astype(np.uint8)
     # Saving
-    tifffile.imwrite(pfm.mask_reg, arr_mask_reg)
+    tifffile.imwrite(pfm.mask_reg, mask_reg_ar)
 
     # Counting mask voxels in each region
-    arr_annot = tifffile.imread(pfm.annot)
-    with open(pfm.map, "r") as f:
-        annot_df = annot_dict2df(json.load(f))
+    annot_ar = tifffile.imread(pfm.annot)
+    annot_df = annot_dict2df(read_json(pfm.map))
     # Getting the annotation name for every cell (zyx coord)
     mask_df = pd.merge(
-        left=mask2region_counts(np.full(arr_annot.shape, 1), arr_annot),
-        right=mask2region_counts(arr_mask_reg, arr_annot),
+        left=mask2region_counts(np.full(annot_ar.shape, 1), annot_ar),
+        right=mask2region_counts(mask_reg_ar, annot_ar),
         how="left",
         left_index=True,
         right_index=True,
@@ -279,9 +278,9 @@ def img_overlap_pipeline(pfm: ProjFpModel):
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making overlap image
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
-        arr_raw = da.from_zarr(pfm.raw, chunks=configs.chunksize)
-        arr_overlap = da_overlap(arr_raw, d=configs.depth)
-        arr_overlap = disk_cache(arr_overlap, pfm.overlap)
+        raw_ar = da.from_zarr(pfm.raw, chunks=configs.chunksize)
+        overlap_ar = da_overlap(raw_ar, d=configs.depth)
+        overlap_ar = disk_cache(overlap_ar, pfm.overlap)
 
 
 # @flow
@@ -363,7 +362,7 @@ def cellc4_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # # Visually inspect sd offset
-        # t_p = arr_adaptv.sum() / (np.prod(arr_adaptv.shape) - (arr_adaptv == 0).sum())
+        # t_p =adaptv_ar.sum() / (np.prod(adaptv_ar.shape) - (adaptv_ar == 0).sum())
         # t_p = t_p.compute()
         # logging.debug(t_p)
         # Reading input images
@@ -527,10 +526,10 @@ def cellc11_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        raw_ar = tifffile.imread(pfm.raw)
-        overlap_ar = tifffile.imread(pfm.overlap)
-        maxima_ar = tifffile.imread(pfm.maxima_final)
-        wshed_filt_ar = tifffile.imread(pfm.wshed_final)
+        raw_ar = da.from_zarr(pfm.raw)
+        overlap_ar = da.from_zarr(pfm.overlap)
+        maxima_ar = da.from_zarr(pfm.maxima_final)
+        wshed_filt_ar = da.from_zarr(pfm.wshed_final)
         # Declaring processing instructions
         # (coords, size, and intensity) to a df
         # Getting maxima coords and corresponding watershed sizes in table
@@ -638,10 +637,10 @@ def cell_mapping_pipeline(pfm: ProjFpModel):
         cells_df[f"{Coords.X.value}_{TRFM}"] = coords_trfm[Coords.X.value].values
 
         # Reading annotation image
-        arr_annot = tifffile.imread(pfm.annot)
+        annot_ar = tifffile.imread(pfm.annot)
         # Getting the annotation ID for every cell (zyx coord)
         # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
-        s = arr_annot.shape
+        s = annot_ar.shape
         trfm_loc = (
             cells_df[
                 [
@@ -659,16 +658,15 @@ def cell_mapping_pipeline(pfm: ProjFpModel):
             )
         )
         # Getting the pixel values of each valid transformed coord (hence the specified index)
-        # By complex array indexing on arr_annot's (z, y, x) dimensions.
+        # By complex array indexing on ar_annot's (z, y, x) dimensions.
         # nulls are imputed with -1
         cells_df[AnnotColumns.ID.value] = pd.Series(
-            arr_annot[*trfm_loc.values.T].astype(np.uint32),
+            annot_ar[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
         ).fillna(-1)
 
         # Reading annotation mappings dataframe
-        with open(pfm.map, "r") as f:
-            annot_df = annot_dict2df(json.load(f))
+        annot_df = annot_dict2df(read_json(pfm.map))
         # Getting the annotation name for every cell (zyx coord)
         cells_df = df_map_ids(cells_df, annot_df)
         # Saving to disk
@@ -695,8 +693,7 @@ def group_cells_pipeline(pfm: ProjFpModel):
         cells_agg_df.columns = list(CELL_AGG_MAPPINGS.keys())
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
-        with open(pfm.map, "r") as f:
-            annot_df = annot_dict2df(json.load(f))
+        annot_df = annot_dict2df(read_json(pfm.map))
         # Combining (summing) the cells_groagg values for parent regions using the annot_df
         cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / size)

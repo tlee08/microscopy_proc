@@ -87,15 +87,15 @@ def make_npy_header(fp):
     }
 
     # Loading array
-    arr = np.load(fp, mmap_mode="r")
+    ar = np.load(fp, mmap_mode="r")
     # Making header contents
     header_content = f"""ObjectType = Image
 NDims = 3
 BinaryData = True
 BinaryDataByteOrderMSB = False
-DimSize = {arr.shape[2]} {arr.shape[1]} {arr.shape[0]}
+DimSize = {ar.shape[2]} {ar.shape[1]} {ar.shape[0]}
 HeaderSize = {get_npy_header_size(fp)}
-ElementType = {dtype_mapper[str(arr.dtype)]}
+ElementType = {dtype_mapper[str(ar.dtype)]}
 ElementDataFile = {os.path.split(fp)[1]}
 """
     # Saving header file

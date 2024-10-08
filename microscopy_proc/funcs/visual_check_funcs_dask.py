@@ -40,9 +40,9 @@ def cell_counts_plot(df):
 
 
 # @task
-def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
-    arr = arr.copy()
-    shape = arr.shape  # noqa: F841
+def coords2points_workers(ar: np.ndarray, coords: pd.DataFrame, block_info=None):
+    ar = ar.copy()
+    shape = ar.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
         coords = coords2block(coords, block_info)
@@ -67,18 +67,18 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
     )
     # Incrementing the coords inCoords.Y.valuee array
     if coords.shape[0] > 0:
-        arr[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += (
+        ar[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += (
             coords["counts"]
         )
     # Return arr
-    return arr
+    return ar
 
 
 # @task
 def coords2sphere_workers(
-    arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
+    ar: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
 ):
-    shape = arr.shape  # noqa: F841
+    shape = ar.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
         coords = coords2block(coords, block_info)
@@ -106,9 +106,9 @@ def coords2sphere_workers(
             coords_i[Coords.Z.value] += z
             coords_i[Coords.Y.value] += y
             coords_i[Coords.X.value] += x
-            arr = coords2points_workers(arr, coords_i)
+            ar = coords2points_workers(ar, coords_i)
     # Return arr
-    return arr
+    return ar
 
 
 #####################################################################
@@ -117,31 +117,31 @@ def coords2sphere_workers(
 
 
 # @flow
-def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], arr_out_fp: str):
+def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], out_fp: str):
     """
     Converts list of coordinates to spatial array single points.
 
     Params:
         coords: A pd.DataFrame of points, with the columns, `x`, `y`, and `z`.
         shape: The dimensions of the output array. Assumes that shape is in format `(z, y, x)` (regular for npy and tif file).
-        arr_out_fp: The output filename.
+        out_fp: The output filename.
 
     Returns:
         The output image array
     """
     # Initialising spatial array
-    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
+    ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
     # arr = arr.map_blocks(
     #     lambda i, block_info=None: coords2points_workers(i, coords, block_info)
     # )
-    arr = da.map_blocks(coords2points_workers, arr, coords)
+    ar = da.map_blocks(coords2points_workers, ar, coords)
     # Computing and saving
-    arr.to_zarr(arr_out_fp, overwrite=True)
+    ar.to_zarr(out_fp, overwrite=True)
 
 
 # @flow
-def coords2heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
+def coords2heatmaps(coords: pd.DataFrame, r, shape, out_fp):
     """
     Converts list of coordinates to spatial array as voxels.
     Overlapping areas accumulate in intensity.
@@ -150,43 +150,43 @@ def coords2heatmaps(coords: pd.DataFrame, r, shape, arr_out_fp):
         coords: A pd.DataFrame of points, with the columns, `x`, `y`, and `z`.
         r: radius of the voxels.
         shape: The dimensions of the output array. Assumes that shape is in format `(z, y, x)` (regular for npy and tif file).
-        arr_out_fp: The output filename.
+        out_fp: The output filename.
 
     Returns:
         The output image array
     """
     # Initialising spatial array
-    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
+    ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
-    arr = arr.map_blocks(
+    ar = ar.map_blocks(
         lambda i, block_info=None: coords2sphere_workers(i, coords, r, block_info)
     )
     # Computing and saving
-    arr.to_zarr(arr_out_fp, overwrite=True)
+    ar.to_zarr(out_fp, overwrite=True)
 
 
 # @flow
-def coords2regions(coords, shape, arr_out_fp):
+def coords2regions(coords, shape, out_fp):
     """
     Converts list of coordinates to spatial array.
 
     Params:
         coords: A pd.DataFrame of points, with the columns, `x`, `y`, `z`, and `id`.
         shape: The dimensions of the output array. Assumes that shape is in format `(z, y, x)` (regular for npy and tif file).
-        arr_out_fp: The output filename.
+        out_fp: The output filename.
 
     Returns:
         The output image array
     """
     # Initialising spatial array
-    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
+    ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
 
     # Adding coords to image with np.apply_along_axis
     def f(coord):
         # Plotting coord to image. Including only coords within the image's bounds
         if np.all((coord >= 0) & (coord < shape)):
             z, y, x, _id = coord
-            arr[z, y, x] = _id
+            ar[z, y, x] = _id
 
     # Formatting coord values as (z, y, x) and rounding to integers
     coords = (

@@ -152,7 +152,6 @@ def transformix_file2coords(output_points_fp):
         df = pd.read_csv(output_points_fp, header=None, sep=";")
     except pd.errors.EmptyDataError:
         # If there are no points, then return empty df
-        # print(open(output_points_fp).read())
         return pd.DataFrame(columns=[Coords.Z.value, Coords.Y.value, Coords.X.value])
     df.columns = df.loc[0].str.strip().str.split(r"\s").str[0]
     # Try either "OutputIndexFixed" or "OutputPoint"

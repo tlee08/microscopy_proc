@@ -16,16 +16,16 @@ def view_imgs(fp_ls, vmax_ls, slicer):
         # OPTIONAL colourmaps
         cmap_ls = ["gray", "green", "yellow"]
         # Reading arrays
-        arr_ls = []
+        ar_ls = []
         for i in fp_ls:
             logging.info(i)
             if ".zarr" in i:
-                arr_ls.append(da.from_zarr(i)[*slicer].compute())
+                ar_ls.append(da.from_zarr(i)[*slicer].compute())
             elif ".tif" in i:
-                arr_ls.append(tifffile.imread(i)[*slicer])
+                ar_ls.append(tifffile.imread(i)[*slicer])
         # Napari viewer adding images
         viewer = napari.Viewer()
-        for i, arr in enumerate(arr_ls):
+        for i, arr in enumerate(ar_ls):
             vmax = vmax_ls[i]
             cmap = cmap_ls[i] if i < len(cmap_ls) else "gray"
             viewer.add_image(
