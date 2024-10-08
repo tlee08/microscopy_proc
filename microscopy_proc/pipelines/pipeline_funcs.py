@@ -280,7 +280,7 @@ def img_overlap_pipeline(pfm: ProjFpModel):
     # Making overlap image
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
         arr_raw = da.from_zarr(pfm.raw, chunks=configs.chunksize)
-        arr_overlap = da_overlap(arr_raw, d=configs.de)
+        arr_overlap = da_overlap(arr_raw, d=configs.depth)
         arr_overlap = disk_cache(arr_overlap, pfm.overlap)
 
 
