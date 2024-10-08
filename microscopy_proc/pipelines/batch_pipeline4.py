@@ -41,46 +41,46 @@ if __name__ == "__main__":
 
         # Getting file paths
         pfm = get_proj_fp_model(proj_dir)
-        try:
-            # Making project folders
-            make_proj_dirs(proj_dir)
+        # try:
+        # Making project folders
+        make_proj_dirs(proj_dir)
 
-            init_configs(pfm, depth=DEPTH)
+        init_configs(pfm, depth=DEPTH)
 
-            # Converting maxima from raw space to refernce atlas space
-            # transform_coords(pfm)
-            # Getting ID mappings
-            # get_cell_mappings(pfm)
-            # # Grouping cells
-            # grouping_cells(pfm)
-            # # Saving cells to csv
-            # cells2csv(pfm)
+        # Converting maxima from raw space to refernce atlas space
+        # transform_coords(pfm)
+        # Getting ID mappings
+        # get_cell_mappings(pfm)
+        # # Grouping cells
+        # grouping_cells(pfm)
+        # # Saving cells to csv
+        # cells2csv(pfm)
 
-            # try:
-            #     shutil.rmtree(f"{pfm.cells_raw_df}temp.parquet")
-            #     print("removed temp")
-            # except:
-            #     print("no temp")
+        # try:
+        #     shutil.rmtree(f"{pfm.cells_raw_df}temp.parquet")
+        #     print("removed temp")
+        # except:
+        #     print("no temp")
 
-            # df_fp = pfm.cells_df
+        # df_fp = pfm.cells_df
 
-            # pfm.cells_agg_df
-            # x = dd.read_parquet(df_fp)
-            # x = x.rename(columns={"z": "count"})
-            # # x["count"] = 1
-            # try:
-            #     x = x.drop(columns=["smb-share:server"])
-            # except:
-            #     print("no smb-share:server")
-            # # print(x)
-            # x = x.compute()
-            # # x = dd.from_pandas(x, npartitions=1)
-            # x.to_parquet(df_fp, overwrite=True)
+        # pfm.cells_agg_df
+        # x = dd.read_parquet(df_fp)
+        # x = x.rename(columns={"z": "count"})
+        # # x["count"] = 1
+        # try:
+        #     x = x.drop(columns=["smb-share:server"])
+        # except:
+        #     print("no smb-share:server")
+        # # print(x)
+        # x = x.compute()
+        # # x = dd.from_pandas(x, npartitions=1)
+        # x.to_parquet(df_fp, overwrite=True)
 
-            # cells2csv(pfm)
+        # cells2csv(pfm)
 
-            print()
-        except Exception as e:
-            logging.info(f"Error in {i}: {e}")
-            print(f"Error in {i}: {e}")
-        break
+        print()
+        # except Exception as e:
+        logging.info(f"Error in {i}: {e}")
+        print(f"Error in {i}: {e}")
+        # break
