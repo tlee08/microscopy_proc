@@ -13,6 +13,29 @@ DEPTH = 50
 ROWS_PARTITION = 10000000
 
 
+class RefFolders(Enum):
+    REFERENCE = "reference"
+    ANNOTATION = "annotation"
+    MAPPING = "region_mapping"
+    ELASTIX = "elastix_params"
+
+
+class RefVersions(Enum):
+    AVERAGE_TEMPLATE_25 = "average_template_25"
+    ARA_NISSL_25 = "ara_nissl_25"
+
+
+class AnnotVersions(Enum):
+    CCF_2017_25 = "ccf_2017_25"
+    CCF_2016_25 = "ccf_2016_25"
+    CCF_2015_25 = "ccf_2015_25"
+
+
+class MapVersions(Enum):
+    ABA_ANNOTATIONS = "ABA_annotations"
+    CM_ANNOTATIONS = "CM_annotations"
+
+
 class Coords(Enum):
     X = "x"
     Y = "y"
@@ -95,13 +118,6 @@ class ProjFolders(Enum):
     CELLCOUNT = "cellcount"
     ANALYSIS = "analysis"
     VISUALISATION = "visualisation"
-
-
-class RefFolders(Enum):
-    REFERENCE = "reference"
-    ANNOTATION = "annotation"
-    MAPPING = "region_mapping"
-    ELASTIX = "elastix_params"
 
 
 CONFIGS_DIR = ".microscopy_proc"

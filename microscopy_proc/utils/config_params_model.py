@@ -1,6 +1,13 @@
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from microscopy_proc.constants import DEPTH, PROC_CHUNKS
+from microscopy_proc.constants import (
+    DEPTH,
+    PROC_CHUNKS,
+    RESOURCES_DIR,
+    AnnotVersions,
+    MapVersions,
+    RefVersions,
+)
 from microscopy_proc.utils.io_utils import read_json, write_json
 
 
@@ -9,8 +16,13 @@ class ConfigParamsModel(BaseModel):
     Pydantic model for registration parameters.
     """
 
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+    model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
 
+    # Reference
+    atlas_dir: str = RESOURCES_DIR
+    ref_v: str = RefVersions.AVERAGE_TEMPLATE_25.value
+    annot_v: str = AnnotVersions.CCF_2016_25.value
+    map_v: str = MapVersions.ABA_ANNOTATIONS.value
     # Raw
     chunksize: tuple[int, int, int] = PROC_CHUNKS
     # Registration
