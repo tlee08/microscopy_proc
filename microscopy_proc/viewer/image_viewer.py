@@ -25,12 +25,12 @@ def view_imgs(fp_ls, vmax_ls, slicer):
                 ar_ls.append(tifffile.imread(i)[*slicer])
         # Napari viewer adding images
         viewer = napari.Viewer()
-        for i, arr in enumerate(ar_ls):
+        for i, ar in enumerate(ar_ls):
             vmax = vmax_ls[i]
             cmap = cmap_ls[i] if i < len(cmap_ls) else "gray"
             viewer.add_image(
-                arr,
-                # name=arr.__name__,
+                ar,
+                # name=ar.__name__,
                 contrast_limits=(0, vmax),
                 blending="additive",
                 colormap=cmap,

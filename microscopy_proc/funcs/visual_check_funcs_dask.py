@@ -20,9 +20,9 @@ def make_scatter(df):
 
 
 # @task
-def make_img(arr, **kwargs):
+def make_img(ar, **kwargs):
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(arr, cmap="grey", **kwargs)
+    ax.imshow(ar, cmap="grey", **kwargs)
     ax.axis("off")
 
 
@@ -132,7 +132,7 @@ def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], out_fp: str):
     # Initialising spatial array
     ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
-    # arr = arr.map_blocks(
+    # ar = ar.map_blocks(
     #     lambda i, block_info=None: coords2points_workers(i, coords, block_info)
     # )
     ar = da.map_blocks(coords2points_workers, ar, coords)

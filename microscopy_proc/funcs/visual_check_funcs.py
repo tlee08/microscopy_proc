@@ -11,8 +11,8 @@ from microscopy_proc.utils.io_utils import silentremove
 #####################################################################
 
 
-def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
-    shape = arr.shape  # noqa: F841
+def coords2points_workers(ar: np.ndarray, coords: pd.DataFrame):
+    shape = ar.shape  # noqa: F841
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering
@@ -27,9 +27,9 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
     )
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
-        arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
+        ar[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
     # Return arr
-    return arr
+    return ar
 
 
 def coords2points_start(shape: tuple, out_fp: str) -> da.Array:
@@ -43,9 +43,9 @@ def coords2points_start(shape: tuple, out_fp: str) -> da.Array:
     return ar
 
 
-def coords2points_end(arr, out_fp):
+def coords2points_end(ar, out_fp):
     # # Saving the subsampled array
-    tifffile.imwrite(out_fp, arr)
+    tifffile.imwrite(out_fp, ar)
     # Removing temporary memmap
     silentremove("temp.dat")
 

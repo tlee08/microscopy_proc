@@ -10,7 +10,7 @@ xp = cp
 xdimage = ndimage
 
 
-def downsmpl_rough_arr(
+def downsmpl_rough(
     ar: np.ndarray, z_scale: int, y_scale: int, x_scale: int
 ) -> np.ndarray:
     """
@@ -21,20 +21,17 @@ def downsmpl_rough_arr(
 
 
 @clear_cuda_mem_dec
-def downsmpl_fine_arr(
+def downsmpl_fine(
     ar: np.ndarray, z_scale: float, y_scale: float, x_scale: float
 ) -> np.ndarray:
     """
     Expects scales to be floats
     """
-    # arr = xp.asarray(arr)
-    # res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
-    # return res.get()
     res = xdimage.zoom(ar, (z_scale, y_scale, x_scale))
     return res
 
 
-def reorient_arr(ar: np.ndarray, orient_ls: list):
+def reorient(ar: np.ndarray, orient_ls: list):
     """
     Order of orient_ls is the axis order.
     Negative of an element in orient_ls means that axis is flipped

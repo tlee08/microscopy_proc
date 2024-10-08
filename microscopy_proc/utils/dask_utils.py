@@ -13,8 +13,8 @@ from microscopy_proc.constants import DEPTH, Coords
 
 def block2coords(func, *args: list) -> dd.DataFrame:
     """
-    Applies the `func` to `arr`.
-    Expects `func` to convert `arr` to coords df (of sorts).
+    Applies the `func` to `ar`.
+    Expects `func` to convert `ar` to coords df (of sorts).
 
     Importantly, this offsets the coords in each block.
 
@@ -38,8 +38,10 @@ def block2coords(func, *args: list) -> dd.DataFrame:
         )
         return df
 
-    # Getting the first block in the args list
+    # Getting the first da.Array in the args list
+    # to store the offsets of each block in ((z/y/x)_offsets)
     # NOTE: assumes all arrays have the same chunks
+    # TODO: assert that all arrays have the same chunks
     z_offsets, y_offsets, x_offsets = ([0], [0], [0])
     for arg in args:
         if isinstance(arg, da.Array):
@@ -82,21 +84,21 @@ def coords2block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
     return df
 
 
-def disk_cache(arr: da.Array, fp):
-    arr.to_zarr(fp, overwrite=True)
+def disk_cache(ar: da.Array, fp):
+    ar.to_zarr(fp, overwrite=True)
     return da.from_zarr(fp)
 
 
-def da_overlap(arr, d=DEPTH):
-    return da.overlap.overlap(arr, depth=d, boundary="reflect").rechunk(
-        [i + 2 * d for i in arr.chunksize]
+def da_overlap(ar, d=DEPTH):
+    return da.overlap.overlap(ar, depth=d, boundary="reflect").rechunk(
+        [i + 2 * d for i in ar.chunksize]
     )
 
 
-def da_trim(arr, d=DEPTH):
-    return arr.map_blocks(
+def da_trim(ar, d=DEPTH):
+    return ar.map_blocks(
         lambda x: x[d:-d, d:-d, d:-d],
-        chunks=[tuple(np.array(i) - d * 2) for i in arr.chunks],
+        chunks=[tuple(np.array(i) - d * 2) for i in ar.chunks],
     )
 
 
@@ -149,9 +151,9 @@ def cluster_proc_contxt(cluster):
         cluster.close()
 
 
-def const_iter(arr, n):
+def const_iter(x, n):
     """
-    Iterates over the array `arr` `n` times.
+    Iterates the object, `x`, `n` times.
     """
     for _ in range(n):
-        yield arr
+        yield x

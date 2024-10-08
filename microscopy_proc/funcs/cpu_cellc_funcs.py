@@ -170,7 +170,7 @@ class CpuCellcFuncs:
         ids, counts = cls.xp.unique(ar[ar > 0], return_counts=True)
         # NOTE: assumes ids are incrementing from 1
         counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
-        logging.debug("Converting arr intensity to sizes")
+        logging.debug("Converting ar intensity to sizes")
         res = counts[ar]
         logging.debug("Returning")
         return res.astype(cls.xp.uint16)
@@ -191,10 +191,10 @@ class CpuCellcFuncs:
         """
         Visualise statistics.
 
-        NOTE: expects arr to be a 3D tensor of a property
+        NOTE: expects ar to be a 3D tensor of a property
         (e.g. size).
         """
-        logging.debug("Converting arr to vector of the ids")
+        logging.debug("Converting ar to vector of the ids")
         ids = ar[ar > 0]
         logging.debug("Making histogram")
         fig, ax = plt.subplots()
@@ -209,7 +209,7 @@ class CpuCellcFuncs:
     # @task
     def filt_by_size(cls, ar: np.ndarray, smin=None, smax=None):
         """
-        Assumes `arr` is array of objects labelled with their size.
+        Assumes `ar` is array of objects labelled with their size.
         """
         ar = cls.xp.asarray(ar)
         logging.debug("Getting filter of small and large object to filter out")
@@ -240,7 +240,7 @@ class CpuCellcFuncs:
         max_ar = cls.xdimage.maximum_filter(ar, sigma)
         logging.debug("Add 1 (so we separate the max pixel from the max_filter)")
         ar = ar + 1
-        logging.debug("Getting local maxima (where ar - max_arr == 1)")
+        logging.debug("Getting local maxima (where ar - max_ar == 1)")
         res = ar - max_ar == 1
         # If a mask is given, then keep only the maxima within the mask
         if mask_ar is not None:
@@ -333,7 +333,7 @@ class CpuCellcFuncs:
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).
         """
-        # Asserting arr sizes match between raw_ar, overlap_ar, and depth
+        # Asserting ar sizes match between raw_ar, overlap_ar, and depth
         assert raw_ar.shape == tuple(i - 2 * depth for i in overlap_ar.shape)
         logging.debug("Trimming maxima labels array to raw array dimensions using `d`")
         slicer = slice(depth, -depth) if depth > 0 else slice(None)
@@ -388,8 +388,8 @@ class CpuCellcFuncs:
         return df
 
 
-def cp2np(arr) -> np.ndarray:
+def cp2np(ar) -> np.ndarray:
     try:
-        return arr.get()
+        return ar.get()
     except Exception:
-        return arr
+        return ar

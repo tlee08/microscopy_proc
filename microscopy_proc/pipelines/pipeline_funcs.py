@@ -42,9 +42,9 @@ from microscopy_proc.funcs.mask_funcs import (
 
 # from prefect import flow
 from microscopy_proc.funcs.reg_funcs import (
-    downsmpl_fine_arr,
-    downsmpl_rough_arr,
-    reorient_arr,
+    downsmpl_fine,
+    downsmpl_rough,
+    reorient,
 )
 
 # from prefect import flow
@@ -117,7 +117,7 @@ def ref_prepare_pipeline(pfm: ProjFpModel):
         # Reading
         ar = tifffile.imread(fp_i)
         # Reorienting
-        ar = reorient_arr(ar, configs.ref_orient_ls)
+        ar = reorient(ar, configs.ref_orient_ls)
         # Slicing
         ar = ar[
             slice(*configs.ref_z_trim),
@@ -141,7 +141,7 @@ def img_rough_pipeline(pfm: ProjFpModel):
         # Reading
         raw_ar = da.from_zarr(pfm.raw)
         # Rough downsample
-        downsmpl1_ar = downsmpl_rough_arr(
+        downsmpl1_ar = downsmpl_rough(
             raw_ar, configs.z_rough, configs.y_rough, configs.x_rough
         )
         downsmpl1_ar = downsmpl1_ar.compute()
@@ -156,7 +156,7 @@ def img_fine_pipeline(pfm: ProjFpModel):
     # Reading
     downsmpl1_ar = tifffile.imread(pfm.downsmpl1)
     # Fine downsample
-    downsmpl2_ar = downsmpl_fine_arr(
+    downsmpl2_ar = downsmpl_fine(
         downsmpl1_ar, configs.z_fine, configs.y_fine, configs.x_fine
     )
     # Saving
@@ -641,7 +641,7 @@ def cell_mapping_pipeline(pfm: ProjFpModel):
         # Reading annotation image
         annot_ar = tifffile.imread(pfm.annot)
         # Getting the annotation ID for every cell (zyx coord)
-        # Getting transformed coords (that are within tbe arr bounds, and their corresponding idx)
+        # Getting transformed coords (that are within tbe bounds_ar, and their corresponding idx)
         s = annot_ar.shape
         trfm_loc = (
             cells_df[
