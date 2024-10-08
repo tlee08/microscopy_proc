@@ -420,7 +420,7 @@ def cellc7_pipeline(pfm: ProjFpModel):
     """
     Cell counting pipeline - Step 7
 
-    Get maxima of image masked by labels
+    Get maxima of image masked by labels.
     """
     # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
@@ -444,7 +444,7 @@ def cellc8_pipeline(pfm: ProjFpModel):
     """
     Cell counting pipeline - Step 8
 
-    Watershed segmentation sizes
+    Watershed segmentation sizes.
     """
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
@@ -468,7 +468,7 @@ def cellc9_pipeline(pfm: ProjFpModel):
     """
     Cell counting pipeline - Step 9
 
-    Filter out large watershed objects (again likely outlines, not cells)
+    Filter out large watershed objects (again likely outlines, not cells).
     """
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
@@ -555,12 +555,12 @@ def cellc_coords_only_pipeline(pfm: ProjFpModel):
     # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
-        arr_maxima_f = da.from_zarr(pfm.maxima_final)
+        maxima_f_ar = da.from_zarr(pfm.maxima_final)
         # Declaring processing instructions
         # Storing coords of each maxima in df
         coords_df = block2coords(
             Gf.get_coords,
-            arr_maxima_f,
+            maxima_f_ar,
         )
         # Computing and saving as parquet
         coords_df.to_parquet(pfm.maxima_df, overwrite=True)
@@ -717,3 +717,33 @@ def cells2csv_pipeline(pfm: ProjFpModel):
     cells_agg_df = sanitise_smb_df(cells_agg_df)
     # Saving to csv
     cells_agg_df.to_csv(pfm.cells_agg_csv)
+
+
+def all_pipeline(pfm: ProjFpModel):
+    """
+    Running all pipelines in order.
+    """
+    # Running all pipelines in order
+    tiff2zarr_pipeline(pfm.in_fp, pfm)
+    ref_prepare_pipeline(pfm)
+    img_rough_pipeline(pfm)
+    img_fine_pipeline(pfm)
+    img_trim_pipeline(pfm)
+    registration_pipeline(pfm)
+    make_mask_pipeline(pfm)
+    img_overlap_pipeline(pfm)
+    cellc1_pipeline(pfm)
+    cellc2_pipeline(pfm)
+    cellc3_pipeline(pfm)
+    cellc4_pipeline(pfm)
+    cellc5_pipeline(pfm)
+    cellc6_pipeline(pfm)
+    cellc7_pipeline(pfm)
+    cellc8_pipeline(pfm)
+    cellc9_pipeline(pfm)
+    cellc10_pipeline(pfm)
+    cellc11_pipeline(pfm)
+    transform_coords_pipeline(pfm)
+    cell_mapping_pipeline(pfm)
+    group_cells_pipeline(pfm)
+    cells2csv_pipeline(pfm)

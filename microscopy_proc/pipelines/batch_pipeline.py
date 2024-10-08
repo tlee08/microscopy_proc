@@ -5,7 +5,17 @@ from natsort import natsorted
 
 from microscopy_proc.pipelines.pipeline_funcs import (
     cell_mapping_pipeline,
-    cellc_pipeline,
+    cellc1_pipeline,
+    cellc2_pipeline,
+    cellc3_pipeline,
+    cellc4_pipeline,
+    cellc5_pipeline,
+    cellc6_pipeline,
+    cellc7_pipeline,
+    cellc8_pipeline,
+    cellc9_pipeline,
+    cellc10_pipeline,
+    cellc11_pipeline,
     cells2csv_pipeline,
     group_cells_pipeline,
     img_fine_pipeline,
@@ -119,7 +129,17 @@ if __name__ == "__main__":
                 # Making overlapped chunks images for processing
                 img_overlap_pipeline(pfm)
                 # Cell counting
-                cellc_pipeline(pfm)
+                cellc1_pipeline(pfm)
+                cellc2_pipeline(pfm)
+                cellc3_pipeline(pfm)
+                cellc4_pipeline(pfm)
+                cellc5_pipeline(pfm)
+                cellc6_pipeline(pfm)
+                cellc7_pipeline(pfm)
+                cellc8_pipeline(pfm)
+                cellc9_pipeline(pfm)
+                cellc10_pipeline(pfm)
+                cellc11_pipeline(pfm)
 
             # Converting maxima from raw space to refernce atlas space
             transform_coords_pipeline(pfm)
