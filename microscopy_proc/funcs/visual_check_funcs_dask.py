@@ -20,9 +20,9 @@ def make_scatter(df):
 
 
 # @task
-def make_img(ar, **kwargs):
+def make_img(arr, **kwargs):
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(ar, cmap="grey", **kwargs)
+    ax.imshow(arr, cmap="grey", **kwargs)
     ax.axis("off")
 
 
@@ -40,9 +40,9 @@ def cell_counts_plot(df):
 
 
 # @task
-def coords2points_workers(ar: np.ndarray, coords: pd.DataFrame, block_info=None):
-    ar = ar.copy()
-    shape = ar.shape  # noqa: F841
+def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
+    arr = arr.copy()
+    shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
         coords = coords2block(coords, block_info)
@@ -67,18 +67,18 @@ def coords2points_workers(ar: np.ndarray, coords: pd.DataFrame, block_info=None)
     )
     # Incrementing the coords inCoords.Y.valuee array
     if coords.shape[0] > 0:
-        ar[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += (
+        arr[coords[Coords.Z.value], coords[Coords.Y.value], coords[Coords.X.value]] += (
             coords["counts"]
         )
     # Return arr
-    return ar
+    return arr
 
 
 # @task
 def coords2sphere_workers(
-    ar: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
+    arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
 ):
-    shape = ar.shape  # noqa: F841
+    shape = arr.shape  # noqa: F841
     # Offsetting coords with chunk space
     if block_info is not None:
         coords = coords2block(coords, block_info)
@@ -106,9 +106,9 @@ def coords2sphere_workers(
             coords_i[Coords.Z.value] += z
             coords_i[Coords.Y.value] += y
             coords_i[Coords.X.value] += x
-            ar = coords2points_workers(ar, coords_i)
+            arr = coords2points_workers(arr, coords_i)
     # Return arr
-    return ar
+    return arr
 
 
 #####################################################################
@@ -130,14 +130,14 @@ def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], out_fp: str):
         The output image array
     """
     # Initialising spatial array
-    ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
+    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
-    # ar = ar.map_blocks(
+    # arr = arr.map_blocks(
     #     lambda i, block_info=None: coords2points_workers(i, coords, block_info)
     # )
-    ar = da.map_blocks(coords2points_workers, ar, coords)
+    arr = da.map_blocks(coords2points_workers, arr, coords)
     # Computing and saving
-    ar.to_zarr(out_fp, overwrite=True)
+    arr.to_zarr(out_fp, overwrite=True)
 
 
 # @flow
@@ -156,13 +156,13 @@ def coords2heatmaps(coords: pd.DataFrame, r, shape, out_fp):
         The output image array
     """
     # Initialising spatial array
-    ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
+    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
-    ar = ar.map_blocks(
+    arr = arr.map_blocks(
         lambda i, block_info=None: coords2sphere_workers(i, coords, r, block_info)
     )
     # Computing and saving
-    ar.to_zarr(out_fp, overwrite=True)
+    arr.to_zarr(out_fp, overwrite=True)
 
 
 # @flow
@@ -179,14 +179,14 @@ def coords2regions(coords, shape, out_fp):
         The output image array
     """
     # Initialising spatial array
-    ar = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
+    arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
 
     # Adding coords to image with np.apply_along_axis
     def f(coord):
         # Plotting coord to image. Including only coords within the image's bounds
         if np.all((coord >= 0) & (coord < shape)):
             z, y, x, _id = coord
-            ar[z, y, x] = _id
+            arr[z, y, x] = _id
 
     # Formatting coord values as (z, y, x) and rounding to integers
     coords = (
@@ -196,3 +196,5 @@ def coords2regions(coords, shape, out_fp):
     )
     if coords.shape[0] > 0:
         np.apply_along_axis(f, 1, coords)
+    # Computing and saving
+    arr.to_zarr(out_fp, overwrite=True)

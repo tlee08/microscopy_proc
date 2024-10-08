@@ -18,18 +18,18 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def tophat_filt(cls, ar: np.ndarray, sigma: int = 10) -> np.ndarray:
+    def tophat_filt(cls, arr: np.ndarray, sigma: int = 10) -> np.ndarray:
         """
         Top hat is calculated as:
 
         ```
-        res = ar - max_filter(min_filter(ar, sigma), sigma)
+        res = arr - max_filter(min_filter(arr, sigma), sigma)
         ```
         """
-        ar = cls.xp.asarray(ar).astype(cls.xp.float32)
+        arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Perform white top-hat filter")
-        logging.debug(f"TYPE: {ar.dtype} {type(ar)}")
-        res = cls.xdimage.white_tophat(ar, sigma)
+        logging.debug(f"TYPE: {arr.dtype} {type(arr)}")
+        res = cls.xdimage.white_tophat(arr, sigma)
         logging.debug("ReLu")
         res = cls.xp.maximum(res, 0)
         # Returning
@@ -37,12 +37,12 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def dog_filt(cls, ar: np.ndarray, sigma1=1, sigma2=2) -> np.ndarray:
-        ar = cls.xp.asarray(ar).astype(cls.xp.float32)
+    def dog_filt(cls, arr: np.ndarray, sigma1=1, sigma2=2) -> np.ndarray:
+        arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Making gaussian blur 1")
-        gaus1 = cls.xdimage.gaussian_filter(ar, sigma=sigma1)
+        gaus1 = cls.xdimage.gaussian_filter(arr, sigma=sigma1)
         logging.debug("Making gaussian blur 2")
-        gaus2 = cls.xdimage.gaussian_filter(ar, sigma=sigma2)
+        gaus2 = cls.xdimage.gaussian_filter(arr, sigma=sigma2)
         logging.debug("Subtracting gaussian blurs")
         res = gaus1 - gaus2
         logging.debug("ReLu")
@@ -52,21 +52,21 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def gauss_blur_filt(cls, ar: np.ndarray, sigma=10) -> np.ndarray:
-        ar = cls.xp.asarray(ar).astype(cls.xp.float32)
+    def gauss_blur_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
+        arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Calculate Gaussian blur")
-        res = cls.xdimage.gaussian_filter(ar, sigma=sigma)
+        res = cls.xdimage.gaussian_filter(arr, sigma=sigma)
         # Returning
         return res.astype(cls.xp.uint16)
 
     @classmethod
     # @task
-    def gauss_subt_filt(cls, ar: np.ndarray, sigma=10) -> np.ndarray:
-        ar = cls.xp.asarray(ar).astype(cls.xp.float32)
+    def gauss_subt_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
+        arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Calculate local Gaussian blur")
-        gaus = cls.xdimage.gaussian_filter(ar, sigma=sigma)
+        gaus = cls.xdimage.gaussian_filter(arr, sigma=sigma)
         logging.debug("Apply the adaptive filter")
-        res = ar - gaus
+        res = arr - gaus
         logging.debug("ReLu")
         res = cls.xp.maximum(res, 0)
         # Returning
@@ -74,13 +74,13 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def intensity_cutoff(cls, ar: np.ndarray, min_=None, max_=None) -> np.ndarray:
+    def intensity_cutoff(cls, arr: np.ndarray, min_=None, max_=None) -> np.ndarray:
         """
         Performing cutoffs on a 3D tensor.
         """
-        ar = cls.xp.asarray(ar)
+        arr = cls.xp.asarray(arr)
         logging.debug("Making cutoffs")
-        res = ar
+        res = arr
         if min_ is not None:
             res = cls.xp.maximum(res, min_)
         if max_ is not None:
@@ -90,13 +90,13 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def otsu_thresh(cls, ar: np.ndarray) -> np.ndarray:
+    def otsu_thresh(cls, arr: np.ndarray) -> np.ndarray:
         """
         Perform Otsu's thresholding on a 3D tensor.
         """
-        ar = cls.xp.asarray(ar)
+        arr = cls.xp.asarray(arr)
         logging.debug("Calculate histogram")
-        hist, bin_edges = cls.xp.histogram(ar, bins=256)
+        hist, bin_edges = cls.xp.histogram(arr, bins=256)
         logging.debug("Normalize histogram")
         prob_hist = hist / hist.sum()
         logging.debug("Compute cumulative sum and cumulative mean")
@@ -115,87 +115,87 @@ class CpuCellcFuncs:
         logging.debug("Find the threshold that maximizes the between class variance")
         optimal_threshold = cls.xp.argmax(between_class_variance)
         logging.debug("Apply threshold")
-        res = ar > optimal_threshold
+        res = arr > optimal_threshold
         # Returning
         return res.astype(cls.xp.uint8)
 
     @classmethod
     # @task
-    def mean_thresh(cls, ar: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
+    def mean_thresh(cls, arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
         """
         Perform adaptive thresholding on a 3D tensor on GPU.
         """
-        ar = cls.xp.asarray(ar)
+        arr = cls.xp.asarray(arr)
         logging.debug("Get mean and std of ONLY non-zero values")
-        ar0 = ar[ar > 0]
-        mu = ar0.mean()
-        sd = ar0.std()
+        arr0 = arr[arr > 0]
+        mu = arr0.mean()
+        sd = arr0.std()
         logging.debug("Apply the threshold")
-        res = ar > mu + offset_sd * sd
+        res = arr > mu + offset_sd * sd
         # Returning
         return res.astype(cls.xp.uint8)
 
     @classmethod
     # @task
-    def manual_thresh(cls, ar: np.ndarray, val: int):
+    def manual_thresh(cls, arr: np.ndarray, val: int):
         """
         Perform manual thresholding on a tensor.
         """
-        ar = cls.xp.asarray(ar)
+        arr = cls.xp.asarray(arr)
         logging.debug("Applying the threshold")
-        res = ar >= val
+        res = arr >= val
         # Returning
         return res.astype(cls.xp.uint8)
 
     @classmethod
     # @task
-    def label_with_ids(cls, ar: np.ndarray) -> np.ndarray:
+    def label_with_ids(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
         """
-        ar = cls.xp.asarray(ar).astype(cls.xp.uint8)
+        arr = cls.xp.asarray(arr).astype(cls.xp.uint8)
         logging.debug("Labelling contiguous objects uniquely")
-        res, _ = cls.xdimage.label(ar)
+        res, _ = cls.xdimage.label(arr)
         logging.debug("Returning")
         return res.astype(cls.xp.uint32)
 
     @classmethod
     # @task
-    def ids2sizes(cls, ar: np.ndarray) -> np.ndarray:
+    def ids2sizes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Convert labels to sizes.
         """
-        ar = cls.xp.asarray(ar)
+        arr = cls.xp.asarray(arr)
         logging.debug("Getting vector of ids and sizes (not incl. 0)")
-        ids, counts = cls.xp.unique(ar[ar > 0], return_counts=True)
+        ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
         # NOTE: assumes ids are incrementing from 1
         counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
-        logging.debug("Converting ar intensity to sizes")
-        res = counts[ar]
+        logging.debug("Converting arr intensity to sizes")
+        res = counts[arr]
         logging.debug("Returning")
         return res.astype(cls.xp.uint16)
 
     @classmethod
     # @task
-    def label_with_sizes(cls, ar: np.ndarray) -> np.ndarray:
+    def label_with_sizes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
         """
-        ar = cls.label_with_ids(ar)
-        res = cls.ids2sizes(ar)
+        arr = cls.label_with_ids(arr)
+        res = cls.ids2sizes(arr)
         return res
 
     @classmethod
     # @task
-    def visualise_stats(cls, ar: np.ndarray):
+    def visualise_stats(cls, arr: np.ndarray):
         """
         Visualise statistics.
 
-        NOTE: expects ar to be a 3D tensor of a property
+        NOTE: expects arr to be a 3D tensor of a property
         (e.g. size).
         """
-        logging.debug("Converting ar to vector of the ids")
-        ids = ar[ar > 0]
+        logging.debug("Converting arr to vector of the ids")
+        ids = arr[arr > 0]
         logging.debug("Making histogram")
         fig, ax = plt.subplots()
         sns.histplot(
@@ -207,74 +207,76 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def filt_by_size(cls, ar: np.ndarray, smin=None, smax=None):
+    def filt_by_size(cls, arr: np.ndarray, smin=None, smax=None):
         """
-        Assumes `ar` is array of objects labelled with their size.
+        Assumes `arr` is array of objects labelled with their size.
         """
-        ar = cls.xp.asarray(ar)
+        arr = cls.xp.asarray(arr)
         logging.debug("Getting filter of small and large object to filter out")
         smin = smin if smin is not None else 0
-        smax = smax if smax is not None else ar.max()
-        filt_objs = (ar < smin) | (ar > smax)
+        smax = smax if smax is not None else arr.max()
+        filt_objs = (arr < smin) | (arr > smax)
         logging.debug("Filter out objects (by setting them to 0)")
-        ar[filt_objs] = 0
+        arr[filt_objs] = 0
         # Returning
-        return ar
+        return arr
 
     @classmethod
     # @task
     def get_local_maxima(
         cls,
-        ar: np.ndarray,
+        arr: np.ndarray,
         sigma: int = 10,
-        mask_ar: None | np.ndarray = None,
+        mask_arr: None | np.ndarray = None,
     ):
         """
         Getting local maxima (no connectivity) in a 3D tensor.
         If there is a connected region of maxima, then only the centre point is kept.
 
-        If `mask_ar` is provided, then only maxima within the mask are kept.
+        If `mask_arr` is provided, then only maxima within the mask are kept.
         """
-        ar = cls.xp.asarray(ar)
-        logging.debug("Making max filter for raw ar (holds the maximum in given area)")
-        max_ar = cls.xdimage.maximum_filter(ar, sigma)
+        arr = cls.xp.asarray(arr)
+        logging.debug("Making max filter for raw arr (holds the maximum in given area)")
+        max_arr = cls.xdimage.maximum_filter(arr, sigma)
         logging.debug("Add 1 (so we separate the max pixel from the max_filter)")
-        ar = ar + 1
-        logging.debug("Getting local maxima (where ar - max_ar == 1)")
-        res = ar - max_ar == 1
+        arr = arr + 1
+        logging.debug("Getting local maxima (where arr - max_arr == 1)")
+        res = arr - max_arr == 1
         # If a mask is given, then keep only the maxima within the mask
-        if mask_ar is not None:
+        if mask_arr is not None:
             logging.debug(
                 "Mask provided. Maxima will only be found within mask regions."
             )
-            mask_ar = (cls.xp.asarray(mask_ar) > 0).astype(cls.xp.uint8)
-            res = res * mask_ar
+            mask_arr = (cls.xp.asarray(mask_arr) > 0).astype(cls.xp.uint8)
+            res = res * mask_arr
         # Returning
         return res
 
     @classmethod
     # @task
-    def mask(cls, ar: np.ndarray, mask_ar: np.ndarray):
-        ar = cls.xp.asarray(ar)
-        mask_ar = cls.xp.asarray(mask_ar).astype(cls.xp.uint8)
+    def mask(cls, arr: np.ndarray, mask_arr: np.ndarray):
+        arr = cls.xp.asarray(arr)
+        mask_arr = cls.xp.asarray(mask_arr).astype(cls.xp.uint8)
         logging.debug("Masking for only maxima within mask")
-        res = ar * (mask_ar > 0)
+        res = arr * (mask_arr > 0)
         # Returning
         return res
 
     @classmethod
     # @task
-    def wshed_segm(cls, raw_ar: np.ndarray, maxima_ar: np.ndarray, mask_ar: np.ndarray):
+    def wshed_segm(
+        cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
+    ):
         """
         NOTE: NOT GPU accelerated
 
-        Expects `maxima_ar` to have unique labels for each maxima.
+        Expects `maxima_arr` to have unique labels for each maxima.
         """
         logging.debug("Watershed segmentation")
         res = watershed(
-            image=-raw_ar,
-            markers=maxima_ar,
-            mask=mask_ar > 0,
+            image=-raw_arr,
+            markers=maxima_arr,
+            mask=mask_arr > 0,
         )
         # Returning
         return res
@@ -282,32 +284,32 @@ class CpuCellcFuncs:
     @classmethod
     # @task
     def wshed_segm_sizes(
-        cls, raw_ar: np.ndarray, maxima_ar: np.ndarray, mask_ar: np.ndarray
+        cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
     ):
         """
         NOTE: NOT GPU accelerated
         """
         # Labelling contiguous maxima with unique labels
-        maxima_ar = cls.label_with_ids(maxima_ar)
+        maxima_arr = cls.label_with_ids(maxima_arr)
         # Watershed segmentation
-        wshed_ar = cls.wshed_segm(raw_ar, maxima_ar, mask_ar)
+        wshed_arr = cls.wshed_segm(raw_arr, maxima_arr, mask_arr)
         # Getting sizes of watershed regions
-        res = cls.ids2sizes(wshed_ar)
+        res = cls.ids2sizes(wshed_arr)
         # Returning
         return res
 
     @classmethod
     # @task
-    def get_coords(cls, ar: np.ndarray):
+    def get_coords(cls, arr: np.ndarray):
         """
         Get coordinates of regions in 3D tensor.
 
         TODO: Keep only the first row (i.e cell) for each label (groupby).
         """
         logging.debug("Getting coordinates of regions")
-        z, y, x = np.where(ar)
+        z, y, x = np.where(arr)
         logging.debug("Getting IDs of regions (from coords)")
-        ids = ar[z, y, x]
+        ids = arr[z, y, x]
         logging.debug("Making dataframe")
         df = pd.DataFrame(
             {Coords.Z.value: z, Coords.Y.value: y, Coords.X.value: x},
@@ -323,27 +325,27 @@ class CpuCellcFuncs:
     # @task
     def get_cells(
         cls,
-        raw_ar: np.ndarray,
-        overlap_ar: np.ndarray,
-        maxima_ar: np.ndarray,
-        mask_ar: np.ndarray,
+        raw_arr: np.ndarray,
+        overlap_arr: np.ndarray,
+        maxima_arr: np.ndarray,
+        mask_arr: np.ndarray,
         depth: int = DEPTH,
     ):
         """
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).
         """
-        # Asserting ar sizes match between raw_ar, overlap_ar, and depth
-        assert raw_ar.shape == tuple(i - 2 * depth for i in overlap_ar.shape)
+        # Asserting arr sizes match between raw_arr, overlap_arr, and depth
+        assert raw_arr.shape == tuple(i - 2 * depth for i in overlap_arr.shape)
         logging.debug("Trimming maxima labels array to raw array dimensions using `d`")
         slicer = slice(depth, -depth) if depth > 0 else slice(None)
-        maxima_ar = maxima_ar[slicer, slicer, slicer]
-        logging.debug("Getting unique labels in maxima_ar")
-        maxima_l_ar = cls.label_with_ids(maxima_ar)
+        maxima_arr = maxima_arr[slicer, slicer, slicer]
+        logging.debug("Getting unique labels in maxima_arr")
+        maxima_l_arr = cls.label_with_ids(maxima_arr)
         logging.debug("Converting to DataFrame of coordinates and sizes")
         # NOTE: getting first coord of each unique label
-        ids_m, ind = cls.xp.unique(maxima_l_ar, return_index=True)
-        z, y, x = cls.xp.unravel_index(ind, maxima_l_ar.shape)
+        ids_m, ind = cls.xp.unique(maxima_l_arr, return_index=True)
+        z, y, x = cls.xp.unravel_index(ind, maxima_l_arr.shape)
         df = (
             pd.DataFrame(
                 {
@@ -356,20 +358,20 @@ class CpuCellcFuncs:
             .drop(index=0)
             .astype(np.uint16)
         )
-        logging.debug("Watershed of overlap_ar, seeds maxima_ar, mask mask_ar")
-        # NOTE: padding maxima_l_ar because we previously trimmed maxima_ar
-        maxima_l_ar = np.pad(
-            cp2np(maxima_l_ar), depth, mode="constant", constant_values=0
+        logging.debug("Watershed of overlap_arr, seeds maxima_arr, mask mask_arr")
+        # NOTE: padding maxima_l_arr because we previously trimmed maxima_arr
+        maxima_l_arr = np.pad(
+            cp2np(maxima_l_arr), depth, mode="constant", constant_values=0
         )
-        wshed_ar = cls.wshed_segm(overlap_ar, maxima_l_ar, mask_ar)
+        wshed_arr = cls.wshed_segm(overlap_arr, maxima_l_arr, mask_arr)
         logging.debug("Making vector of region sizes (corresponding to maxima)")
-        ids_w, counts = cls.xp.unique(wshed_ar[wshed_ar > 0], return_counts=True)
+        ids_w, counts = cls.xp.unique(wshed_arr[wshed_arr > 0], return_counts=True)
         ids_w = cp2np(ids_w).astype(np.uint32)
         counts = cp2np(counts).astype(np.uint32)
         logging.debug("Getting sum intensity for each cell (wshed)")
         sum_intensity = cls.xp.bincount(
-            cls.xp.asarray(wshed_ar[wshed_ar > 0].ravel()),
-            weights=cls.xp.asarray(overlap_ar[wshed_ar > 0].ravel()),
+            cls.xp.asarray(wshed_arr[wshed_arr > 0].ravel()),
+            weights=cls.xp.asarray(overlap_arr[wshed_arr > 0].ravel()),
             minlength=len(ids_w),
         )
         # NOTE: excluding 0 valued elements means sum_intensity matches with ids_w
@@ -388,8 +390,8 @@ class CpuCellcFuncs:
         return df
 
 
-def cp2np(ar) -> np.ndarray:
+def cp2np(arr) -> np.ndarray:
     try:
-        return ar.get()
+        return arr.get()
     except Exception:
-        return ar
+        return arr

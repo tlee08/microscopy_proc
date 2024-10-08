@@ -11,8 +11,8 @@ from microscopy_proc.utils.io_utils import silentremove
 #####################################################################
 
 
-def coords2points_workers(ar: np.ndarray, coords: pd.DataFrame):
-    shape = ar.shape  # noqa: F841
+def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
+    shape = arr.shape  # noqa: F841
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
     # Filtering
@@ -27,25 +27,25 @@ def coords2points_workers(ar: np.ndarray, coords: pd.DataFrame):
     )
     # Incrementing the coords in the array
     if coords.shape[0] > 0:
-        ar[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
+        arr[coords[:, 0], coords[:, 1], coords[:, 2]] += 1
     # Return arr
-    return ar
+    return arr
 
 
 def coords2points_start(shape: tuple, out_fp: str) -> da.Array:
     # Initialising spatial array
-    ar = np.memmap(
+    arr = np.memmap(
         "temp.dat",
         mode="w+",
         shape=shape,
         dtype=np.uint8,
     )
-    return ar
+    return arr
 
 
-def coords2points_end(ar, out_fp):
+def coords2points_end(arr, out_fp):
     # # Saving the subsampled array
-    tifffile.imwrite(out_fp, ar)
+    tifffile.imwrite(out_fp, arr)
     # Removing temporary memmap
     silentremove("temp.dat")
 
@@ -68,11 +68,11 @@ def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], out_fp: str):
         The output image array
     """
     # Initialising spatial array
-    ar = coords2points_start(shape, out_fp)
+    arr = coords2points_start(shape, out_fp)
     # Adding coords to image
-    coords2points_workers(ar, coords)
+    coords2points_workers(arr, coords)
     # Saving the subsampled array
-    coords2points_end(ar, out_fp)
+    coords2points_end(arr, out_fp)
 
 
 def coords2heatmaps(coords: pd.DataFrame, r, shape, out_fp):
@@ -90,7 +90,7 @@ def coords2heatmaps(coords: pd.DataFrame, r, shape, out_fp):
         The output image array
     """
     # Initialising spatial array
-    ar = coords2points_start(shape, out_fp)
+    arr = coords2points_start(shape, out_fp)
 
     # Constructing sphere array mask
     zz, yy, xx = np.ogrid[1 : r * 2, 1 : r * 2, 1 : r * 2]
@@ -105,10 +105,10 @@ def coords2heatmaps(coords: pd.DataFrame, r, shape, out_fp):
             coords_i[Coords.Z.value] += z
             coords_i[Coords.Y.value] += y
             coords_i[Coords.X.value] += x
-            coords2points_workers(ar, coords_i)
+            coords2points_workers(arr, coords_i)
 
     # Saving the subsampled array
-    coords2points_end(ar, out_fp)
+    coords2points_end(arr, out_fp)
 
 
 def coords2regions(coords, shape, out_fp):
@@ -124,14 +124,14 @@ def coords2regions(coords, shape, out_fp):
         The output image array
     """
     # Initialising spatial array
-    ar = coords2points_start(shape)
+    arr = coords2points_start(shape)
 
     # Adding coords to image with np.apply_along_axis
     def f(coord):
         # Plotting coord to image. Including only coords within the image's bounds
         if np.all((coord >= 0) & (coord < shape)):
             z, y, x, _id = coord
-            ar[z, y, x] = _id
+            arr[z, y, x] = _id
 
     # Formatting coord values as (z, y, x) and rounding to integers
     coords = (
@@ -143,4 +143,4 @@ def coords2regions(coords, shape, out_fp):
         np.apply_along_axis(f, 1, coords)
 
     # Saving the subsampled array
-    coords2points_end(ar, out_fp)
+    coords2points_end(arr, out_fp)

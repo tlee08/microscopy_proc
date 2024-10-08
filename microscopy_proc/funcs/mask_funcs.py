@@ -4,21 +4,21 @@ import pandas as pd
 from microscopy_proc.constants import MASK_VOLUME, AnnotColumns, Coords
 
 
-def make_outline(ar: np.ndarray) -> pd.DataFrame:
+def make_outline(arr: np.ndarray) -> pd.DataFrame:
     # Shifting along last axis with 0 padding
-    l_shift = np.concatenate([ar[..., 1:], np.zeros((*ar.shape[:-1], 1))], axis=-1)
-    r_shift = np.concatenate([np.zeros((*ar.shape[:-1], 1)), ar[..., :-1]], axis=-1)
+    l_shift = np.concatenate([arr[..., 1:], np.zeros((*arr.shape[:-1], 1))], axis=-1)
+    r_shift = np.concatenate([np.zeros((*arr.shape[:-1], 1)), arr[..., :-1]], axis=-1)
     # Finding outline (ins and outs)
     # is_in = 1 means starts in (last axis - x) from pixel
     # is_in = 0 means NEXT pixel starts out (last axis - x)
     coords_df = pd.concat(
         [
             pd.DataFrame(
-                np.asarray(np.where((ar == 1) & (r_shift == 0))).T,
+                np.asarray(np.where((arr == 1) & (r_shift == 0))).T,
                 columns=[Coords.Z.value, Coords.Y.value, Coords.X.value],
             ).assign(is_in=1),
             pd.DataFrame(
-                np.asarray(np.where((ar == 1) & (l_shift == 0))).T,
+                np.asarray(np.where((arr == 1) & (l_shift == 0))).T,
                 columns=[Coords.Z.value, Coords.Y.value, Coords.X.value],
             ).assign(is_in=0),
         ]
@@ -52,7 +52,7 @@ def fill_outline(coords_df: pd.DataFrame, shape: tuple) -> np.ndarray:
     return res
 
 
-def mask2region_counts(mask_ar: np.ndarray, annot_ar: np.ndarray) -> pd.DataFrame:
+def mask2region_counts(mask_arr: np.ndarray, annot_arr: np.ndarray) -> pd.DataFrame:
     """
     Given an nd-array mask and an same-shaped annotation array,
     returns a dataframe with region IDs (from annotation array)
@@ -61,12 +61,12 @@ def mask2region_counts(mask_ar: np.ndarray, annot_ar: np.ndarray) -> pd.DataFram
     The dataframe index is the region ID and the columns are:
     - volume: the number of voxels in the mask for that region ID.
     """
-    # Convert mask_ar to binary
-    mask_ar = (mask_ar > 0).astype(np.uint8)
+    # Convert mask_arr to binary
+    mask_arr = (mask_arr > 0).astype(np.uint8)
     # Multiply mask by annotation to convert mask to region IDs
-    mask_ar = mask_ar * annot_ar
+    mask_arr = mask_arr * annot_arr
     # Getting annotated region IDs
-    id_labels, id_counts = np.unique(mask_ar, return_counts=True)
+    id_labels, id_counts = np.unique(mask_arr, return_counts=True)
     # Returning region IDs and counts as dataframe
     # NOTE: dropping the 0 index (background)
     return pd.DataFrame(

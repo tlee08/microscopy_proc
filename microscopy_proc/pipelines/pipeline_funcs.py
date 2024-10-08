@@ -115,17 +115,17 @@ def ref_prepare_pipeline(pfm: ProjFpModel):
         (rfm.annot, pfm.annot),
     ]:
         # Reading
-        ar = tifffile.imread(fp_i)
+        arr = tifffile.imread(fp_i)
         # Reorienting
-        ar = reorient(ar, configs.ref_orient_ls)
+        arr = reorient(arr, configs.ref_orient_ls)
         # Slicing
-        ar = ar[
+        arr = arr[
             slice(*configs.ref_z_trim),
             slice(*configs.ref_y_trim),
             slice(*configs.ref_x_trim),
         ]
         # Saving
-        tifffile.imwrite(fp_o, ar)
+        tifffile.imwrite(fp_o, arr)
     # Copying region mapping json to project folder
     shutil.copyfile(rfm.map, pfm.map)
     # Copying transformation files
@@ -139,14 +139,14 @@ def img_rough_pipeline(pfm: ProjFpModel):
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     with cluster_proc_contxt(LocalCluster()):
         # Reading
-        raw_ar = da.from_zarr(pfm.raw)
+        raw_arr = da.from_zarr(pfm.raw)
         # Rough downsample
-        downsmpl1_ar = downsmpl_rough(
-            raw_ar, configs.z_rough, configs.y_rough, configs.x_rough
+        downsmpl1_arr = downsmpl_rough(
+            raw_arr, configs.z_rough, configs.y_rough, configs.x_rough
         )
-        downsmpl1_ar = downsmpl1_ar.compute()
+        downsmpl1_arr = downsmpl1_arr.compute()
         # Saving
-        tifffile.imwrite(pfm.downsmpl1, downsmpl1_ar)
+        tifffile.imwrite(pfm.downsmpl1, downsmpl1_arr)
 
 
 # @flow
@@ -154,13 +154,13 @@ def img_fine_pipeline(pfm: ProjFpModel):
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
-    downsmpl1_ar = tifffile.imread(pfm.downsmpl1)
+    downsmpl1_arr = tifffile.imread(pfm.downsmpl1)
     # Fine downsample
-    downsmpl2_ar = downsmpl_fine(
-        downsmpl1_ar, configs.z_fine, configs.y_fine, configs.x_fine
+    downsmpl2_arr = downsmpl_fine(
+        downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine
     )
     # Saving
-    tifffile.imwrite(pfm.downsmpl2, downsmpl2_ar)
+    tifffile.imwrite(pfm.downsmpl2, downsmpl2_arr)
 
 
 # @flow
@@ -168,19 +168,17 @@ def img_trim_pipeline(pfm: ProjFpModel):
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
-    downsmpl2_ar = tifffile.imread(pfm.downsmpl2)
+    downsmpl2_arr = tifffile.imread(pfm.downsmpl2)
     # Trim
-    trimmed_ar = downsmpl2_ar[
+    trimmed_arr = downsmpl2_arr[
         slice(*configs.z_trim), slice(*configs.y_trim), slice(*configs.x_trim)
     ]
     # Saving
-    tifffile.imwrite(pfm.trimmed, trimmed_ar)
+    tifffile.imwrite(pfm.trimmed, trimmed_arr)
 
 
 # @flow
 def registration_pipeline(pfm: ProjFpModel):
-    # Getting configs
-    configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Running Elastix registration
     registration(
         fixed_img_fp=pfm.trimmed,
@@ -201,16 +199,16 @@ def make_mask_pipeline(pfm: ProjFpModel):
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading ref and trimmed imgs
-    ref_ar = tifffile.imread(pfm.ref)
-    trimmed_ar = tifffile.imread(pfm.trimmed)
+    ref_arr = tifffile.imread(pfm.ref)
+    trimmed_arr = tifffile.imread(pfm.trimmed)
     # Making mask
-    blur_ar = Gf.gauss_blur_filt(trimmed_ar, configs.mask_gaus_blur)
-    tifffile.imwrite(pfm.premask_blur, blur_ar)
-    mask_ar = Gf.manual_thresh(blur_ar, configs.mask_thresh)
-    tifffile.imwrite(pfm.mask, mask_ar)
+    blur_arr = Gf.gauss_blur_filt(trimmed_arr, configs.mask_gaus_blur)
+    tifffile.imwrite(pfm.premask_blur, blur_arr)
+    mask_arr = Gf.manual_thresh(blur_arr, configs.mask_thresh)
+    tifffile.imwrite(pfm.mask, mask_arr)
 
     # Make outline
-    outline_df = make_outline(mask_ar)
+    outline_df = make_outline(mask_arr)
     # Transformix on coords
     outline_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]] = (
         transformation_coords(
@@ -223,40 +221,40 @@ def make_mask_pipeline(pfm: ProjFpModel):
     )
     # Filtering out of bounds coords
     outline_df = outline_df.query(
-        f"z >= 0 and z < {ref_ar.shape[0]} and y >= 0 and y < {ref_ar.shape[1]} and x >= 0 and x < {ref_ar.shape[2]}"
+        f"z >= 0 and z < {ref_arr.shape[0]} and y >= 0 and y < {ref_arr.shape[1]} and x >= 0 and x < {ref_arr.shape[2]}"
     )
 
     # Make outline img (1 for in, 2 for out)
     # TODO: convert to return np.array and save out-of-function
     coords2points(
         outline_df[outline_df.is_in == 1],
-        ref_ar.shape,
+        ref_arr.shape,
         pfm.outline,
     )
-    in_ar = tifffile.imread(pfm.outline)
+    in_arr = tifffile.imread(pfm.outline)
     coords2points(
         outline_df[outline_df.is_in == 0],
-        ref_ar.shape,
+        ref_arr.shape,
         pfm.outline,
     )
-    out_ar = tifffile.imread(pfm.outline)
-    tifffile.imwrite(pfm.outline, in_ar + out_ar * 2)
+    out_arr = tifffile.imread(pfm.outline)
+    tifffile.imwrite(pfm.outline, in_arr + out_arr * 2)
 
     # Fill in outline to recreate mask (not perfect)
-    mask_reg_ar = fill_outline(outline_df, ref_ar.shape)
+    mask_reg_arr = fill_outline(outline_df, ref_arr.shape)
     # Opening (removes FP) and closing (fills FN)
-    mask_reg_ar = ndimage.binary_closing(mask_reg_ar, iterations=2).astype(np.uint8)
-    mask_reg_ar = ndimage.binary_opening(mask_reg_ar, iterations=2).astype(np.uint8)
+    mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(np.uint8)
+    mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(np.uint8)
     # Saving
-    tifffile.imwrite(pfm.mask_reg, mask_reg_ar)
+    tifffile.imwrite(pfm.mask_reg, mask_reg_arr)
 
     # Counting mask voxels in each region
-    annot_ar = tifffile.imread(pfm.annot)
+    annot_arr = tifffile.imread(pfm.annot)
     annot_df = annot_dict2df(read_json(pfm.map))
     # Getting the annotation name for every cell (zyx coord)
     mask_df = pd.merge(
-        left=mask2region_counts(np.full(annot_ar.shape, 1), annot_ar),
-        right=mask2region_counts(mask_reg_ar, annot_ar),
+        left=mask2region_counts(np.full(annot_arr.shape, 1), annot_arr),
+        right=mask2region_counts(mask_reg_arr, annot_arr),
         how="left",
         left_index=True,
         right_index=True,
@@ -280,9 +278,9 @@ def img_overlap_pipeline(pfm: ProjFpModel):
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making overlap image
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
-        raw_ar = da.from_zarr(pfm.raw, chunks=configs.chunksize)
-        overlap_ar = da_overlap(raw_ar, d=configs.depth)
-        overlap_ar = disk_cache(overlap_ar, pfm.overlap)
+        raw_arr = da.from_zarr(pfm.raw, chunks=configs.chunksize)
+        overlap_arr = da_overlap(raw_arr, d=configs.depth)
+        overlap_arr = disk_cache(overlap_arr, pfm.overlap)
 
 
 # @flow
@@ -297,15 +295,15 @@ def cellc1_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        overlap_ar = da.from_zarr(pfm.overlap)
+        overlap_arr = da.from_zarr(pfm.overlap)
         # Declaring processing instructions
-        bgrm_ar = da.map_blocks(
+        bgrm_arr = da.map_blocks(
             Gf.tophat_filt,
-            overlap_ar,
+            overlap_arr,
             configs.tophat_sigma,
         )
         # Computing and saving
-        bgrm_ar = disk_cache(bgrm_ar, pfm.bgrm)
+        bgrm_arr = disk_cache(bgrm_arr, pfm.bgrm)
 
 
 def cellc2_pipeline(pfm: ProjFpModel):
@@ -319,16 +317,16 @@ def cellc2_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        bgrm_ar = da.from_zarr(pfm.bgrm)
+        bgrm_arr = da.from_zarr(pfm.bgrm)
         # Declaring processing instructions
-        dog_ar = da.map_blocks(
+        dog_arr = da.map_blocks(
             Gf.dog_filt,
-            bgrm_ar,
+            bgrm_arr,
             configs.dog_sigma1,
             configs.dog_sigma2,
         )
         # Computing and saving
-        dog_ar = disk_cache(dog_ar, pfm.dog)
+        dog_arr = disk_cache(dog_arr, pfm.dog)
 
 
 def cellc3_pipeline(pfm: ProjFpModel):
@@ -342,15 +340,15 @@ def cellc3_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        dog_ar = da.from_zarr(pfm.dog)
+        dog_arr = da.from_zarr(pfm.dog)
         # Declaring processing instructions
-        adaptv_ar = da.map_blocks(
+        adaptv_arr = da.map_blocks(
             Gf.gauss_subt_filt,
-            dog_ar,
+            dog_arr,
             configs.gauss_sigma,
         )
         # Computing and saving
-        adaptv_ar = disk_cache(adaptv_ar, pfm.adaptv)
+        adaptv_arr = disk_cache(adaptv_arr, pfm.adaptv)
 
 
 def cellc4_pipeline(pfm: ProjFpModel):
@@ -364,19 +362,19 @@ def cellc4_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # # Visually inspect sd offset
-        # t_p =adaptv_ar.sum() / (np.prod(adaptv_ar.shape) - (adaptv_ar == 0).sum())
+        # t_p =adaptv_arr.sum() / (np.prod(adaptv_arr.shape) - (adaptv_arr == 0).sum())
         # t_p = t_p.compute()
         # logging.debug(t_p)
         # Reading input images
-        adaptv_ar = da.from_zarr(pfm.adaptv)
+        adaptv_arr = da.from_zarr(pfm.adaptv)
         # Declaring processing instructions
-        threshd_ar = da.map_blocks(
+        threshd_arr = da.map_blocks(
             Cf.manual_thresh,
-            adaptv_ar,
+            adaptv_arr,
             configs.thresh_p,
         )
         # Computing and saving
-        threshd_ar = disk_cache(threshd_ar, pfm.threshd)
+        threshd_arr = disk_cache(threshd_arr, pfm.threshd)
 
 
 def cellc5_pipeline(pfm: ProjFpModel):
@@ -388,12 +386,12 @@ def cellc5_pipeline(pfm: ProjFpModel):
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Reading input images
-        threshd_ar = da.from_zarr(pfm.threshd)
-        sizes_ar = da.map_blocks(
+        threshd_arr = da.from_zarr(pfm.threshd)
+        sizes_arr = da.map_blocks(
             Cf.label_with_sizes,
-            threshd_ar,
+            threshd_arr,
         )
-        sizes_ar = disk_cache(sizes_ar, pfm.threshd_sizes)
+        sizes_arr = disk_cache(sizes_arr, pfm.threshd_sizes)
 
 
 def cellc6_pipeline(pfm: ProjFpModel):
@@ -407,16 +405,16 @@ def cellc6_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        sizes_ar = da.from_zarr(pfm.threshd_sizes)
+        sizes_arr = da.from_zarr(pfm.threshd_sizes)
         # Declaring processing instructions
-        threshd_filt_ar = da.map_blocks(
+        threshd_filt_arr = da.map_blocks(
             Cf.filt_by_size,
-            sizes_ar,
+            sizes_arr,
             configs.min_threshd,
             configs.max_threshd,
         )
         # Computing and saving
-        threshd_filt_ar = disk_cache(threshd_filt_ar, pfm.threshd_filt)
+        threshd_filt_arr = disk_cache(threshd_filt_arr, pfm.threshd_filt)
 
 
 def cellc7_pipeline(pfm: ProjFpModel):
@@ -430,17 +428,17 @@ def cellc7_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        overlap_ar = da.from_zarr(pfm.overlap)
-        threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
+        overlap_arr = da.from_zarr(pfm.overlap)
+        threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
         # Declaring processing instructions
-        maxima_ar = da.map_blocks(
+        maxima_arr = da.map_blocks(
             Gf.get_local_maxima,
-            overlap_ar,
+            overlap_arr,
             configs.maxima_sigma,
-            threshd_filt_ar,
+            threshd_filt_arr,
         )
         # Computing and saving
-        maxima_ar = disk_cache(maxima_ar, pfm.maxima)
+        maxima_arr = disk_cache(maxima_arr, pfm.maxima)
 
 
 def cellc8_pipeline(pfm: ProjFpModel):
@@ -453,18 +451,18 @@ def cellc8_pipeline(pfm: ProjFpModel):
     with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
         # n_workers=2
         # Reading input images
-        overlap_ar = da.from_zarr(pfm.overlap)
-        maxima_ar = da.from_zarr(pfm.maxima)
-        threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
+        overlap_arr = da.from_zarr(pfm.overlap)
+        maxima_arr = da.from_zarr(pfm.maxima)
+        threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
         # Declaring processing instructions
-        wshed_sizes_ar = da.map_blocks(
+        wshed_sizes_arr = da.map_blocks(
             Cf.wshed_segm_sizes,
-            overlap_ar,
-            maxima_ar,
-            threshd_filt_ar,
+            overlap_arr,
+            maxima_arr,
+            threshd_filt_arr,
         )
         # Computing and saving
-        wshed_sizes_ar = disk_cache(wshed_sizes_ar, pfm.wshed_sizes)
+        wshed_sizes_arr = disk_cache(wshed_sizes_arr, pfm.wshed_sizes)
 
 
 def cellc9_pipeline(pfm: ProjFpModel):
@@ -478,16 +476,16 @@ def cellc9_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        wshed_sizes_ar = da.from_zarr(pfm.wshed_sizes)
+        wshed_sizes_arr = da.from_zarr(pfm.wshed_sizes)
         # Declaring processing instructions
-        wshed_filt_ar = da.map_blocks(
+        wshed_filt_arr = da.map_blocks(
             Cf.filt_by_size,
-            wshed_sizes_ar,
+            wshed_sizes_arr,
             configs.min_wshed,
             configs.max_wshed,
         )
         # Computing and saving
-        wshed_filt_ar = disk_cache(wshed_filt_ar, pfm.wshed_filt)
+        wshed_filt_arr = disk_cache(wshed_filt_arr, pfm.wshed_filt)
 
 
 def cellc10_pipeline(pfm: ProjFpModel):
@@ -504,17 +502,17 @@ def cellc10_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        maxima_ar = da.from_zarr(pfm.maxima)
-        threshd_filt_ar = da.from_zarr(pfm.threshd_filt)
-        wshed_sizes_ar = da.from_zarr(pfm.wshed_sizes)
+        maxima_arr = da.from_zarr(pfm.maxima)
+        threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
+        wshed_sizes_arr = da.from_zarr(pfm.wshed_sizes)
         # Declaring processing instructions
-        maxima_f_ar = da_trim(maxima_ar, d=configs.depth)
-        threshd_final_ar = da_trim(threshd_filt_ar, d=configs.depth)
-        wshed_final_ar = da_trim(wshed_sizes_ar, d=configs.depth)
+        maxima_f_arr = da_trim(maxima_arr, d=configs.depth)
+        threshd_final_arr = da_trim(threshd_filt_arr, d=configs.depth)
+        wshed_final_arr = da_trim(wshed_sizes_arr, d=configs.depth)
         # Computing and saving
-        disk_cache(maxima_f_ar, pfm.maxima_final)
-        disk_cache(threshd_final_ar, pfm.threshd_final)
-        disk_cache(wshed_final_ar, pfm.wshed_final)
+        disk_cache(maxima_f_arr, pfm.maxima_final)
+        disk_cache(threshd_final_arr, pfm.threshd_final)
+        disk_cache(wshed_final_arr, pfm.wshed_final)
 
 
 def cellc11_pipeline(pfm: ProjFpModel):
@@ -528,19 +526,19 @@ def cellc11_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        raw_ar = da.from_zarr(pfm.raw)
-        overlap_ar = da.from_zarr(pfm.overlap)
-        maxima_ar = da.from_zarr(pfm.maxima_final)
-        wshed_filt_ar = da.from_zarr(pfm.wshed_final)
+        raw_arr = da.from_zarr(pfm.raw)
+        overlap_arr = da.from_zarr(pfm.overlap)
+        maxima_arr = da.from_zarr(pfm.maxima_final)
+        wshed_filt_arr = da.from_zarr(pfm.wshed_final)
         # Declaring processing instructions
         # (coords, size, and intensity) to a df
         # Getting maxima coords and corresponding watershed sizes in table
         cells_df = block2coords(
             Cf.get_cells,
-            raw_ar,
-            overlap_ar,
-            maxima_ar,
-            wshed_filt_ar,
+            raw_arr,
+            overlap_arr,
+            maxima_arr,
+            wshed_filt_arr,
             configs.depth,
         )
         # Filtering out by size
@@ -558,12 +556,12 @@ def cellc_coords_only_pipeline(pfm: ProjFpModel):
     # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
-        maxima_f_ar = da.from_zarr(pfm.maxima_final)
+        maxima_f_arr = da.from_zarr(pfm.maxima_final)
         # Declaring processing instructions
         # Storing coords of each maxima in df
         coords_df = block2coords(
             Gf.get_coords,
-            maxima_f_ar,
+            maxima_f_arr,
         )
         # Computing and saving as parquet
         coords_df.to_parquet(pfm.maxima_df, overwrite=True)
@@ -639,10 +637,10 @@ def cell_mapping_pipeline(pfm: ProjFpModel):
         cells_df[f"{Coords.X.value}_{TRFM}"] = coords_trfm[Coords.X.value].values
 
         # Reading annotation image
-        annot_ar = tifffile.imread(pfm.annot)
+        annot_arr = tifffile.imread(pfm.annot)
         # Getting the annotation ID for every cell (zyx coord)
-        # Getting transformed coords (that are within tbe bounds_ar, and their corresponding idx)
-        s = annot_ar.shape
+        # Getting transformed coords (that are within tbe bounds_arr, and their corresponding idx)
+        s = annot_arr.shape
         trfm_loc = (
             cells_df[
                 [
@@ -663,7 +661,7 @@ def cell_mapping_pipeline(pfm: ProjFpModel):
         # By complex array indexing on ar_annot's (z, y, x) dimensions.
         # nulls are imputed with -1
         cells_df[AnnotColumns.ID.value] = pd.Series(
-            annot_ar[*trfm_loc.values.T].astype(np.uint32),
+            annot_arr[*trfm_loc.values.T].astype(np.uint32),
             index=trfm_loc.index,
         ).fillna(-1)
 
