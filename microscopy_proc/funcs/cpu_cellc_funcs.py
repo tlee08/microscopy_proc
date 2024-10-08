@@ -363,6 +363,9 @@ class CpuCellcFuncs:
         maxima_l_arr = np.pad(
             cp2np(maxima_l_arr), depth, mode="constant", constant_values=0
         )
+        print("overlap_arr", overlap_arr.shape)
+        print("maxima_l_arr", maxima_l_arr.shape)
+        print("mask_arr", mask_arr.shape)
         wshed_arr = cls.wshed_segm(overlap_arr, maxima_l_arr, mask_arr)
         logging.debug("Making vector of region sizes (corresponding to maxima)")
         ids_w, counts = cls.xp.unique(wshed_arr[wshed_arr > 0], return_counts=True)
