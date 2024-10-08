@@ -1,23 +1,19 @@
 import os
 
 from microscopy_proc.constants import DEPTH, PROC_CHUNKS
-from microscopy_proc.pipelines.cellc_pipeline import (
-    img_overlap_pipeline,
-    img_proc_pipeline,
-)
-from microscopy_proc.pipelines.make_zarr import tiff2zarr
-from microscopy_proc.pipelines.map_pipeline import (
+from microscopy_proc.pipelines.pipeline_funcs import (
+    cell_count_pipeline,
     cells2csv,
     get_cell_mappings,
     grouping_cells,
-    transform_coords,
-)
-from microscopy_proc.pipelines.reg_pipeline import (
     img_fine_pipeline,
+    img_overlap_pipeline,
     img_rough_pipeline,
     img_trim_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
+    tiff2zarr_pipeline,
+    transform_coords,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
@@ -47,7 +43,7 @@ if __name__ == "__main__":
     init_configs(pfm)
 
     # Making zarr from tiff file(s)
-    tiff2zarr(in_fp, pfm, chunks=PROC_CHUNKS)
+    tiff2zarr_pipeline(in_fp, pfm, chunks=PROC_CHUNKS)
 
     # Preparing reference images
     ref_prepare_pipeline(
@@ -87,7 +83,7 @@ if __name__ == "__main__":
         depth=DEPTH,
     )
 
-    img_proc_pipeline(
+    cell_count_pipeline(
         pfm=pfm,
         tophat_sigma=10,
         dog_sigma1=1,

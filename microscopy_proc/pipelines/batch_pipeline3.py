@@ -3,7 +3,7 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.pipelines.map_pipeline import (
+from microscopy_proc.pipelines.pipeline_funcs import (
     cells2csv,
     get_cell_mappings,
     grouping_cells,

@@ -3,17 +3,15 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.pipelines.map_pipeline import (
+from microscopy_proc.pipelines.pipeline_funcs import (
     cells2csv,
     get_cell_mappings,
     grouping_cells,
-    transform_coords,
-)
-from microscopy_proc.pipelines.reg_pipeline import (
     img_fine_pipeline,
     img_trim_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
+    transform_coords,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
