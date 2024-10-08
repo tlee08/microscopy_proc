@@ -69,11 +69,11 @@ class ConfigParamsModel(BaseModel):
         # Trim validation
         return self
 
-    def update_params(self, **kwargs):
+    def update(self, **kwargs):
         return self.model_validate(self.model_copy(update=kwargs))
 
     @classmethod
-    def update_params_file(cls, fp: str, **kwargs):
+    def update_file(cls, fp: str, **kwargs):
         """
         Reads the json file in `fp`, updates the parameters with `kwargs`,
         writes the updated parameters back to `fp` (if there are any updates),
