@@ -3,7 +3,7 @@ from dask.distributed import LocalCluster
 from dask_cuda import LocalCUDACluster
 
 # from prefect import flow
-from microscopy_proc.constants import DEPTH
+from microscopy_proc.constants import DEPTH, PROC_CHUNKS
 from microscopy_proc.funcs.cpu_arr_funcs import CpuArrFuncs as Cf
 from microscopy_proc.funcs.gpu_arr_funcs import GpuArrFuncs as Gf
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
@@ -153,7 +153,6 @@ if __name__ == "__main__":
 
     img_proc_pipeline(
         pfm=pfm,
-        d=DEPTH,
         tophat_sigma=10,
         dog_sigma1=1,
         dog_sigma2=4,

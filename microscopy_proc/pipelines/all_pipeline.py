@@ -92,7 +92,6 @@ if __name__ == "__main__":
 
     img_proc_pipeline(
         pfm=pfm,
-        d=DEPTH,
         tophat_sigma=10,
         dog_sigma1=1,
         dog_sigma2=4,
