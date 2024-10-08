@@ -74,6 +74,7 @@ def tiff2zarr_pipeline(in_fp: str, pfm: ProjFpModel):
     # Making zarr from tiff file(s)
     with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
         if os.path.isdir(in_fp):
+            # If in_fp is a directory, make zarr from the tiff file stack in directory
             tiffs2zarr(
                 natsorted(
                     [
@@ -86,13 +87,14 @@ def tiff2zarr_pipeline(in_fp: str, pfm: ProjFpModel):
                 chunks=configs.chunksize,
             )
         elif os.path.isfile(in_fp):
+            # If in_fp is a file, make zarr from the btiff file
             btiff2zarr(
                 in_fp,
                 pfm.raw,
                 chunks=configs.chunksize,
             )
         else:
-            raise ValueError("Input file path does not exist.")
+            raise ValueError(f'Input file path, "{in_fp}" does not exist.')
 
 
 # @flow

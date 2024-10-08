@@ -39,7 +39,7 @@ from microscopy_proc.utils.proj_org_utils import (
 if __name__ == "__main__":
     # Filenames
     in_fp = (
-        "home/linux1/Desktop/Sample_11_zoom0.52_2.5x_dual_side_fusion_2x4 vertical tif"
+        "/home/linux1/Desktop/Sample_11_zoom0.52_2.5x_dual_side_fusion_2x4 vertical tif"
     )
     proj_dir = "/home/linux1/Desktop/example_proj"
     # in_fp = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
