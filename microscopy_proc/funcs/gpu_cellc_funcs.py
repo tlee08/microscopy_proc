@@ -52,19 +52,19 @@ class GpuCellcFuncs(CpuCellcFuncs):
 
     @classmethod
     # @task
-    def label_with_ids(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().label_with_ids)(*args, **kwargs).get()
+    def mask2ids(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().mask2ids)(*args, **kwargs).get()
 
     @classmethod
     # @task
-    def label_with_sizes(cls, *args, **kwargs):
+    def label_with_volumes(cls, *args, **kwargs):
         # NOTE: Already returns a numpy array
-        return clear_cuda_mem_dec(super().label_with_sizes)(*args, **kwargs)
+        return clear_cuda_mem_dec(super().label_with_volumes)(*args, **kwargs)
 
     @classmethod
     # @task
-    def ids2sizes(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().ids2sizes)(*args, **kwargs).get()
+    def ids2volumes(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().ids2volumes)(*args, **kwargs).get()
 
     @classmethod
     # @task
@@ -73,8 +73,8 @@ class GpuCellcFuncs(CpuCellcFuncs):
 
     @classmethod
     # @task
-    def filt_by_size(cls, *args, **kwargs):
-        return clear_cuda_mem_dec(super().filt_by_size)(*args, **kwargs).get()
+    def volume_filter(cls, *args, **kwargs):
+        return clear_cuda_mem_dec(super().volume_filter)(*args, **kwargs).get()
 
     @classmethod
     # @task
@@ -94,9 +94,9 @@ class GpuCellcFuncs(CpuCellcFuncs):
 
     @classmethod
     # @task
-    def wshed_segm_sizes(cls, *args, **kwargs):
+    def wshed_segm_volumes(cls, *args, **kwargs):
         # NOTE: This is a CPU function
-        return clear_cuda_mem_dec(super().wshed_segm_sizes)(*args, **kwargs)
+        return clear_cuda_mem_dec(super().wshed_segm_volumes)(*args, **kwargs)
 
     @classmethod
     # @task

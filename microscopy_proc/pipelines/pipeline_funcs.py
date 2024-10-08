@@ -387,11 +387,11 @@ def cellc5_pipeline(pfm: ProjFpModel):
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Reading input images
         threshd_arr = da.from_zarr(pfm.threshd)
-        sizes_arr = da.map_blocks(
-            Cf.label_with_sizes,
+        threshd_volumes_arr = da.map_blocks(
+            Cf.label_with_volumes,
             threshd_arr,
         )
-        sizes_arr = disk_cache(sizes_arr, pfm.threshd_sizes)
+        threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes)
 
 
 def cellc6_pipeline(pfm: ProjFpModel):
@@ -405,11 +405,11 @@ def cellc6_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        sizes_arr = da.from_zarr(pfm.threshd_sizes)
+        threshd_volumes_arr = da.from_zarr(pfm.threshd_volumes)
         # Declaring processing instructions
         threshd_filt_arr = da.map_blocks(
-            Cf.filt_by_size,
-            sizes_arr,
+            Cf.volume_filter,
+            threshd_volumes_arr,
             configs.min_threshd,
             configs.max_threshd,
         )
@@ -445,7 +445,7 @@ def cellc8_pipeline(pfm: ProjFpModel):
     """
     Cell counting pipeline - Step 8
 
-    Watershed segmentation sizes.
+    Watershed segmentation volumes.
     """
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
@@ -455,14 +455,14 @@ def cellc8_pipeline(pfm: ProjFpModel):
         maxima_arr = da.from_zarr(pfm.maxima)
         threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
         # Declaring processing instructions
-        wshed_sizes_arr = da.map_blocks(
-            Cf.wshed_segm_sizes,
+        wshed_volumes_arr = da.map_blocks(
+            Cf.wshed_segm_volumes,
             overlap_arr,
             maxima_arr,
             threshd_filt_arr,
         )
         # Computing and saving
-        wshed_sizes_arr = disk_cache(wshed_sizes_arr, pfm.wshed_sizes)
+        wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes)
 
 
 def cellc9_pipeline(pfm: ProjFpModel):
@@ -476,11 +476,11 @@ def cellc9_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        wshed_sizes_arr = da.from_zarr(pfm.wshed_sizes)
+        wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes)
         # Declaring processing instructions
         wshed_filt_arr = da.map_blocks(
-            Cf.filt_by_size,
-            wshed_sizes_arr,
+            Cf.volume_filter,
+            wshed_volumes_arr,
             configs.min_wshed,
             configs.max_wshed,
         )
@@ -504,11 +504,11 @@ def cellc10_pipeline(pfm: ProjFpModel):
         # Reading input images
         maxima_arr = da.from_zarr(pfm.maxima)
         threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
-        wshed_sizes_arr = da.from_zarr(pfm.wshed_sizes)
+        wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes)
         # Declaring processing instructions
         maxima_final_arr = da_trim(maxima_arr, d=configs.depth)
         threshd_final_arr = da_trim(threshd_filt_arr, d=configs.depth)
-        wshed_final_arr = da_trim(wshed_sizes_arr, d=configs.depth)
+        wshed_final_arr = da_trim(wshed_volumes_arr, d=configs.depth)
         # Computing and saving
         disk_cache(maxima_final_arr, pfm.maxima_final)
         disk_cache(threshd_final_arr, pfm.threshd_final)
@@ -526,24 +526,22 @@ def cellc11_pipeline(pfm: ProjFpModel):
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
-        raw_arr = da.from_zarr(pfm.raw)
         overlap_arr = da.from_zarr(pfm.overlap)
         maxima_arr = da.from_zarr(pfm.maxima)
         wshed_filt_arr = da.from_zarr(pfm.wshed_filt)
         # Declaring processing instructions
-        # (coords, size, and intensity) to a df
-        # Getting maxima coords and corresponding watershed sizes in table
+        # Getting maxima coords and cell measures in table
         cells_df = block2coords(
             Cf.get_cells,
-            raw_arr,
             overlap_arr,
             maxima_arr,
             wshed_filt_arr,
             configs.depth,
         )
-        # Filtering out by size
+        # Filtering out by volume (same filter cellc9_pipeline volume_filter)
         cells_df = cells_df.query(
-            f"size >= {configs.min_wshed} and size <= {configs.max_wshed}"
+            f"{CellColumns.VOLUME.value} >= {configs.min_wshed} & "
+            + f"{CellColumns.VOLUME.value} <= {configs.max_wshed}"
         )
         # Computing and saving as parquet
         cells_df.to_parquet(pfm.cells_raw_df, overwrite=True)
@@ -551,7 +549,8 @@ def cellc11_pipeline(pfm: ProjFpModel):
 
 def cellc_coords_only_pipeline(pfm: ProjFpModel):
     """
-    Get coords of maxima and get corresponding sizes from watershed.
+    Get maxima coords.
+    Very basic but faster version of cellc11_pipeline get_cells.
     """
     # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
@@ -696,7 +695,7 @@ def group_cells_pipeline(pfm: ProjFpModel):
         annot_df = annot_dict2df(read_json(pfm.map))
         # Combining (summing) the cells_groagg values for parent regions using the annot_df
         cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
-        # Calculating integrated average intensity (sum_intensity / size)
+        # Calculating integrated average intensity (sum_intensity / volume)
         cells_agg_df[CellColumns.IOV.value] = (
             cells_agg_df[CellColumns.SUM_INTENSITY.value]
             / cells_agg_df[CellColumns.VOLUME.value]

@@ -81,10 +81,10 @@ if __name__ == "__main__":
         # ("dog", 100),
         # ("adaptv", 100),
         # ("threshd", 5),
-        # ("threshd_sizes", 10000),
+        # ("threshd_volumes", 10000),
         # ("threshd_filt", 5),
         # ("maxima", 5),
-        # ("wshed_sizes", 1000),
+        # ("wshed_volumes", 1000),
         # ("wshed_filt", 1000),
         # CELLC FINAL
         # ("threshd_final", 5),

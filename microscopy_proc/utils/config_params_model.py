@@ -59,8 +59,6 @@ class ConfigParamsModel(BaseModel):
     @model_validator(mode="after")
     def validate_trims(self):
         # Orient validation
-        assert len(self.ref_orient_ls) == 3
-        assert all(isinstance(i, int) for i in self.ref_orient_ls)
         ref_orient_ls_abs = [abs(i) for i in self.ref_orient_ls]
         assert max(ref_orient_ls_abs) == 3
         assert min(ref_orient_ls_abs) == 1

@@ -149,7 +149,7 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def label_with_ids(cls, arr: np.ndarray) -> np.ndarray:
+    def mask2ids(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
         """
@@ -161,28 +161,29 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def ids2sizes(cls, arr: np.ndarray) -> np.ndarray:
+    def ids2volumes(cls, arr: np.ndarray) -> np.ndarray:
         """
-        Convert labels to sizes.
+        Convert array of label values to
+        contiguous volume (i.e. count) values.
         """
         arr = cls.xp.asarray(arr)
-        logging.debug("Getting vector of ids and sizes (not incl. 0)")
+        logging.debug("Getting vector of ids and volumes (not incl. 0)")
         ids, counts = cls.xp.unique(arr[arr > 0], return_counts=True)
         # NOTE: assumes ids are incrementing from 1
         counts = cls.xp.concatenate([cls.xp.asarray([0]), counts])
-        logging.debug("Converting arr intensity to sizes")
+        logging.debug("Converting arr intensity to volumes")
         res = counts[arr]
         logging.debug("Returning")
         return res.astype(cls.xp.uint16)
 
     @classmethod
     # @task
-    def label_with_sizes(cls, arr: np.ndarray) -> np.ndarray:
+    def label_with_volumes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
         """
-        arr = cls.label_with_ids(arr)
-        res = cls.ids2sizes(arr)
+        arr = cls.mask2ids(arr)
+        res = cls.ids2volumes(arr)
         return res
 
     @classmethod
@@ -192,7 +193,7 @@ class CpuCellcFuncs:
         Visualise statistics.
 
         NOTE: expects arr to be a 3D tensor of a property
-        (e.g. size).
+        (e.g. volume).
         """
         logging.debug("Converting arr to vector of the ids")
         ids = arr[arr > 0]
@@ -207,9 +208,9 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def filt_by_size(cls, arr: np.ndarray, smin=None, smax=None):
+    def volume_filter(cls, arr: np.ndarray, smin=None, smax=None):
         """
-        Assumes `arr` is array of objects labelled with their size.
+        Assumes `arr` is array of objects labelled with their volumes.
         """
         arr = cls.xp.asarray(arr)
         logging.debug("Getting filter of small and large object to filter out")
@@ -283,18 +284,18 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def wshed_segm_sizes(
+    def wshed_segm_volumes(
         cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
     ):
         """
         NOTE: NOT GPU accelerated
         """
         # Labelling contiguous maxima with unique labels
-        maxima_arr = cls.label_with_ids(maxima_arr)
+        maxima_arr = cls.mask2ids(maxima_arr)
         # Watershed segmentation
         wshed_arr = cls.wshed_segm(raw_arr, maxima_arr, mask_arr)
-        # Getting sizes of watershed regions
-        res = cls.ids2sizes(wshed_arr)
+        # Getting volumes of watershed regions
+        res = cls.ids2volumes(wshed_arr)
         # Returning
         return res
 
@@ -315,9 +316,9 @@ class CpuCellcFuncs:
             {Coords.Z.value: z, Coords.Y.value: y, Coords.X.value: x},
             index=pd.Index(ids.astype(np.uint32), name=CELL_IDX_NAME),
         ).astype(np.uint16)
-        df["size"] = -1  # TODO: placeholder
-        df["sum_intensity"] = -1  # TODO: placeholder
-        # df["max_intensity"] = -1  # TODO: placeholder
+        df[CellColumns.VOLUME.value] = -1  # TODO: placeholder
+        df[CellColumns.SUM_INTENSITY.value] = -1  # TODO: placeholder
+        # df[CellColumns.MAX_INTENSITY.value] = -1  # TODO: placeholder
         # Returning
         return df
 
@@ -325,7 +326,6 @@ class CpuCellcFuncs:
     # @task
     def get_cells(
         cls,
-        raw_arr: np.ndarray,
         overlap_arr: np.ndarray,
         maxima_arr: np.ndarray,
         mask_arr: np.ndarray,
@@ -335,14 +335,12 @@ class CpuCellcFuncs:
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).
         """
-        # Asserting arr sizes match between raw_arr, overlap_arr, and depth
-        assert raw_arr.shape == tuple(i - 2 * depth for i in overlap_arr.shape)
         logging.debug("Trimming maxima labels array to raw array dimensions using `d`")
         slicer = slice(depth, -depth) if depth > 0 else slice(None)
         maxima_arr = maxima_arr[slicer, slicer, slicer]
         logging.debug("Getting unique labels in maxima_arr")
-        maxima_l_arr = cls.label_with_ids(maxima_arr)
-        logging.debug("Converting to DataFrame of coordinates and sizes")
+        maxima_l_arr = cls.mask2ids(maxima_arr)
+        logging.debug("Converting to DataFrame of coordinates and measures")
         # NOTE: getting first coord of each unique label
         ids_m, ind = cls.xp.unique(maxima_l_arr, return_index=True)
         z, y, x = cls.xp.unravel_index(ind, maxima_l_arr.shape)
@@ -363,11 +361,8 @@ class CpuCellcFuncs:
         maxima_l_arr = np.pad(
             cp2np(maxima_l_arr), depth, mode="constant", constant_values=0
         )
-        print("overlap_arr", overlap_arr.shape)
-        print("maxima_l_arr", maxima_l_arr.shape)
-        print("mask_arr", mask_arr.shape)
         wshed_arr = cls.wshed_segm(overlap_arr, maxima_l_arr, mask_arr)
-        logging.debug("Making vector of region sizes (corresponding to maxima)")
+        logging.debug("Making vector of watershed region volumes")
         ids_w, counts = cls.xp.unique(wshed_arr[wshed_arr > 0], return_counts=True)
         ids_w = cp2np(ids_w).astype(np.uint32)
         counts = cp2np(counts).astype(np.uint32)
@@ -379,7 +374,7 @@ class CpuCellcFuncs:
         )
         # NOTE: excluding 0 valued elements means sum_intensity matches with ids_w
         sum_intensity = cp2np(sum_intensity[sum_intensity > 0])
-        logging.debug("Adding sizes and intensities to DataFrame")
+        logging.debug("Adding cell measures to DataFrame")
         idx = pd.Index(ids_w, name=CELL_IDX_NAME)
         df[CellColumns.COUNT.value] = 1
         df[CellColumns.VOLUME.value] = pd.Series(counts, index=idx)

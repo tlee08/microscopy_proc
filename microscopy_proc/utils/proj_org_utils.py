@@ -79,10 +79,10 @@ class ProjFpModel(BaseModel):
     dog: str
     adaptv: str
     threshd: str
-    threshd_sizes: str
+    threshd_volumes: str
     threshd_filt: str
     maxima: str
-    wshed_sizes: str
+    wshed_volumes: str
     wshed_filt: str
     threshd_final: str
     maxima_final: str
@@ -130,10 +130,12 @@ class ProjFpModel(BaseModel):
             dog=os.path.join(proj_dir, "cellcount", "2_dog.zarr"),
             adaptv=os.path.join(proj_dir, "cellcount", "3_adaptv.zarr"),
             threshd=os.path.join(proj_dir, "cellcount", "4_threshd.zarr"),
-            threshd_sizes=os.path.join(proj_dir, "cellcount", "5_threshd_sizes.zarr"),
+            threshd_volumes=os.path.join(
+                proj_dir, "cellcount", "5_threshd_volumes.zarr"
+            ),
             threshd_filt=os.path.join(proj_dir, "cellcount", "6_threshd_filt.zarr"),
             maxima=os.path.join(proj_dir, "cellcount", "7_maxima.zarr"),
-            wshed_sizes=os.path.join(proj_dir, "cellcount", "8_wshed_sizes.zarr"),
+            wshed_volumes=os.path.join(proj_dir, "cellcount", "8_wshed_volumes.zarr"),
             wshed_filt=os.path.join(proj_dir, "cellcount", "9_wshed_filt.zarr"),
             threshd_final=os.path.join(proj_dir, "cellcount", "10_threshd_f.zarr"),
             maxima_final=os.path.join(proj_dir, "cellcount", "10_maxima_f.zarr"),
