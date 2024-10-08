@@ -3,7 +3,7 @@ import os
 
 from pydantic import BaseModel, ConfigDict
 
-from microscopy_proc.constants import RESOURCES_DIR, ProjFolders, RefFolders
+from microscopy_proc.constants import ProjFolders, RefFolders
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 
@@ -24,21 +24,12 @@ class RefFpModel(BaseModel):
     bspline: str
 
     @classmethod
-    def get_ref_fp_model(cls, atlas_dir=None, ref_v=None, annot_v=None, map_v=None):
+    def get_ref_fp_model(cls, atlas_dir, ref_v, annot_v, map_v):
         """
         atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
 
         Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
         """
-        # NAMES OF ATLAS FILES USED
-        atlas_dir = RESOURCES_DIR if atlas_dir is None else atlas_dir
-        # "average_template_25", "ara_nissl_25"
-        ref_v = "average_template_25" if ref_v is None else ref_v
-        # "ccf_2017_25", "ccf_2016_25", "ccf_2015_25"
-        annot_v = "ccf_2016_25" if annot_v is None else ref_v
-        # "ABA_annotations", "CM_annotations"
-        map_v = "ABA_annotations" if map_v is None else ref_v
-
         return cls(
             ref=os.path.join(atlas_dir, RefFolders.REFERENCE.value, f"{ref_v}.tif"),
             annot=os.path.join(
