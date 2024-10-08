@@ -1,5 +1,10 @@
-import os
+import dask.array as da
+import dask.dataframe as dd
+import tifffile
 
+from microscopy_proc.funcs.visual_check_funcs_dask import (
+    coords2points,
+)
 from microscopy_proc.pipelines.pipeline_funcs import (
     cell_mapping_pipeline,
     cellc1_pipeline,
@@ -33,16 +38,15 @@ from microscopy_proc.utils.proj_org_utils import (
 
 if __name__ == "__main__":
     # Filenames
-    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
-    # in_fp = "/home/linux1/Desktop/A-1-1/cropped abcd_larger.tif"
-    # in_fp = "/home/linux1/Desktop/A-1-1/example"
-    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    in_fp = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
-    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    exp_name = "G17_2.5x_1x_zoom_07082024"
-
-    in_fp = os.path.join(in_fp, exp_name)
-    proj_dir = os.path.join(proj_dir, exp_name)
+    in_fp = (
+        "home/linux1/Desktop/Sample_11_zoom0.52_2.5x_dual_side_fusion_2x4 vertical tif"
+    )
+    proj_dir = "/home/linux1/Desktop/example_proj"
+    # in_fp = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
+    # proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
+    # exp_name = "G17_2.5x_1x_zoom_07082024"
+    # in_fp = os.path.join(in_fp, exp_name)
+    # proj_dir = os.path.join(proj_dir, exp_name)
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     pfm = get_proj_fp_model(proj_dir)
@@ -117,3 +121,15 @@ if __name__ == "__main__":
     group_cells_pipeline(pfm)
     # Exporting cells_agg parquet as csv
     cells2csv_pipeline(pfm)
+
+    # Running visual checks
+    coords2points(
+        dd.read_parquet(pfm.cells_raw_df).compute(),
+        da.from_zarr(pfm.raw).shape,
+        pfm.points_check,
+    )
+    coords2points(
+        dd.read_parquet(pfm.cells_trfm_df),
+        tifffile.imread(pfm.ref).shape,
+        pfm.points_trfm_check,
+    )
