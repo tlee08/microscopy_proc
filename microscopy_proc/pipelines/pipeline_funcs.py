@@ -506,11 +506,11 @@ def cellc10_pipeline(pfm: ProjFpModel):
         threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
         wshed_sizes_arr = da.from_zarr(pfm.wshed_sizes)
         # Declaring processing instructions
-        maxima_f_arr = da_trim(maxima_arr, d=configs.depth)
+        maxima_final_arr = da_trim(maxima_arr, d=configs.depth)
         threshd_final_arr = da_trim(threshd_filt_arr, d=configs.depth)
         wshed_final_arr = da_trim(wshed_sizes_arr, d=configs.depth)
         # Computing and saving
-        disk_cache(maxima_f_arr, pfm.maxima_final)
+        disk_cache(maxima_final_arr, pfm.maxima_final)
         disk_cache(threshd_final_arr, pfm.threshd_final)
         disk_cache(wshed_final_arr, pfm.wshed_final)
 
@@ -528,8 +528,8 @@ def cellc11_pipeline(pfm: ProjFpModel):
         # Reading input images
         raw_arr = da.from_zarr(pfm.raw)
         overlap_arr = da.from_zarr(pfm.overlap)
-        maxima_arr = da.from_zarr(pfm.maxima_final)
-        wshed_filt_arr = da.from_zarr(pfm.wshed_final)
+        maxima_arr = da.from_zarr(pfm.maxima)
+        wshed_filt_arr = da.from_zarr(pfm.wshed_filt)
         # Declaring processing instructions
         # (coords, size, and intensity) to a df
         # Getting maxima coords and corresponding watershed sizes in table
@@ -556,12 +556,12 @@ def cellc_coords_only_pipeline(pfm: ProjFpModel):
     # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
-        maxima_f_arr = da.from_zarr(pfm.maxima_final)
+        maxima_final_arr = da.from_zarr(pfm.maxima_final)
         # Declaring processing instructions
         # Storing coords of each maxima in df
         coords_df = block2coords(
             Gf.get_coords,
-            maxima_f_arr,
+            maxima_final_arr,
         )
         # Computing and saving as parquet
         coords_df.to_parquet(pfm.maxima_df, overwrite=True)
