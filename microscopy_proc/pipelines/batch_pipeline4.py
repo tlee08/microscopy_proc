@@ -3,16 +3,16 @@ import os
 
 from natsort import natsorted
 
+from microscopy_proc.constants import DEPTH
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
+    init_configs,
     make_proj_dirs,
 )
 
 # logging.basicConfig(level=logging.INFO)
 logging.disable(logging.CRITICAL)
 
-
-import dask.dataframe as dd
 
 if __name__ == "__main__":
     # Filenames
@@ -44,6 +44,9 @@ if __name__ == "__main__":
         try:
             # Making project folders
             make_proj_dirs(proj_dir)
+
+            init_configs(pfm, depth=DEPTH)
+
             # Converting maxima from raw space to refernce atlas space
             # transform_coords(pfm)
             # Getting ID mappings
@@ -59,20 +62,20 @@ if __name__ == "__main__":
             # except:
             #     print("no temp")
 
-            df_fp = pfm.cells_df
+            # df_fp = pfm.cells_df
 
-            pfm.cells_agg_df
-            x = dd.read_parquet(df_fp)
-            x = x.rename(columns={"z": "count"})
-            # x["count"] = 1
-            try:
-                x = x.drop(columns=["smb-share:server"])
-            except:
-                print("no smb-share:server")
-            # print(x)
-            x = x.compute()
-            # x = dd.from_pandas(x, npartitions=1)
-            x.to_parquet(df_fp, overwrite=True)
+            # pfm.cells_agg_df
+            # x = dd.read_parquet(df_fp)
+            # x = x.rename(columns={"z": "count"})
+            # # x["count"] = 1
+            # try:
+            #     x = x.drop(columns=["smb-share:server"])
+            # except:
+            #     print("no smb-share:server")
+            # # print(x)
+            # x = x.compute()
+            # # x = dd.from_pandas(x, npartitions=1)
+            # x.to_parquet(df_fp, overwrite=True)
 
             # cells2csv(pfm)
 
