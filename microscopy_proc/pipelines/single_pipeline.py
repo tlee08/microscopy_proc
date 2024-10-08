@@ -7,27 +7,9 @@ from microscopy_proc.funcs.visual_check_funcs_dask import (
 )
 from microscopy_proc.pipelines.pipeline_funcs import (
     cell_mapping_pipeline,
-    cellc1_pipeline,
-    cellc2_pipeline,
-    cellc3_pipeline,
-    cellc4_pipeline,
-    cellc5_pipeline,
-    cellc6_pipeline,
-    cellc7_pipeline,
-    cellc8_pipeline,
-    cellc9_pipeline,
-    cellc10_pipeline,
     cellc11_pipeline,
     cells2csv_pipeline,
     group_cells_pipeline,
-    img_fine_pipeline,
-    img_overlap_pipeline,
-    img_rough_pipeline,
-    img_trim_pipeline,
-    make_mask_pipeline,
-    ref_prepare_pipeline,
-    registration_pipeline,
-    tiff2zarr_pipeline,
     transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
@@ -91,31 +73,31 @@ if __name__ == "__main__":
         max_wshed=700,
     )
 
-    # Making zarr from tiff file(s)
-    tiff2zarr_pipeline(in_fp, pfm)
-    # Preparing reference images
-    ref_prepare_pipeline(pfm)
-    # Preparing image itself
-    img_rough_pipeline(pfm)
-    img_fine_pipeline(pfm)
-    img_trim_pipeline(pfm)
-    # Running Elastix registration
-    registration_pipeline(pfm)
-    # Running mask pipeline
-    make_mask_pipeline(pfm)
-    # Making overlap chunks in preparation for cell counting
-    img_overlap_pipeline(pfm)
-    # Counting cells
-    cellc1_pipeline(pfm)
-    cellc2_pipeline(pfm)
-    cellc3_pipeline(pfm)
-    cellc4_pipeline(pfm)
-    cellc5_pipeline(pfm)
-    cellc6_pipeline(pfm)
-    cellc7_pipeline(pfm)
-    cellc8_pipeline(pfm)
-    cellc9_pipeline(pfm)
-    cellc10_pipeline(pfm)
+    # # Making zarr from tiff file(s)
+    # tiff2zarr_pipeline(in_fp, pfm)
+    # # Preparing reference images
+    # ref_prepare_pipeline(pfm)
+    # # Preparing image itself
+    # img_rough_pipeline(pfm)
+    # img_fine_pipeline(pfm)
+    # img_trim_pipeline(pfm)
+    # # Running Elastix registration
+    # registration_pipeline(pfm)
+    # # Running mask pipeline
+    # make_mask_pipeline(pfm)
+    # # Making overlap chunks in preparation for cell counting
+    # img_overlap_pipeline(pfm)
+    # # Counting cells
+    # cellc1_pipeline(pfm)
+    # cellc2_pipeline(pfm)
+    # cellc3_pipeline(pfm)
+    # cellc4_pipeline(pfm)
+    # cellc5_pipeline(pfm)
+    # cellc6_pipeline(pfm)
+    # cellc7_pipeline(pfm)
+    # cellc8_pipeline(pfm)
+    # cellc9_pipeline(pfm)
+    # cellc10_pipeline(pfm)
     cellc11_pipeline(pfm)
     # Converting maxima from raw space to refernce atlas space
     transform_coords_pipeline(pfm)
