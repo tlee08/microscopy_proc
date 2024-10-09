@@ -1,3 +1,4 @@
+import functools
 import logging
 import os
 import re
@@ -75,6 +76,7 @@ def overwrite_check_decorator(func: Callable):
     (as specified in `overwrite_fp_map`) already exists.
     """
 
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # Getting overwrite arg
         overwrite = kwargs.get("overwrite", False)
@@ -884,28 +886,28 @@ def all_pipeline(
 
 
 overwrite_fp_map = {
-    "tiff2zarr_pipeline": ["raw"],
-    "ref_prepare_pipeline": ["ref", "annot", "map", "affine", "bspline"],
-    "img_rough_pipeline": ["downsmpl1"],
-    "img_fine_pipeline": ["downsmpl2"],
-    "img_trim_pipeline": ["trimmed"],
-    "registration_pipeline": ["regresult"],
-    "make_mask_pipeline": ["mask_df"],
-    "img_overlap_pipeline": ["overlap"],
-    "cellc1_pipeline": ["bgrm"],
-    "cellc2_pipeline": ["dog"],
-    "cellc3_pipeline": ["adaptv"],
-    "cellc4_pipeline": ["threshd"],
-    "cellc5_pipeline": ["threshd_volumes"],
-    "cellc6_pipeline": ["threshd_filt"],
-    "cellc7_pipeline": ["maxima"],
-    "cellc8_pipeline": ["wshed_volumes"],
-    "cellc9_pipeline": ["wshed_filt"],
-    "cellc10_pipeline": ["threshd_final", "maxima_final", "wshed_final"],
-    "cellc11_pipeline": ["cells_raw_df"],
-    "cellc_coords_only_pipeline": ["maxima_df"],
-    "transform_coords_pipeline": ["cells_trfm_df"],
-    "cell_mapping_pipeline": ["cells_df"],
-    "group_cells_pipeline": ["cells_agg_df"],
-    "cells2csv_pipeline": ["cells_agg_csv"],
+    tiff2zarr_pipeline.__name__: ["raw"],
+    ref_prepare_pipeline.__name__: ["ref", "annot", "map", "affine", "bspline"],
+    img_rough_pipeline.__name__: ["downsmpl1"],
+    img_fine_pipeline.__name__: ["downsmpl2"],
+    img_trim_pipeline.__name__: ["trimmed"],
+    registration_pipeline.__name__: ["regresult"],
+    make_mask_pipeline.__name__: ["mask_df"],
+    img_overlap_pipeline.__name__: ["overlap"],
+    cellc1_pipeline.__name__: ["bgrm"],
+    cellc2_pipeline.__name__: ["dog"],
+    cellc3_pipeline.__name__: ["adaptv"],
+    cellc4_pipeline.__name__: ["threshd"],
+    cellc5_pipeline.__name__: ["threshd_volumes"],
+    cellc6_pipeline.__name__: ["threshd_filt"],
+    cellc7_pipeline.__name__: ["maxima"],
+    cellc8_pipeline.__name__: ["wshed_volumes"],
+    cellc9_pipeline.__name__: ["wshed_filt"],
+    cellc10_pipeline.__name__: ["threshd_final", "maxima_final", "wshed_final"],
+    cellc11_pipeline.__name__: ["cells_raw_df"],
+    cellc_coords_only_pipeline.__name__: ["maxima_df"],
+    transform_coords_pipeline.__name__: ["cells_trfm_df"],
+    cell_mapping_pipeline.__name__: ["cells_df"],
+    group_cells_pipeline.__name__: ["cells_agg_df"],
+    cells2csv_pipeline.__name__: ["cells_agg_csv"],
 }
