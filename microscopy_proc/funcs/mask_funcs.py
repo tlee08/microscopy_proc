@@ -14,11 +14,11 @@ def make_outline(arr: np.ndarray) -> pd.DataFrame:
     coords_df = pd.concat(
         [
             pd.DataFrame(
-                np.asarray(np.where((arr == 1) & (r_shift == 0))).T,
+                np.array(np.where((arr == 1) & (r_shift == 0))).T,
                 columns=[Coords.Z.value, Coords.Y.value, Coords.X.value],
             ).assign(is_in=1),
             pd.DataFrame(
-                np.asarray(np.where((arr == 1) & (l_shift == 0))).T,
+                np.array(np.where((arr == 1) & (l_shift == 0))).T,
                 columns=[Coords.Z.value, Coords.Y.value, Coords.X.value],
             ).assign(is_in=0),
         ]
