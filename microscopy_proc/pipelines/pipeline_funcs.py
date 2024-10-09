@@ -211,7 +211,7 @@ def img_fine_pipeline(
 @overwrite_check_decorator
 def img_trim_pipeline(
     pfm: ProjFpModel,
-    overwrite: bool = False,
+    # overwrite: bool = False,
 ) -> None:
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))

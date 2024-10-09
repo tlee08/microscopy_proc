@@ -1,16 +1,6 @@
-import dask.array as da
-import dask.dataframe as dd
-import tifffile
-
-from microscopy_proc.funcs.visual_check_funcs_dask import (
-    coords2points,
-)
 from microscopy_proc.pipelines.pipeline_funcs import (
-    cell_mapping_pipeline,
-    cellc_coords_only_pipeline,
-    cells2csv_pipeline,
-    group_cells_pipeline,
-    transform_coords_pipeline,
+    img_fine_pipeline,
+    img_trim_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
@@ -79,8 +69,8 @@ if __name__ == "__main__":
     # ref_prepare_pipeline(pfm)
     # # Preparing image itself
     # img_rough_pipeline(pfm)
-    # img_fine_pipeline(pfm)
-    # img_trim_pipeline(pfm)
+    img_fine_pipeline(pfm)
+    img_trim_pipeline(pfm)
     # # Running Elastix registration
     # registration_pipeline(pfm)
     # # Running mask pipeline
@@ -99,24 +89,24 @@ if __name__ == "__main__":
     # cellc9_pipeline(pfm)
     # cellc10_pipeline(pfm)
     # cellc11_pipeline(pfm)
-    cellc_coords_only_pipeline(pfm)
-    # Converting maxima from raw space to refernce atlas space
-    transform_coords_pipeline(pfm)
-    # Getting Region ID mappings for each cell
-    cell_mapping_pipeline(pfm)
-    # Grouping cells
-    group_cells_pipeline(pfm)
-    # Exporting cells_agg parquet as csv
-    cells2csv_pipeline(pfm)
+    # cellc_coords_only_pipeline(pfm)
+    # # Converting maxima from raw space to refernce atlas space
+    # transform_coords_pipeline(pfm)
+    # # Getting Region ID mappings for each cell
+    # cell_mapping_pipeline(pfm)
+    # # Grouping cells
+    # group_cells_pipeline(pfm)
+    # # Exporting cells_agg parquet as csv
+    # cells2csv_pipeline(pfm)
 
-    # Running visual checks
-    coords2points(
-        dd.read_parquet(pfm.cells_raw_df).compute(),
-        da.from_zarr(pfm.raw).shape,
-        pfm.points_check,
-    )
-    coords2points(
-        dd.read_parquet(pfm.cells_trfm_df),
-        tifffile.imread(pfm.ref).shape,
-        pfm.points_trfm_check,
-    )
+    # # Running visual checks
+    # coords2points(
+    #     dd.read_parquet(pfm.cells_raw_df).compute(),
+    #     da.from_zarr(pfm.raw).shape,
+    #     pfm.points_check,
+    # )
+    # coords2points(
+    #     dd.read_parquet(pfm.cells_trfm_df),
+    #     tifffile.imread(pfm.ref).shape,
+    #     pfm.points_trfm_check,
+    # )
