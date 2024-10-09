@@ -113,13 +113,14 @@ def annot_df_get_children(annot_df: pd.DataFrame) -> pd.DataFrame:
 
 def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     """
-    Combine (sum) children regions in their parent regions in the cells_agg dataframe.
+    Combine (sum) children regions in their parent regions
+    in the cells_agg dataframe.
 
     Done recursively.
 
     Returns a new dataframe with index as region ID,
     the annotation columns, and the
-    same columns as the input cells_agg dataframe.
+    same columns as the input `cells_agg_df` dataframe.
 
     Notes
     -----

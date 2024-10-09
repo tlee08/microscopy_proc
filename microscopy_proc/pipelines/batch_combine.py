@@ -25,11 +25,12 @@ if __name__ == "__main__":
     exp_ls = natsorted(os.listdir(batch_proj_dir))
     exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(batch_proj_dir, i))]
 
-    # Check if all experiments have cells_agg_df file
+    # Check if all experiments have cells_agg_df and mask_df files
     for i in exp_ls:
         proj_dir = os.path.join(batch_proj_dir, i)
         pfm = get_proj_fp_model(proj_dir)
         assert os.path.exists(pfm.cells_agg_df), f"Missing cells_agg_df for {i}"
+        assert os.path.exists(pfm.mask_df), f"Missing mask_df for {i}"
 
     # Making combined_agg_df with (annot_df)
     total_df = annot_dict2df(read_json(pfm.map))
@@ -52,39 +53,47 @@ if __name__ == "__main__":
         # Filenames
         proj_dir = os.path.join(batch_proj_dir, i)
         pfm = get_proj_fp_model(proj_dir)
-        try:
-            # CELL_AGG_DF
-            # Reading experiment's cells_agg dataframe
-            cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
-            # Sanitising (removing smb columns)
-            cells_agg_df = sanitise_smb_df(cells_agg_df)
-            # Keeping only the required columns (not annot columns)
-            cells_agg_df = cells_agg_df[enum2list(CellColumns)]
-            # MASK_DF
-            # Reading experiment's mask_counts dataframe
-            mask_df = pd.read_parquet(pfm.mask_df)
-            # Keeping only the required columns
-            mask_df = mask_df[enum2list(MaskColumns)]
-            # Making columns a multindex with levels as
-            # (specimen name, cell agg columns)
-            cells_agg_df = pd.concat(
-                [cells_agg_df, mask_df],
-                keys=[i, i],
-                names=["specimen"],
-                axis=1,
-            )
-            # Merging with comb_agg_df (ID is index for both dfs)
-            total_df = pd.merge(
-                left=total_df,
-                right=cells_agg_df,
-                left_index=True,
-                right_index=True,
-                how="outer",
-            )
-            print()
-        except Exception as e:
-            logging.info(f"Error in {i}: {e}")
-            print(f"Error in {i}: {e}")
+        # try:
+        # CELL_AGG_DF
+        # Reading experiment's cells_agg dataframe
+        cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
+        # Sanitising (removing smb columns)
+        cells_agg_df = sanitise_smb_df(cells_agg_df)
+        # Keeping only the required columns (not annot columns)
+        cells_agg_df = cells_agg_df[enum2list(CellColumns)]
+        # MASK_DF
+        # Reading experiment's mask_counts dataframe
+        mask_df = pd.read_parquet(pfm.mask_df)
+        # Keeping only the required columns
+        mask_df = mask_df[enum2list(MaskColumns)]
+        # Merging cells_agg_df with mask_df to combine columns
+        exp_df = pd.merge(
+            left=cells_agg_df,
+            right=mask_df,
+            left_index=True,
+            right_index=True,
+            how="outer",
+        )
+        # Making columns a multindex with levels as
+        # (specimen name, cell agg columns)
+        exp_df = pd.concat(
+            [exp_df],
+            keys=[i],
+            names=["specimen"],
+            axis=1,
+        )
+        # Merging with comb_agg_df (ID is index for both dfs)
+        total_df = pd.merge(
+            left=total_df,
+            right=exp_df,
+            left_index=True,
+            right_index=True,
+            how="outer",
+        )
+        print()
+        # except Exception as e:
+        #     logging.info(f"Error in {i}: {e}")
+        #     print(f"Error in {i}: {e}")
     # Setting column MultiIndex's level names
     total_df.columns = total_df.columns.set_names(["specimen", "measure"])
     # Saving to disk
