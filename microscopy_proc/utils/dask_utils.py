@@ -24,20 +24,6 @@ def block2coords(func, *args: list) -> dd.DataFrame:
         - At each block, offset the coords by the block's location in the entire array.
     """
 
-    @dask.delayed
-    def func_offsetted(args: list, z_offset: int, y_offset: int, x_offset: int):
-        df = func(*args)
-        df.loc[:, Coords.Z.value] = (
-            df[Coords.Z.value] + z_offset if Coords.Z.value in df.columns else z_offset
-        )
-        df.loc[:, Coords.Y.value] = (
-            df[Coords.Y.value] + y_offset if Coords.Y.value in df.columns else y_offset
-        )
-        df.loc[:, Coords.X.value] = (
-            df[Coords.X.value] + x_offset if Coords.X.value in df.columns else x_offset
-        )
-        return df
-
     # Asserting that all da.Array objects have the same chunks
     curr_chunks = None
     for arg in args:
@@ -62,18 +48,36 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     # Getting number of blocks
     n = z_offsets.shape[0]
     # Converting dask arrays to list of delayed blocks in args list
-    # and transposing so (block, arg) dimensions.
     args_blocks = [
         i.to_delayed().ravel() if isinstance(i, da.Array) else list(const_iter(i, n))
         for i in args
     ]
+    # Transposing so (block, arg) dimensions.
+    args_blocks = list(map(list, zip(*args_blocks)))
+
+    # Defining the function that offsets the coords in each block
+    # Given the block args and offsets, applies the function to each block
+    # and offsets the outputted coords for the block.
+    @dask.delayed
+    def func_offsetted(args: list, z_offset: int, y_offset: int, x_offset: int):
+        df = func(*args)
+        df.loc[:, Coords.Z.value] = (
+            df[Coords.Z.value] + z_offset if Coords.Z.value in df.columns else z_offset
+        )
+        df.loc[:, Coords.Y.value] = (
+            df[Coords.Y.value] + y_offset if Coords.Y.value in df.columns else y_offset
+        )
+        df.loc[:, Coords.X.value] = (
+            df[Coords.X.value] + x_offset if Coords.X.value in df.columns else x_offset
+        )
+        return df
 
     # Applying the function to each block
     return dd.from_delayed(
         [
             func_offsetted(args_block, z_offset, y_offset, x_offset)
-            for *args_block, z_offset, y_offset, x_offset in zip(
-                *args_blocks, z_offsets, y_offsets, x_offsets
+            for args_block, z_offset, y_offset, x_offset in zip(
+                args_blocks, z_offsets, y_offsets, x_offsets
             )
         ]
     )
