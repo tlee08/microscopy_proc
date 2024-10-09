@@ -42,6 +42,8 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_fp_dir != batch_proj_dir
 
+    overwrite = False
+
     # Get all experiments
     exp_ls = natsorted(os.listdir(in_fp_dir))
     exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(in_fp_dir, i))]
@@ -66,7 +68,6 @@ if __name__ == "__main__":
             # Filenames
             in_fp = os.path.join(in_fp_dir, i)
             proj_dir = os.path.join(batch_proj_dir, i)
-
             # Getting file paths
             pfm = get_proj_fp_model(proj_dir)
             # Making project folders
@@ -106,46 +107,41 @@ if __name__ == "__main__":
                 max_wshed=700,
             )
 
-            if not os.path.exists(pfm.raw):
-                # Making zarr from tiff file(s)
-                tiff2zarr_pipeline(pfm, in_fp)
-
-            # if not os.path.exists(pfm.regresult"]):
+            # Making zarr from tiff file(s)
+            tiff2zarr_pipeline(pfm, in_fp, overwrite=overwrite)
             # Preparing reference images
-            ref_prepare_pipeline(pfm)
+            ref_prepare_pipeline(pfm, overwrite=overwrite)
             # Preparing image itself
-            img_rough_pipeline(pfm)
-            img_fine_pipeline(pfm)
-            img_trim_pipeline(pfm)
+            img_rough_pipeline(pfm, overwrite=overwrite)
+            img_fine_pipeline(pfm, overwrite=overwrite)
+            img_trim_pipeline(pfm, overwrite=overwrite)
             # Running Elastix registration
             registration_pipeline(pfm)
             # Running mask pipeline
             make_mask_pipeline(pfm)
-
-            if not os.path.exists(pfm.cells_raw_df):
-                # Making overlapped chunks images for processing
-                img_overlap_pipeline(pfm)
-                # Cell counting
-                cellc1_pipeline(pfm)
-                cellc2_pipeline(pfm)
-                cellc3_pipeline(pfm)
-                cellc4_pipeline(pfm)
-                cellc5_pipeline(pfm)
-                cellc6_pipeline(pfm)
-                cellc7_pipeline(pfm)
-                cellc8_pipeline(pfm)
-                cellc9_pipeline(pfm)
-                cellc10_pipeline(pfm)
-                cellc11_pipeline(pfm)
-
+            # Making overlap chunks in preparation for cell counting
+            img_overlap_pipeline(pfm)
+            # Counting cells
+            cellc1_pipeline(pfm, overwrite=overwrite)
+            cellc2_pipeline(pfm, overwrite=overwrite)
+            cellc3_pipeline(pfm, overwrite=overwrite)
+            cellc4_pipeline(pfm, overwrite=overwrite)
+            cellc5_pipeline(pfm, overwrite=overwrite)
+            cellc6_pipeline(pfm, overwrite=overwrite)
+            cellc7_pipeline(pfm, overwrite=overwrite)
+            cellc8_pipeline(pfm, overwrite=overwrite)
+            cellc9_pipeline(pfm, overwrite=overwrite)
+            cellc10_pipeline(pfm, overwrite=overwrite)
+            cellc11_pipeline(pfm, overwrite=overwrite)
             # Converting maxima from raw space to refernce atlas space
-            transform_coords_pipeline(pfm)
+            transform_coords_pipeline(pfm, overwrite=overwrite)
             # Getting Region ID mappings for each cell
-            cell_mapping_pipeline(pfm)
+            cell_mapping_pipeline(pfm, overwrite=overwrite)
             # Grouping cells
-            group_cells_pipeline(pfm)
+            group_cells_pipeline(pfm, overwrite=overwrite)
             # Exporting cells_agg parquet as csv
-            cells2csv_pipeline(pfm)
+            cells2csv_pipeline(pfm, overwrite=overwrite)
+
             print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
