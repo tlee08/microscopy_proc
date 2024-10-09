@@ -78,6 +78,7 @@ def overwrite_check_decorator(func):
         # Getting overwrite arg
         overwrite = kwargs.get("overwrite", False)
         # If overwrite is False, check if output file exists
+        print(overwrite_fp_map)
         if not overwrite:
             # Getting pfm arg
             pfm = kwargs.get("pfm", args[0])
