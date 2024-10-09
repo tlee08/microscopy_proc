@@ -1,6 +1,33 @@
+import dask.array as da
+import dask.dataframe as dd
+import tifffile
+
+from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.pipelines.pipeline_funcs import (
+    cell_mapping_pipeline,
+    cellc1_pipeline,
+    cellc2_pipeline,
+    cellc3_pipeline,
+    cellc4_pipeline,
+    cellc5_pipeline,
+    cellc6_pipeline,
+    cellc7_pipeline,
+    cellc8_pipeline,
+    cellc9_pipeline,
+    cellc10_pipeline,
+    cellc11_pipeline,
+    cellc_coords_only_pipeline,
+    cells2csv_pipeline,
+    group_cells_pipeline,
     img_fine_pipeline,
+    img_overlap_pipeline,
+    img_rough_pipeline,
     img_trim_pipeline,
+    make_mask_pipeline,
+    ref_prepare_pipeline,
+    registration_pipeline,
+    tiff2zarr_pipeline,
+    transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
@@ -23,6 +50,8 @@ if __name__ == "__main__":
     # exp_name = "G17_2.5x_1x_zoom_07082024"
     # in_fp = os.path.join(in_fp, exp_name)
     # proj_dir = os.path.join(proj_dir, exp_name)
+
+    overwrite = True
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     pfm = get_proj_fp_model(proj_dir)
@@ -63,50 +92,50 @@ if __name__ == "__main__":
         max_wshed=700,
     )
 
-    # # Making zarr from tiff file(s)
-    # tiff2zarr_pipeline(pfm, in_fp)
-    # # Preparing reference images
-    # ref_prepare_pipeline(pfm)
-    # # Preparing image itself
-    # img_rough_pipeline(pfm)
-    img_fine_pipeline(pfm)
-    img_trim_pipeline(pfm)
-    # # Running Elastix registration
-    # registration_pipeline(pfm)
-    # # Running mask pipeline
-    # make_mask_pipeline(pfm)
-    # # Making overlap chunks in preparation for cell counting
-    # img_overlap_pipeline(pfm)
+    # Making zarr from tiff file(s)
+    tiff2zarr_pipeline(pfm, in_fp, overwrite=overwrite)
+    # Preparing reference images
+    ref_prepare_pipeline(pfm, overwrite=overwrite)
+    # Preparing image itself
+    img_rough_pipeline(pfm, overwrite=overwrite)
+    img_fine_pipeline(pfm, overwrite=overwrite)
+    img_trim_pipeline(pfm, overwrite=overwrite)
+    # Running Elastix registration
+    registration_pipeline(pfm, overwrite=overwrite)
+    # Running mask pipeline
+    make_mask_pipeline(pfm, overwrite=overwrite)
+    # Making overlap chunks in preparation for cell counting
+    img_overlap_pipeline(pfm, overwrite=overwrite)
     # Counting cells
-    # cellc1_pipeline(pfm)
-    # cellc2_pipeline(pfm)
-    # cellc3_pipeline(pfm)
-    # cellc4_pipeline(pfm)
-    # cellc5_pipeline(pfm)
-    # cellc6_pipeline(pfm)
-    # cellc7_pipeline(pfm)
-    # cellc8_pipeline(pfm)
-    # cellc9_pipeline(pfm)
-    # cellc10_pipeline(pfm)
-    # cellc11_pipeline(pfm)
-    # cellc_coords_only_pipeline(pfm)
-    # # Converting maxima from raw space to refernce atlas space
-    # transform_coords_pipeline(pfm)
-    # # Getting Region ID mappings for each cell
-    # cell_mapping_pipeline(pfm)
-    # # Grouping cells
-    # group_cells_pipeline(pfm)
-    # # Exporting cells_agg parquet as csv
-    # cells2csv_pipeline(pfm)
+    cellc1_pipeline(pfm, overwrite=overwrite)
+    cellc2_pipeline(pfm, overwrite=overwrite)
+    cellc3_pipeline(pfm, overwrite=overwrite)
+    cellc4_pipeline(pfm, overwrite=overwrite)
+    cellc5_pipeline(pfm, overwrite=overwrite)
+    cellc6_pipeline(pfm, overwrite=overwrite)
+    cellc7_pipeline(pfm, overwrite=overwrite)
+    cellc8_pipeline(pfm, overwrite=overwrite)
+    cellc9_pipeline(pfm, overwrite=overwrite)
+    cellc10_pipeline(pfm, overwrite=overwrite)
+    cellc11_pipeline(pfm, overwrite=overwrite)
+    cellc_coords_only_pipeline(pfm, overwrite=overwrite)
+    # Converting maxima from raw space to refernce atlas space
+    transform_coords_pipeline(pfm, overwrite=overwrite)
+    # Getting Region ID mappings for each cell
+    cell_mapping_pipeline(pfm, overwrite=overwrite)
+    # Grouping cells
+    group_cells_pipeline(pfm, overwrite=overwrite)
+    # Exporting cells_agg parquet as csv
+    cells2csv_pipeline(pfm, overwrite=overwrite)
 
-    # # Running visual checks
-    # coords2points(
-    #     dd.read_parquet(pfm.cells_raw_df).compute(),
-    #     da.from_zarr(pfm.raw).shape,
-    #     pfm.points_check,
-    # )
-    # coords2points(
-    #     dd.read_parquet(pfm.cells_trfm_df),
-    #     tifffile.imread(pfm.ref).shape,
-    #     pfm.points_trfm_check,
-    # )
+    # Running visual checks
+    coords2points(
+        dd.read_parquet(pfm.cells_raw_df).compute(),
+        da.from_zarr(pfm.raw).shape,
+        pfm.points_check,
+    )
+    coords2points(
+        dd.read_parquet(pfm.cells_trfm_df),
+        tifffile.imread(pfm.ref).shape,
+        pfm.points_trfm_check,
+    )

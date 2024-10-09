@@ -58,9 +58,6 @@ if __name__ == "__main__":
             "G13_2.5x_1x_zoom_07082024",
         ]:
             continue
-        # Checking if it is a directory
-        if not os.path.isdir(os.path.join(in_fp_dir, i)):
-            continue
         # Logging which file is being processed
         print(f"Running: {i}")
         logging.info(f"Running: {i}")
