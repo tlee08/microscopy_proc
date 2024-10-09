@@ -63,20 +63,17 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     n = z_offsets.shape[0]
     # Converting dask arrays to list of delayed blocks in args list
     # and transposing so (block, arg) dimensions.
-    args_blocks = np.array(
-        [
-            i.to_delayed().ravel()
-            if isinstance(i, da.Array)
-            else list(const_iter(i, n))
-            for i in args
-        ]
-    ).T
+    args_blocks = [
+        i.to_delayed().ravel() if isinstance(i, da.Array) else list(const_iter(i, n))
+        for i in args
+    ]
+
     # Applying the function to each block
     return dd.from_delayed(
         [
             func_offsetted(args_block, z_offset, y_offset, x_offset)
-            for args_block, z_offset, y_offset, x_offset in zip(
-                args_blocks, z_offsets, y_offsets, x_offsets
+            for *args_block, z_offset, y_offset, x_offset in zip(
+                *args_blocks, z_offsets, y_offsets, x_offsets
             )
         ]
     )
