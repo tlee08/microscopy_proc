@@ -74,7 +74,7 @@ if __name__ == "__main__":
     )
 
     # # Making zarr from tiff file(s)
-    # tiff2zarr_pipeline(in_fp, pfm)
+    # tiff2zarr_pipeline(pfm, in_fp)
     # # Preparing reference images
     # ref_prepare_pipeline(pfm)
     # # Preparing image itself

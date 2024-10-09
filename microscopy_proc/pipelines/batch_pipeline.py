@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
             if not os.path.exists(pfm.raw):
                 # Making zarr from tiff file(s)
-                tiff2zarr_pipeline(in_fp, pfm)
+                tiff2zarr_pipeline(pfm, in_fp)
 
             # if not os.path.exists(pfm.regresult"]):
             # Preparing reference images

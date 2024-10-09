@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import shutil
@@ -65,18 +66,40 @@ from microscopy_proc.utils.proj_org_utils import (
     RefFpModel,
 )
 
-# TODO: include overwrite funcionality in each pipeline
+
+def overwrite_check_decorator(func):
+    """
+    Decorator to check overwrite and will
+    not run the function if the output file
+    (as specified in `overwrite_fp_map`) already exists.
+    """
+
+    def wrapper(*args, **kwargs):
+        # Getting overwrite arg
+        overwrite = kwargs.get("overwrite", False)
+        # If overwrite is False, check if output file exists
+        if not overwrite:
+            # Getting pfm arg
+            pfm = kwargs.get("pfm", args[0])
+            # Iterating through filepaths that will
+            # be overwritten according to overwrite_fp_map
+            for fp in overwrite_fp_map[func]:
+                if os.path.exists(getattr(pfm, fp)):
+                    logging.info(f"Skipping {func.__name__} as {fp} already exists.")
+                    return
+        # Running func
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 # @flow
+@overwrite_check_decorator
 def tiff2zarr_pipeline(
-    in_fp: str,
     pfm: ProjFpModel,
+    in_fp: str,
     overwrite: bool = False,
 ):
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.raw):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making zarr from tiff file(s)
@@ -106,6 +129,7 @@ def tiff2zarr_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def ref_prepare_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -146,13 +170,11 @@ def ref_prepare_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def img_rough_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.downsmpl1):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     with cluster_proc_contxt(LocalCluster()):
@@ -168,13 +190,11 @@ def img_rough_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def img_fine_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.downsmpl2):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
@@ -188,13 +208,11 @@ def img_fine_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def img_trim_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.trimmed):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading
@@ -208,13 +226,11 @@ def img_trim_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def registration_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.regresult):
-        return
     # Running Elastix registration
     registration(
         fixed_img_fp=pfm.trimmed,
@@ -226,6 +242,7 @@ def registration_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def make_mask_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -235,9 +252,6 @@ def make_mask_pipeline(
     Also stores # and proportion of existent voxels
     for each region.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.mask_df):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Reading ref and trimmed imgs
@@ -318,13 +332,11 @@ def make_mask_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def img_overlap_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.overlap):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making overlap image
@@ -335,6 +347,7 @@ def img_overlap_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def cellc1_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -344,9 +357,6 @@ def cellc1_pipeline(
 
     Top-hat filter (background subtraction)
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.bgrm):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
         # Getting configs
@@ -363,6 +373,7 @@ def cellc1_pipeline(
         bgrm_arr = disk_cache(bgrm_arr, pfm.bgrm)
 
 
+@overwrite_check_decorator
 def cellc2_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -372,9 +383,6 @@ def cellc2_pipeline(
 
     Difference of Gaussians (edge detection)
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.dog):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
         # Getting configs
@@ -392,6 +400,7 @@ def cellc2_pipeline(
         dog_arr = disk_cache(dog_arr, pfm.dog)
 
 
+@overwrite_check_decorator
 def cellc3_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -401,9 +410,6 @@ def cellc3_pipeline(
 
     Gaussian subtraction with large sigma for adaptive thresholding
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.adaptv):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
         # Getting configs
@@ -420,6 +426,7 @@ def cellc3_pipeline(
         adaptv_arr = disk_cache(adaptv_arr, pfm.adaptv)
 
 
+@overwrite_check_decorator
 def cellc4_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -429,9 +436,6 @@ def cellc4_pipeline(
 
     Mean thresholding with standard deviation offset
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.threshd):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
         # Getting configs
@@ -452,6 +456,7 @@ def cellc4_pipeline(
         threshd_arr = disk_cache(threshd_arr, pfm.threshd)
 
 
+@overwrite_check_decorator
 def cellc5_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -461,9 +466,6 @@ def cellc5_pipeline(
 
     Getting object sizes
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.threshd_volumes):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Reading input images
@@ -477,6 +479,7 @@ def cellc5_pipeline(
         threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes)
 
 
+@overwrite_check_decorator
 def cellc6_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -486,9 +489,6 @@ def cellc6_pipeline(
 
     Filter out large objects (likely outlines, not cells)
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.threshd_filt):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
         # Getting configs
@@ -506,6 +506,7 @@ def cellc6_pipeline(
         threshd_filt_arr = disk_cache(threshd_filt_arr, pfm.threshd_filt)
 
 
+@overwrite_check_decorator
 def cellc7_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -515,9 +516,6 @@ def cellc7_pipeline(
 
     Get maxima of image masked by labels.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.maxima):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCUDACluster()):
         # Getting configs
@@ -536,6 +534,7 @@ def cellc7_pipeline(
         maxima_arr = disk_cache(maxima_arr, pfm.maxima)
 
 
+@overwrite_check_decorator
 def cellc8_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -545,9 +544,6 @@ def cellc8_pipeline(
 
     Watershed segmentation volumes.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.wshed_volumes):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
         # n_workers=2
@@ -566,6 +562,7 @@ def cellc8_pipeline(
         wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes)
 
 
+@overwrite_check_decorator
 def cellc9_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -575,9 +572,6 @@ def cellc9_pipeline(
 
     Filter out large watershed objects (again likely outlines, not cells).
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.wshed_filt):
-        return
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
         # Getting configs
@@ -595,6 +589,7 @@ def cellc9_pipeline(
         wshed_filt_arr = disk_cache(wshed_filt_arr, pfm.wshed_filt)
 
 
+@overwrite_check_decorator
 def cellc10_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -607,8 +602,6 @@ def cellc10_pipeline(
     - Trimmed threshold image
     - Trimmed watershed image
     """
-    # Not overwriting if specified and output file exists
-    # TODO
     # Making Dask cluster
     with cluster_proc_contxt(LocalCluster()):
         # Getting configs
@@ -627,6 +620,7 @@ def cellc10_pipeline(
         disk_cache(wshed_final_arr, pfm.wshed_final)
 
 
+@overwrite_check_decorator
 def cellc11_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -636,9 +630,6 @@ def cellc11_pipeline(
 
     From maxima and watershed, save the cells.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.cells_raw_df):
-        return
     with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
         # n_workers=2
         # Getting configs
@@ -667,6 +658,7 @@ def cellc11_pipeline(
         cells_df.to_parquet(pfm.cells_raw_df, overwrite=True)
 
 
+@overwrite_check_decorator
 def cellc_coords_only_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -675,9 +667,6 @@ def cellc_coords_only_pipeline(
     Get maxima coords.
     Very basic but faster version of cellc11_pipeline get_cells.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.maxima_df):
-        return
     # Reading filtered and maxima images (trimmed - orig space)
     with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
         # Read filtered and maxima images (trimmed - orig space)
@@ -693,6 +682,7 @@ def cellc_coords_only_pipeline(
 
 
 # @flow
+@overwrite_check_decorator
 def transform_coords_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -702,9 +692,6 @@ def transform_coords_pipeline(
 
     NOTE: saves the cells_trfm dataframe as pandas parquet.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.cells_trfm_df):
-        return
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
@@ -730,7 +717,7 @@ def transform_coords_pipeline(
             ]
         )
 
-        cells_df = transformation_coords(cells_df, pfm.ref, pfm.regresult)
+        cells_trfm_df = transformation_coords(cells_df, pfm.ref, pfm.regresult)
         # NOTE: Using pandas parquet. does not work with dask yet
         # cells_df = dd.from_pandas(cells_df, npartitions=1)
         # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
@@ -740,10 +727,11 @@ def transform_coords_pipeline(
         # cells_df = cells_df.map_partitions(
         #     transformation_coords, pfm.ref, pfm.regresult
         # )
-        cells_df.to_parquet(pfm.cells_trfm_df)
+        cells_trfm_df.to_parquet(pfm.cells_trfm_df)
 
 
 # @flow
+@overwrite_check_decorator
 def cell_mapping_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -754,9 +742,6 @@ def cell_mapping_pipeline(
 
     NOTE: saves the cells dataframe as pandas parquet.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.cells_df):
-        return
     # Getting region for each detected cell (i.e. row) in cells_df
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells_raw and cells_trfm dataframes
@@ -811,6 +796,7 @@ def cell_mapping_pipeline(
         cells_df.to_parquet(pfm.cells_df)
 
 
+@overwrite_check_decorator
 def group_cells_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
@@ -821,9 +807,6 @@ def group_cells_pipeline(
 
     NOTE: saves the cells_agg dataframe as pandas parquet.
     """
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.cells_agg_df):
-        return
     # Making cells_agg_df
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells dataframe
@@ -851,13 +834,11 @@ def group_cells_pipeline(
         cells_agg_df.to_parquet(pfm.cells_agg_df)
 
 
+@overwrite_check_decorator
 def cells2csv_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
-    # Not overwriting if specified and output file exists
-    if not overwrite and os.path.exists(pfm.cells_agg_csv):
-        return
     # Reading cells dataframe
     cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
     # Sanitising (removing smb columns)
@@ -867,6 +848,7 @@ def cells2csv_pipeline(
 
 
 def all_pipeline(
+    in_fp: str,
     pfm: ProjFpModel,
     overwrite: bool = False,
 ) -> None:
@@ -874,7 +856,7 @@ def all_pipeline(
     Running all pipelines in order.
     """
     # Running all pipelines in order
-    tiff2zarr_pipeline(pfm.in_fp, pfm, overwrite=overwrite)
+    tiff2zarr_pipeline(pfm, in_fp, overwrite=overwrite)
     ref_prepare_pipeline(pfm, overwrite=overwrite)
     img_rough_pipeline(pfm, overwrite=overwrite)
     img_fine_pipeline(pfm, overwrite=overwrite)
@@ -897,3 +879,31 @@ def all_pipeline(
     cell_mapping_pipeline(pfm, overwrite=overwrite)
     group_cells_pipeline(pfm, overwrite=overwrite)
     cells2csv_pipeline(pfm, overwrite=overwrite)
+
+
+overwrite_fp_map = {
+    tiff2zarr_pipeline: ["raw"],
+    # ref_prepare_pipeline: ["ref"],
+    img_rough_pipeline: ["downsmpl1"],
+    img_fine_pipeline: ["downsmpl2"],
+    img_trim_pipeline: ["trimmed"],
+    registration_pipeline: ["regresult"],
+    make_mask_pipeline: ["mask_df"],
+    img_overlap_pipeline: ["overlap"],
+    cellc1_pipeline: ["bgrm"],
+    cellc2_pipeline: ["dog"],
+    cellc3_pipeline: ["adaptv"],
+    cellc4_pipeline: ["threshd"],
+    cellc5_pipeline: ["threshd_volumes"],
+    cellc6_pipeline: ["threshd_filt"],
+    cellc7_pipeline: ["maxima"],
+    cellc8_pipeline: ["wshed_volumes"],
+    cellc9_pipeline: ["wshed_filt"],
+    cellc10_pipeline: ["maxima_final"],
+    cellc11_pipeline: ["cells_raw_df"],
+    cellc_coords_only_pipeline: ["maxima_df"],
+    transform_coords_pipeline: ["cells_trfm_df"],
+    cell_mapping_pipeline: ["cells_df"],
+    group_cells_pipeline: ["cells_agg_df"],
+    cells2csv_pipeline: ["cells_agg_csv"],
+}
