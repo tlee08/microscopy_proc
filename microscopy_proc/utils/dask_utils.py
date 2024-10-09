@@ -53,7 +53,7 @@ def block2coords(func, *args: list) -> dd.DataFrame:
         for i in args
     ]
     # Transposing so (block, arg) dimensions.
-    args_blocks = list(map(list, zip(*args_blocks)))
+    args_blocks = [list(i) for i in zip(*args_blocks)]
 
     # Defining the function that offsets the coords in each block
     # Given the block args and offsets, applies the function to each block
