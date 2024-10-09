@@ -52,7 +52,7 @@ from microscopy_proc.funcs.reg_funcs import (
 
 # from prefect import flow
 from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
-from microscopy_proc.funcs.visual_check_funcs_dask import coords2points
+from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block2coords,
