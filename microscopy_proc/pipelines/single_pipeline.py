@@ -2,15 +2,7 @@ import dask.array as da
 import dask.dataframe as dd
 import tifffile
 
-from microscopy_proc.funcs.visual_check_funcs import coords2points
-from microscopy_proc.pipelines.pipeline_funcs import (
-    cell_mapping_pipeline,
-    cellc11_pipeline,
-    cellc_coords_only_pipeline,
-    cells2csv_pipeline,
-    group_cells_pipeline,
-    transform_coords_pipeline,
-)
+from microscopy_proc.funcs.visual_check_funcs_dask import coords2points
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     make_proj_dirs,
@@ -99,16 +91,16 @@ if __name__ == "__main__":
     # cellc8_pipeline(pfm, overwrite=overwrite)
     # cellc9_pipeline(pfm, overwrite=overwrite)
     # cellc10_pipeline(pfm, overwrite=overwrite)
-    cellc11_pipeline(pfm, overwrite=overwrite)
-    cellc_coords_only_pipeline(pfm, overwrite=overwrite)
-    # Converting maxima from raw space to refernce atlas space
-    transform_coords_pipeline(pfm, overwrite=overwrite)
-    # Getting Region ID mappings for each cell
-    cell_mapping_pipeline(pfm, overwrite=overwrite)
-    # Grouping cells
-    group_cells_pipeline(pfm, overwrite=overwrite)
-    # Exporting cells_agg parquet as csv
-    cells2csv_pipeline(pfm, overwrite=overwrite)
+    # cellc11_pipeline(pfm, overwrite=overwrite)
+    # cellc_coords_only_pipeline(pfm, overwrite=overwrite)
+    # # Converting maxima from raw space to refernce atlas space
+    # transform_coords_pipeline(pfm, overwrite=overwrite)
+    # # Getting Region ID mappings for each cell
+    # cell_mapping_pipeline(pfm, overwrite=overwrite)
+    # # Grouping cells
+    # group_cells_pipeline(pfm, overwrite=overwrite)
+    # # Exporting cells_agg parquet as csv
+    # cells2csv_pipeline(pfm, overwrite=overwrite)
 
     # Running visual checks
     coords2points(
