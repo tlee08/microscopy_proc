@@ -27,18 +27,19 @@ def block2coords(func, *args: list) -> dd.DataFrame:
         - Perform `func([ar1_blocki, ar2_blocki, ...], *args)` for each block
         - At each block, offset the coords by the block's location in the entire array.
     """
-
-    # Getting the first da.Array's chunks
-    curr_chunks = None
-    for arg in args:
-        if isinstance(arg, da.Array):
-            # If curr_chunks is None, set as chunks of first da.Array
-            curr_chunks = curr_chunks or arg.chunks
-        break
-    # Asserting that curr_chunks is not None (i.e. there is at least one da.Array)
-    assert curr_chunks is not None, "At least one da.Array must be passed."
+    # Assertions
+    arr_blocks_ls = [i for i in args if isinstance(i, da.Array)]
+    # Asserting that there is at least one da.Array (i.e curr_chunks is not None)
+    assert len(arr_blocks_ls) > 0, "At least one da.Array must be passed."
+    # Getting first da.Array
+    arr0 = arr_blocks_ls[0]
+    # Asserting that all da.Arrays have the same number of blocks
+    assert all(
+        len(i.to_delayed().ravel()) == len(arr0.to_delayed().ravel())
+        for i in arr_blocks_ls
+    )
     # Converting chunks tuple[tuple] from chunk sizes to block offsets
-    curr_chunks_offsets = [np.cumsum([0, *i[:-1]]) for i in curr_chunks]
+    curr_chunks_offsets = [np.cumsum([0, *i[:-1]]) for i in arr0.chunks]
     # Creating the meshgrid of offsets to get offsets for each block in order
     z_offsets, y_offsets, x_offsets = np.meshgrid(*curr_chunks_offsets, indexing="ij")
     # Flattening offsets ndarrays to 1D
@@ -46,7 +47,7 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     y_offsets = y_offsets.ravel()
     x_offsets = x_offsets.ravel()
     # Getting number of blocks
-    n = z_offsets.shape[0]
+    n = arr0.to_delayed().ravel().shape[0]
     # Converting dask arrays to list of delayed blocks in args list
     args_blocks = [
         i.to_delayed().ravel() if isinstance(i, da.Array) else list(const_iter(i, n))
