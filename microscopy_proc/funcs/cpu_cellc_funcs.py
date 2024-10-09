@@ -313,7 +313,11 @@ class CpuCellcFuncs:
         ids = arr[z, y, x]
         logging.debug("Making dataframe")
         df = pd.DataFrame(
-            {Coords.Z.value: z, Coords.Y.value: y, Coords.X.value: x},
+            {
+                Coords.Z.value: z,
+                Coords.Y.value: y,
+                Coords.X.value: x,
+            },
             index=pd.Index(ids.astype(np.uint32), name=CELL_IDX_NAME),
         ).astype(np.uint16)
         df[CellColumns.VOLUME.value] = -1  # TODO: placeholder
@@ -346,6 +350,7 @@ class CpuCellcFuncs:
         maxima_l_arr = cls.mask2ids(maxima_arr)
         logging.debug("Converting to DataFrame of coordinates and measures")
         # NOTE: getting first coord of each unique label
+        # NOTE: np.unique auto flattens arr so reshaping it back with np.unravel_index
         ids_m, ind = cls.xp.unique(maxima_l_arr, return_index=True)
         z, y, x = cls.xp.unravel_index(ind, maxima_l_arr.shape)
         df = (
