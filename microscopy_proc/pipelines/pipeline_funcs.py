@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import shutil
@@ -81,16 +80,15 @@ def overwrite_check_decorator(func: Callable):
         # If overwrite is False, check if output file exists
         print("MAP")
         print(overwrite_fp_map)
-        if not overwrite:
-            # Getting pfm arg
-            pfm = kwargs.get("pfm", args[0])
-            # Iterating through filepaths that will
-            # be overwritten according to overwrite_fp_map
-            for fp in overwrite_fp_map[func.__name__]:
-                if os.path.exists(getattr(pfm, fp)):
-                    logging.info(f"Skipping {func.__name__} as {fp} already exists.")
-                    return
-        # Running func
+        # if not overwrite:
+        #     # Getting pfm arg
+        #     pfm = kwargs.get("pfm", args[0])
+        #     # Iterating through filepaths that will be overwritten
+        #     for fp in overwrite_fp_map[func.__name__]:
+        #         if os.path.exists(getattr(pfm, fp)):
+        #             logging.info(f"Skipping {func.__name__} as {fp} already exists.")
+        #             return
+        # # Running func
         return func(*args, **kwargs)
 
     return wrapper
