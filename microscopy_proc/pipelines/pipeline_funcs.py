@@ -644,6 +644,7 @@ def cellc11_pipeline(
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading input images
+        raw_arr = da.from_zarr(pfm.raw)
         overlap_arr = da.from_zarr(pfm.overlap)
         maxima_arr = da.from_zarr(pfm.maxima)
         wshed_filt_arr = da.from_zarr(pfm.wshed_filt)
@@ -651,6 +652,7 @@ def cellc11_pipeline(
         # Getting maxima coords and cell measures in table
         cells_df = block2coords(
             Cf.get_cells,
+            raw_arr,
             overlap_arr,
             maxima_arr,
             wshed_filt_arr,

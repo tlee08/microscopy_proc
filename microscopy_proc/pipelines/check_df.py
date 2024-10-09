@@ -35,11 +35,29 @@ if __name__ == "__main__":
     ]
     # Reading maxima from arr
     maxima_arr = da.from_zarr(pfm.maxima_final)
-    maxima_arr = maxima_arr[*slicer].compute()
-    maxima_arr_df = pd.DataFrame(np.where(maxima_arr), columns=["z", "y", "x"])
+    maxima_arr_df = pd.DataFrame(
+        np.where(maxima_arr[*slicer].compute()),
+        index=["z", "y", "x"],
+    ).T
+    maxima_arr_df["z"] += slicer[0].start
+    maxima_arr_df["y"] += slicer[1].start
+    maxima_arr_df["x"] += slicer[2].start
     # Reading cells df
     cells_raw_df = dd.read_parquet(pfm.cells_raw_df).compute()
     # Reading points
     points_arr = da.from_zarr(pfm.points_check)
-    points_arr = points_arr[*slicer].compute()
-    points_arr_df = pd.DataFrame(np.where(points_arr), columns=["z", "y", "x"])
+    points_arr_df = pd.DataFrame(
+        np.where(points_arr[*slicer].compute()),
+        index=["z", "y", "x"],
+    ).T
+    points_arr_df["z"] += slicer[0].start
+    points_arr_df["y"] += slicer[1].start
+    points_arr_df["x"] += slicer[2].start
+
+    cells_raw_df[
+        (cells_raw_df["z"] >= slicer[0].start)
+        & (cells_raw_df["y"] >= slicer[1].start)
+        & (cells_raw_df["x"] >= slicer[2].start)
+    ]
+
+    # NOTE: cells_raw_df is wrong

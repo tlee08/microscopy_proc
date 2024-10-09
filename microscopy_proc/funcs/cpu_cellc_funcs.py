@@ -326,6 +326,7 @@ class CpuCellcFuncs:
     # @task
     def get_cells(
         cls,
+        raw_arr: np.ndarray,
         overlap_arr: np.ndarray,
         maxima_arr: np.ndarray,
         mask_arr: np.ndarray,
@@ -335,6 +336,9 @@ class CpuCellcFuncs:
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).
         """
+        # Asserting arr sizes match between arr_raw, arr_overlap, and depth
+        # NOTE: we NEED raw_arr as the first da.Array to get chunking coord offsets correct
+        assert raw_arr.shape == tuple(i - 2 * depth for i in overlap_arr.shape)
         logging.debug("Trimming maxima labels array to raw array dimensions using `d`")
         slicer = slice(depth, -depth) if depth > 0 else slice(None)
         maxima_arr = maxima_arr[slicer, slicer, slicer]
