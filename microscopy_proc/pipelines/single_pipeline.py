@@ -9,6 +9,7 @@ from microscopy_proc.funcs.visual_check_funcs_dask import (
 )
 from microscopy_proc.pipelines.pipeline_funcs import (
     cell_mapping_pipeline,
+    cellc11_pipeline,
     cellc_coords_only_pipeline,
     cells2csv_pipeline,
     group_cells_pipeline,
@@ -100,7 +101,7 @@ if __name__ == "__main__":
     # cellc8_pipeline(pfm)
     # cellc9_pipeline(pfm)
     # cellc10_pipeline(pfm)
-    # cellc11_pipeline(pfm)
+    cellc11_pipeline(pfm)
     cellc_coords_only_pipeline(pfm)
     # Converting maxima from raw space to refernce atlas space
     transform_coords_pipeline(pfm)
