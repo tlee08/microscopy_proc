@@ -16,7 +16,11 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     Applies the `func` to `ar`.
     Expects `func` to convert `ar` to coords df (of sorts).
 
-    Importantly, this offsets the coords in each block.
+    Importantly, this offsets the coords in each block using ONLY
+    the chunks of the first da.Array object in `args`.
+
+    All da.Arrays must have the same number of blocks but
+    can have different chunk sizes.
 
     Process is:
         - Convert dask arrays to delayed object blocks
@@ -24,17 +28,13 @@ def block2coords(func, *args: list) -> dd.DataFrame:
         - At each block, offset the coords by the block's location in the entire array.
     """
 
-    # Asserting that all da.Array objects have the same chunks
+    # Getting the first da.Array's chunks
     curr_chunks = None
     for arg in args:
         if isinstance(arg, da.Array):
             # If curr_chunks is None, set as chunks of first da.Array
             curr_chunks = curr_chunks or arg.chunks
-            # Asserting that all da.Array objects have the same chunks
-            assert curr_chunks == arg.chunks, (
-                "All arrays must have the same chunks.\n"
-                + f"{curr_chunks} not equal to {arg.chunks}"
-            )
+        break
     # Asserting that curr_chunks is not None (i.e. there is at least one da.Array)
     assert curr_chunks is not None, "At least one da.Array must be passed."
     # Converting chunks tuple[tuple] from chunk sizes to block offsets

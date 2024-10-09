@@ -5,28 +5,10 @@ import tifffile
 from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.pipelines.pipeline_funcs import (
     cell_mapping_pipeline,
-    cellc1_pipeline,
-    cellc2_pipeline,
-    cellc3_pipeline,
-    cellc4_pipeline,
-    cellc5_pipeline,
-    cellc6_pipeline,
-    cellc7_pipeline,
-    cellc8_pipeline,
-    cellc9_pipeline,
-    cellc10_pipeline,
     cellc11_pipeline,
     cellc_coords_only_pipeline,
     cells2csv_pipeline,
     group_cells_pipeline,
-    img_fine_pipeline,
-    img_overlap_pipeline,
-    img_rough_pipeline,
-    img_trim_pipeline,
-    make_mask_pipeline,
-    ref_prepare_pipeline,
-    registration_pipeline,
-    tiff2zarr_pipeline,
     transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
@@ -92,31 +74,31 @@ if __name__ == "__main__":
         max_wshed=700,
     )
 
-    # Making zarr from tiff file(s)
-    tiff2zarr_pipeline(pfm, in_fp, overwrite=overwrite)
-    # Preparing reference images
-    ref_prepare_pipeline(pfm, overwrite=overwrite)
-    # Preparing image itself
-    img_rough_pipeline(pfm, overwrite=overwrite)
-    img_fine_pipeline(pfm, overwrite=overwrite)
-    img_trim_pipeline(pfm, overwrite=overwrite)
-    # Running Elastix registration
-    registration_pipeline(pfm, overwrite=overwrite)
-    # Running mask pipeline
-    make_mask_pipeline(pfm, overwrite=overwrite)
-    # Making overlap chunks in preparation for cell counting
-    img_overlap_pipeline(pfm, overwrite=overwrite)
-    # Counting cells
-    cellc1_pipeline(pfm, overwrite=overwrite)
-    cellc2_pipeline(pfm, overwrite=overwrite)
-    cellc3_pipeline(pfm, overwrite=overwrite)
-    cellc4_pipeline(pfm, overwrite=overwrite)
-    cellc5_pipeline(pfm, overwrite=overwrite)
-    cellc6_pipeline(pfm, overwrite=overwrite)
-    cellc7_pipeline(pfm, overwrite=overwrite)
-    cellc8_pipeline(pfm, overwrite=overwrite)
-    cellc9_pipeline(pfm, overwrite=overwrite)
-    cellc10_pipeline(pfm, overwrite=overwrite)
+    # # Making zarr from tiff file(s)
+    # tiff2zarr_pipeline(pfm, in_fp, overwrite=overwrite)
+    # # Preparing reference images
+    # ref_prepare_pipeline(pfm, overwrite=overwrite)
+    # # Preparing image itself
+    # img_rough_pipeline(pfm, overwrite=overwrite)
+    # img_fine_pipeline(pfm, overwrite=overwrite)
+    # img_trim_pipeline(pfm, overwrite=overwrite)
+    # # Running Elastix registration
+    # registration_pipeline(pfm, overwrite=overwrite)
+    # # Running mask pipeline
+    # make_mask_pipeline(pfm, overwrite=overwrite)
+    # # Making overlap chunks in preparation for cell counting
+    # img_overlap_pipeline(pfm, overwrite=overwrite)
+    # # Counting cells
+    # cellc1_pipeline(pfm, overwrite=overwrite)
+    # cellc2_pipeline(pfm, overwrite=overwrite)
+    # cellc3_pipeline(pfm, overwrite=overwrite)
+    # cellc4_pipeline(pfm, overwrite=overwrite)
+    # cellc5_pipeline(pfm, overwrite=overwrite)
+    # cellc6_pipeline(pfm, overwrite=overwrite)
+    # cellc7_pipeline(pfm, overwrite=overwrite)
+    # cellc8_pipeline(pfm, overwrite=overwrite)
+    # cellc9_pipeline(pfm, overwrite=overwrite)
+    # cellc10_pipeline(pfm, overwrite=overwrite)
     cellc11_pipeline(pfm, overwrite=overwrite)
     cellc_coords_only_pipeline(pfm, overwrite=overwrite)
     # Converting maxima from raw space to refernce atlas space
