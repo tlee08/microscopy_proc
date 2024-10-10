@@ -29,7 +29,7 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     """
     # Assertions
     arr_blocks_ls = [i for i in args if isinstance(i, da.Array)]
-    # Asserting that there is at least one da.Array (i.e curr_chunks is not None)
+    # Asserting that there is at least one da.Array (i.e curr_chunks not None)
     assert len(arr_blocks_ls) > 0, "At least one da.Array must be passed."
     # Getting first da.Array
     arr0 = arr_blocks_ls[0]

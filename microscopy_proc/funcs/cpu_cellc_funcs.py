@@ -81,9 +81,9 @@ class CpuCellcFuncs:
         arr = cls.xp.asarray(arr)
         logging.debug("Making cutoffs")
         res = arr
-        if min_ is not None:
+        if min_:
             res = cls.xp.maximum(res, min_)
-        if max_ is not None:
+        if max_:
             res = cls.xp.minimum(res, max_)
         # Returning
         return res
@@ -214,8 +214,8 @@ class CpuCellcFuncs:
         """
         arr = cls.xp.asarray(arr)
         logging.debug("Getting filter of small and large object to filter out")
-        smin = smin if smin is not None else 0
-        smax = smax if smax is not None else arr.max()
+        smin = smin if smin else 0
+        smax = smax if smax else arr.max()
         filt_objs = (arr < smin) | (arr > smax)
         logging.debug("Filter out objects (by setting them to 0)")
         arr[filt_objs] = 0
@@ -244,7 +244,7 @@ class CpuCellcFuncs:
         logging.debug("Getting local maxima (where arr - max_arr == 1)")
         res = arr - max_arr == 1
         # If a mask is given, then keep only the maxima within the mask
-        if mask_arr is not None:
+        if mask_arr:
             logging.debug(
                 "Mask provided. Maxima will only be found within mask regions."
             )

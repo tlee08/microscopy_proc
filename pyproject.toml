@@ -32,7 +32,7 @@ mkdocs-material = "^9.5.18"
 mkdocstrings-python = "^1.9.2"
 
 [tool.poetry.scripts]
-microscopy_proc_gui = "microscopy_proc_gui.scripts.gui:run_script"
+microscopy_proc_gui = "microscopy_proc.scripts.gui:run_script"
 
 [build-system]
 requires = ["poetry-core"]

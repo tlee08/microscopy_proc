@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python
+  - python=3.12
   - pip
   # Interactivity
   - ipykernel
@@ -12,7 +12,7 @@ dependencies:
   # Visualisation
   - python-graphviz
   # GPU acceleration
-  # - cudatoolkit
+  - cudatoolkit
   - cupy
   - pip:
-    - -e .
+      - -e .

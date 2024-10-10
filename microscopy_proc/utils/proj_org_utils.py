@@ -178,15 +178,15 @@ def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
     """
     # Making registration params json
     try:  # If file exists
-        rp = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     except FileNotFoundError as e:  # If file does not exist
         logging.info(e)
         logging.info("Making new params json")
-        rp = ConfigParamsModel()
-        write_json(pfm.config_params, rp.model_dump())
+        configs = ConfigParamsModel()
+        write_json(pfm.config_params, configs.model_dump())
     # Updating and saving configs if kwargs is not empty
     if kwargs != {}:
-        rp = rp.model_validate(rp.model_copy(update=kwargs))
-        write_json(pfm.config_params, rp.model_dump())
+        configs = configs.model_validate(configs.model_copy(update=kwargs))
+        write_json(pfm.config_params, configs.model_dump())
     # and returning the configs
-    return rp
+    return configs

@@ -43,7 +43,7 @@ def cell_counts_plot(df):
 def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
     arr = arr.copy()
     # Offsetting coords with chunk space
-    if block_info is not None:
+    if block_info:
         coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
@@ -83,7 +83,7 @@ def coords2sphere_workers(
     arr: np.ndarray, coords: pd.DataFrame, r: int, block_info=None
 ):
     # Offsetting coords with chunk space
-    if block_info is not None:
+    if block_info:
         coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and
