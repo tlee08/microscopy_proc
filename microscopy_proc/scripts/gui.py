@@ -3,15 +3,17 @@ import subprocess
 
 import streamlit as st
 
-from microscopy_proc.scripts.gui_funcs import load_configs, page_decorator, save_configs
+from microscopy_proc.scripts.gui_funcs import (
+    init_session_state,
+    load_configs,
+    page_decorator,
+    save_configs,
+)
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, make_proj_dirs
 
 # from microscopy_proc.scripts.gui_funcs import ConfigsUpdater, enum2list
 
-
-if "configs" not in st.session_state:
-    st.session_state["configs"] = ConfigParamsModel()
 
 # #####################################################################
 # # Streamlit pages
@@ -43,7 +45,7 @@ def page_init_proj():
             pfm = get_proj_fp_model(proj_dir)
             try:
                 # Project directory is initialised (has configs file)
-                load_configs(pfm.config_params)
+                load_configs()
                 st.success("Loaded project directory")
             except FileNotFoundError:
                 # Project directory is not initialised (give option to create)
@@ -137,8 +139,48 @@ def page_configs():
 
 
 @page_decorator()
-def page_placeholder2():
-    st.write("## Placeholder page2 ")
+def page_pipeline():
+    st.write("## Pipeline")
+    # Overwrite box
+    st.session_state["pipeline_overwrite"] = st.toggle(
+        label="Overwrite",
+        value=st.session_state["pipeline_overwrite"],
+        key="pipeline_overwrite_toggle",
+    )
+
+    # Making pipeline checkboxes
+    pipeline_checkboxes = st.session_state["pipeline_checkboxes"]
+    for func in pipeline_checkboxes:
+        pipeline_checkboxes[func] = st.checkbox(
+            label=func.__name__,
+            value=pipeline_checkboxes[func],
+            key=func.__name__,
+        )
+    # Button to run
+    pipeline_run = st.button(
+        label="Run pipeline",
+        key="pipeline_confirm",
+    )
+    if pipeline_run:
+        st.write("Will run:")
+        for func in pipeline_checkboxes:
+            if pipeline_checkboxes[func]:
+                st.write(f"- {func.__name__}")
+        # Check and run pipeline
+        pipeline_confirm = st.button(
+            label="Confirm pipeline",
+            key="pipeline_confirm",
+        )
+        if pipeline_confirm:
+            st.write("Running")
+            for func in pipeline_checkboxes:
+                if pipeline_checkboxes[func]:
+                    func()
+
+
+@page_decorator()
+def page_visualiser():
+    st.write("## Visualiser")
 
 
 #####################################################################
@@ -147,13 +189,17 @@ def page_placeholder2():
 
 
 def main():
+    # Initialising session state
+    init_session_state()
+    # Title
     st.title("Microscopy Processing Pipeline")
-
+    # Multi-page navigation
     pg = st.navigation(
         [
-            st.Page(page_init_proj, title="Init Project"),
-            st.Page(page_configs, title="Placeholder"),
-            st.Page(page_placeholder2, title="Placeholder2"),
+            st.Page(page_init_proj),
+            st.Page(page_configs),
+            st.Page(page_pipeline),
+            st.Page(page_visualiser),
             # st.Page(page_init_project, title="init_project"),
             # st.Page(page_update_configs, title="update_configs"),
             # st.Page(page_run_dlc, title="run_dlc"),

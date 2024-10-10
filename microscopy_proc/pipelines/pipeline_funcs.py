@@ -878,6 +878,7 @@ def all_pipeline(
     cellc9_pipeline(pfm, overwrite=overwrite)
     cellc10_pipeline(pfm, overwrite=overwrite)
     cellc11_pipeline(pfm, overwrite=overwrite)
+    cellc_coords_only_pipeline(pfm, overwrite=overwrite)
     transform_coords_pipeline(pfm, overwrite=overwrite)
     cell_mapping_pipeline(pfm, overwrite=overwrite)
     group_cells_pipeline(pfm, overwrite=overwrite)

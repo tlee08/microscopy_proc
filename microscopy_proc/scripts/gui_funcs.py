@@ -7,6 +7,32 @@ from typing import Callable, Optional, Union, get_args, get_origin
 import streamlit as st
 from pydantic import BaseModel
 
+from microscopy_proc.pipelines.pipeline_funcs import (
+    cell_mapping_pipeline,
+    cellc1_pipeline,
+    cellc2_pipeline,
+    cellc3_pipeline,
+    cellc4_pipeline,
+    cellc5_pipeline,
+    cellc6_pipeline,
+    cellc7_pipeline,
+    cellc8_pipeline,
+    cellc9_pipeline,
+    cellc10_pipeline,
+    cellc11_pipeline,
+    cellc_coords_only_pipeline,
+    cells2csv_pipeline,
+    group_cells_pipeline,
+    img_fine_pipeline,
+    img_overlap_pipeline,
+    img_rough_pipeline,
+    img_trim_pipeline,
+    make_mask_pipeline,
+    ref_prepare_pipeline,
+    registration_pipeline,
+    tiff2zarr_pipeline,
+    transform_coords_pipeline,
+)
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 from microscopy_proc.utils.misc_utils import enum2list
@@ -297,6 +323,38 @@ class ConfigsUpdater:
 #####################################################################
 
 
+def init_session_state():
+    if "pipeline_checkboxes" not in st.session_state:
+        st.session_state["pipeline_checkboxes"] = {
+            tiff2zarr_pipeline: False,
+            ref_prepare_pipeline: False,
+            img_rough_pipeline: False,
+            img_fine_pipeline: False,
+            img_trim_pipeline: False,
+            registration_pipeline: False,
+            make_mask_pipeline: False,
+            img_overlap_pipeline: False,
+            cellc1_pipeline: False,
+            cellc2_pipeline: False,
+            cellc3_pipeline: False,
+            cellc4_pipeline: False,
+            cellc5_pipeline: False,
+            cellc6_pipeline: False,
+            cellc7_pipeline: False,
+            cellc8_pipeline: False,
+            cellc9_pipeline: False,
+            cellc10_pipeline: False,
+            cellc11_pipeline: False,
+            cellc_coords_only_pipeline: False,
+            transform_coords_pipeline: False,
+            cell_mapping_pipeline: False,
+            group_cells_pipeline: False,
+            cells2csv_pipeline: False,
+        }
+    if "pipeline_overwrite" not in st.session_state:
+        st.session_state["pipeline_overwrite"] = False
+
+
 def load_configs():
     """
     Loading in configs to session state from project directory.
@@ -329,15 +387,13 @@ def page_default_setup():
     is_proj_exists = True
     # Recalling session state variables
     proj_dir = st.session_state.get("proj_dir", None)
-    # Checking if project directory exists
-    if proj_dir is None:
-        st.error("Project directory not initialised")
-        is_proj_exists = False
-    # Getting project filepaths
-    pfm = get_proj_fp_model(proj_dir) if proj_dir else None
     # Checking if project configs exists
     try:
+        pfm = get_proj_fp_model(proj_dir) if proj_dir else None
         ConfigParamsModel.model_validate(read_json(pfm.config_params))
+    except AttributeError:
+        is_proj_exists = False
+        st.error("Project directory not initialised")
     except FileNotFoundError:
         is_proj_exists = False
     # Showing project description in sidebar

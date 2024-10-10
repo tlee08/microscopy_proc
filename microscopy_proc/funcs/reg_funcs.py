@@ -31,7 +31,7 @@ def downsmpl_fine(
     return res
 
 
-def reorient(arr: np.ndarray, orient_ls: list):
+def reorient(arr: np.ndarray, orient_ls: tuple[int, ...]):
     """
     Order of orient_ls is the axis order.
     Negative of an element in orient_ls means that axis is flipped
