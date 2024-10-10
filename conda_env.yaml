@@ -12,7 +12,7 @@ dependencies:
   # Visualisation
   - python-graphviz
   # GPU acceleration
-  - cudatoolkit
+  # - cudatoolkit
   - cupy
   - pip:
       - -e .
