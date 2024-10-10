@@ -4,6 +4,7 @@ import subprocess
 import streamlit as st
 
 from microscopy_proc.scripts.gui_funcs import (
+    ConfigsUpdater,
     init_session_state,
     load_configs,
     page_decorator,
