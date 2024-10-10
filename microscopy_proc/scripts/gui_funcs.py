@@ -296,6 +296,8 @@ class ConfigsUpdater:
                 nullable, my_type = cls.check_type_n_nullable(arg)
                 funcs_ls.append(cls.type2updater(my_type))
                 nullable_ls.append(nullable)
+
+            print(field_name, nullable)
             return cls.tuple_inputs(
                 label=field_name,
                 n=len(curr),
@@ -308,7 +310,6 @@ class ConfigsUpdater:
                 **kwargs,
             )
         # Otherwise, using type2updated immediately
-        print(field_name, nullable)
         return cls.type2updater(my_type)(
             label=field_name,
             curr=curr,
