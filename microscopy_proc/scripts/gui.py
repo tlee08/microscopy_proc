@@ -43,7 +43,6 @@ def page_init_proj():
         else:
             # Storing project directory
             st.session_state["proj_dir"] = proj_dir
-            pfm = get_proj_fp_model(proj_dir)
             try:
                 # Project directory is initialised (has configs file)
                 load_configs()

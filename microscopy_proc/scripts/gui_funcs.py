@@ -308,6 +308,7 @@ class ConfigsUpdater:
                 **kwargs,
             )
         # Otherwise, using type2updated immediately
+        print(field_name, nullable)
         return cls.type2updater(my_type)(
             label=field_name,
             curr=curr,
