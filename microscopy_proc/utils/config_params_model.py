@@ -16,13 +16,13 @@ class ConfigParamsModel(BaseModel):
     Pydantic model for registration parameters.
     """
 
-    model_config = ConfigDict(extra="ignore", arbitrary_types_allowed=True)
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     # REFERENCE
     atlas_dir: str = RESOURCES_DIR
-    ref_v: str = RefVersions.AVERAGE_TEMPLATE_25.value
-    annot_v: str = AnnotVersions.CCF_2016_25.value
-    map_v: str = MapVersions.ABA_ANNOTATIONS.value
+    ref_v: RefVersions = RefVersions.AVERAGE_TEMPLATE_25
+    annot_v: AnnotVersions = AnnotVersions.CCF_2016_25
+    map_v: MapVersions = MapVersions.ABA_ANNOTATIONS
     # RAW
     chunksize: tuple[int, int, int] = PROC_CHUNKS
     # REGISTRATION
