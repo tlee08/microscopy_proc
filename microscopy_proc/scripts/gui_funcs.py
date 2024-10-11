@@ -360,9 +360,7 @@ def init_session_state():
     if "pipeline_overwrite" not in st.session_state:
         st.session_state["pipeline_overwrite"] = False
     if "proj_dir" not in st.session_state:
-        st.session_state["proj_dir"] = "/Users/timothylee/Desktop/example"
-        pfm = get_proj_fp_model(st.session_state["proj_dir"])
-        update_configs(pfm)
+        st.session_state["proj_dir"] = None
 
 
 def load_configs():
@@ -395,6 +393,8 @@ def save_configs():
 def make_proj_func(proj_dir):
     """
     Function to make new project.
+
+    Makes project folders and configs file.
     """
     make_proj_dirs(proj_dir)
     pfm = get_proj_fp_model(proj_dir)
