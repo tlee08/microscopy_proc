@@ -411,7 +411,6 @@ def page_default_setup():
     is_proj_exists = True
     # Recalling session state variables
     proj_dir = st.session_state.get("proj_dir", None)
-    st.write(proj_dir)
     with st.sidebar:
         st.subheader(f"Root Directory: {proj_dir}")
         # Checks
@@ -421,14 +420,14 @@ def page_default_setup():
         elif not os.path.exists(proj_dir):
             st.warning("Project directory does not exist")
             is_proj_exists = False
-        try:
-            # Loading configs from session_state's proj_dir
-            load_configs()
-            configs = st.session_state["configs"]
-            st.success("Loaded project directory and configs")
-        except FileNotFoundError:
-            st.warning("No configs file in project directory")
-            is_proj_exists = False
+        else:
+            try:
+                # Loading configs from session_state's proj_dir
+                load_configs()
+                st.success("Loaded project directory and configs")
+            except FileNotFoundError:
+                st.warning("No configs file in project directory")
+                is_proj_exists = False
     return is_proj_exists
 
 
