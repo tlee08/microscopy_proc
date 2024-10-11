@@ -158,7 +158,7 @@ def page_pipeline():
             key=func.__name__,
         )
     # Button to run pipeline
-    pipeline_run_btn = st.button(
+    st.button(
         label="Run pipeline",
         key="pipeline_run_btn",
     )
