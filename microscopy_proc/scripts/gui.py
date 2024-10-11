@@ -160,7 +160,7 @@ def page_pipeline():
     # Button to run pipeline
     pipeline_run_btn = st.button(
         label="Run pipeline",
-        key="pipeline_run",
+        key="pipeline_run_btn",
     )
     if st.session_state["pipeline_run_btn"]:
         st.write("Running:")
