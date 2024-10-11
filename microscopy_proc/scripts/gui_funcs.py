@@ -411,6 +411,7 @@ def page_default_setup():
     is_proj_exists = True
     # Recalling session state variables
     proj_dir = st.session_state.get("proj_dir", None)
+    st.write(proj_dir)
     with st.sidebar:
         st.subheader(f"Root Directory: {proj_dir}")
         # Checks
