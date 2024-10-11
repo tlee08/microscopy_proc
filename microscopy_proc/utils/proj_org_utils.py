@@ -50,7 +50,12 @@ class ProjFpModel(BaseModel):
     Pydantic model for project file paths.
     """
 
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True,
+        validate_default=True,
+        use_enum_values=True,
+    )
 
     # CONFIGS
     config_params: str
@@ -170,7 +175,7 @@ def make_proj_dirs(proj_dir):
 
 def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
     """
-    If config_params file does not exist, make a new one.
+    If config_params file does not exist, makes a new one.
 
     Then updates the config_params file with the kwargs.
     If there are no kwargs, will not update the file

@@ -1,7 +1,8 @@
 import functools
+import os
 from enum import Enum
 from optparse import NO_DEFAULT
-from types import UnionType
+from types import NoneType, UnionType
 from typing import Callable, Optional, Union, get_args, get_origin
 
 import streamlit as st
@@ -36,7 +37,11 @@ from microscopy_proc.pipelines.pipeline_funcs import (
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 from microscopy_proc.utils.misc_utils import enum2list
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
+from microscopy_proc.utils.proj_org_utils import (
+    get_proj_fp_model,
+    make_proj_dirs,
+    update_configs,
+)
 
 NO_DEFAULT = "no_default"
 
@@ -61,26 +66,26 @@ class ConfigsUpdater:
         container = container.container(border=True)
         # Header
         container.write(label)
-        # container = container.container(border=True)
         # If nullable, making nullable checkbox
-        is_null = False
+        is_none = False
         if nullable:
-            is_null = container.toggle(
-                "Set a None",
+            is_none = container.toggle(
+                label="Set to None",
                 value=curr is None,
-                key=f"{label}_null",
+                key=f"{label}_is_none",
             )
         # If default is set, making default button
         if default != NO_DEFAULT:
             default_clicked = container.button(
                 label=f"Set as default (`{default}`)",
-                disabled=is_null,
+                disabled=is_none,
                 key=f"{label}_default",
             )
             # If button clicked, then setting curr to default
             if default_clicked:
                 curr = default
-        return container, curr, is_null
+                is_none = curr is None
+        return container, curr, is_none
 
     @staticmethod
     def enum_input(
@@ -92,20 +97,20 @@ class ConfigsUpdater:
         container=None,
     ):
         # Initialising container, nullable, and default widgets
-        container, curr, is_null = ConfigsUpdater.init_inputter(
+        container, curr, is_none = ConfigsUpdater.init_inputter(
             label, curr, nullable, default, container
         )
         # Selectbox
         output = container.selectbox(
             label=label,
             options=enum2list(my_enum),
-            index=enum2list(my_enum).index(curr.value) if curr else None,
-            disabled=is_null,
+            index=enum2list(my_enum).index(curr) if curr else None,
+            disabled=is_none,
             key=label,
-            label_visibility="hidden",
-        )
+            label_visibility="collapsed",
+        )  # type: ignore
         # Returning input
-        return None if is_null else my_enum(output)
+        return None if is_none else output
 
     @staticmethod
     def int_input(
@@ -116,18 +121,19 @@ class ConfigsUpdater:
         container=None,
     ):
         # Initialising container, nullable, and default widgets
-        container, curr, is_null = ConfigsUpdater.init_inputter(
+        container, curr, is_none = ConfigsUpdater.init_inputter(
             label, curr, nullable, default, container
         )
         output = container.number_input(
             label=label,
             value=curr,
             step=1,
+            disabled=is_none,
             key=label,
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
-        return None if is_null else output
+        return None if is_none else output
 
     @staticmethod
     def float_input(
@@ -138,18 +144,19 @@ class ConfigsUpdater:
         container=None,
     ):
         # Initialising container, nullable, and default widgets
-        container, curr, is_null = ConfigsUpdater.init_inputter(
+        container, curr, is_none = ConfigsUpdater.init_inputter(
             label, curr, nullable, default, container
         )
         output = container.number_input(
             label=label,
             value=curr,
             step=0.05,
+            disabled=is_none,
             key=label,
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
-        return None if is_null else output
+        return None if is_none else output
 
     @staticmethod
     def str_input(
@@ -160,16 +167,17 @@ class ConfigsUpdater:
         container=None,
     ):
         # Initialising container, nullable, and default widgets
-        container, curr, is_null = ConfigsUpdater.init_inputter(
+        container, curr, is_none = ConfigsUpdater.init_inputter(
             label, curr, nullable, default, container
         )
         output = st.text_input(
             label=label,
             value=default,
+            disabled=is_none,
             key=label,
             label_visibility="collapsed",
         )
-        return None if is_null else output
+        return None if is_none else output
 
     @staticmethod
     def tuple_inputs(
@@ -255,15 +263,13 @@ class ConfigsUpdater:
         origin = get_origin(my_type) or my_type
         args = list(get_args(my_type))
         nullable = False
-        # If a Union, then checking if None is possible type
-        if origin in [Union, UnionType, Optional]:
-            if None in args:
-                args.remove(None)
-                nullable = True
-            # Returns (non-nullable type, is_nullable)
+        # If a Union, then checking if NoneType is a possible type
+        if origin in [Union, UnionType, Optional] and NoneType in args:
+            args.remove(NoneType)
+            nullable = True
             # TODO: what happens if multiple args?
-            return nullable, args[0]
-        # If not a Union, then returning the origin type
+            origin = args[0]
+        # Returns (non-nullable type, is_nullable)
         return nullable, origin
 
     @classmethod
@@ -296,8 +302,6 @@ class ConfigsUpdater:
                 nullable, my_type = cls.check_type_n_nullable(arg)
                 funcs_ls.append(cls.type2updater(my_type))
                 nullable_ls.append(nullable)
-
-            print(field_name, nullable)
             return cls.tuple_inputs(
                 label=field_name,
                 n=len(curr),
@@ -355,11 +359,17 @@ def init_session_state():
         }
     if "pipeline_overwrite" not in st.session_state:
         st.session_state["pipeline_overwrite"] = False
+    if "proj_dir" not in st.session_state:
+        st.session_state["proj_dir"] = "/Users/timothylee/Desktop/example"
+        pfm = get_proj_fp_model(st.session_state["proj_dir"])
+        update_configs(pfm)
 
 
 def load_configs():
     """
     Loading in configs to session state from project directory.
+
+    NOTE: does not catch errors
     """
     if "proj_dir" in st.session_state:
         proj_dir = st.session_state["proj_dir"]
@@ -371,6 +381,8 @@ def load_configs():
 def save_configs():
     """
     Saving configs from session state to project directory.
+
+    NOTE: does not catch errors
     """
     if "configs" in st.session_state:
         configs = st.session_state["configs"]
@@ -378,6 +390,16 @@ def save_configs():
         pfm = get_proj_fp_model(proj_dir)
         fp = pfm.config_params
         write_json(fp, configs.model_dump())
+
+
+def make_proj_func(proj_dir):
+    """
+    Function to make new project.
+    """
+    make_proj_dirs(proj_dir)
+    pfm = get_proj_fp_model(proj_dir)
+    update_configs(pfm)
+    st.success("Created new project")
 
 
 #####################################################################
@@ -389,27 +411,23 @@ def page_default_setup():
     is_proj_exists = True
     # Recalling session state variables
     proj_dir = st.session_state.get("proj_dir", None)
-    # Checking if project configs exists
-    try:
-        pfm = get_proj_fp_model(proj_dir) if proj_dir else None
-        ConfigParamsModel.model_validate(read_json(pfm.config_params))
-    except AttributeError:
-        is_proj_exists = False
-        st.error("Project directory not initialised")
-    except FileNotFoundError:
-        is_proj_exists = False
-    # Showing project description in sidebar
     with st.sidebar:
-        if is_proj_exists:
-            st.write("Project directory is initialised")
-        else:
-            st.subheader(f"Root Directory: {proj_dir}")
-        # Placeholder
-        # st.dataframe(
-        #     pd.DataFrame(
-        #         np.random.randn(5, 5),
-        #     )
-        # )
+        st.subheader(f"Root Directory: {proj_dir}")
+        # Checks
+        if proj_dir is None:
+            st.warning("Project directory is not set")
+            is_proj_exists = False
+        elif not os.path.exists(proj_dir):
+            st.warning("Project directory does not exist")
+            is_proj_exists = False
+        try:
+            # Loading configs from session_state's proj_dir
+            load_configs()
+            configs = st.session_state["configs"]
+            st.success("Loaded project directory and configs")
+        except FileNotFoundError:
+            st.warning("No configs file in project directory")
+            is_proj_exists = False
     return is_proj_exists
 
 
@@ -417,7 +435,10 @@ def page_decorator(check_proj_dir=True):
     def decorator_wrapper(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
+            # Checking whether project exists
             is_proj_exists = page_default_setup()
+            # If project not exists and check_proj_dir is True
+            # then don't render rest of page
             if check_proj_dir and not is_proj_exists:
                 return
             return f(*args, **kwargs)

@@ -16,7 +16,12 @@ class ConfigParamsModel(BaseModel):
     Pydantic model for registration parameters.
     """
 
-    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        extra="forbid",
+        # arbitrary_types_allowed=True,
+        validate_default=True,
+        use_enum_values=True,
+    )
 
     # REFERENCE
     atlas_dir: str = RESOURCES_DIR
@@ -77,9 +82,9 @@ class ConfigParamsModel(BaseModel):
         writes the updated parameters back to `fp` (if there are any updates),
         and returns the model instance.
         """
-        rp = cls.model_validate(read_json(fp))
+        configs = cls.model_validate(read_json(fp))
         # Updating and saving if kwargs is not empty
         if kwargs != {}:
-            rp = cls.model_validate(rp.model_copy(update=kwargs))
-            write_json(fp, rp.model_dump())
-        return rp
+            configs = cls.model_validate(configs.model_copy(update=kwargs))
+            write_json(fp, configs.model_dump())
+        return configs
