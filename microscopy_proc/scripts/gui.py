@@ -12,6 +12,7 @@ from microscopy_proc.scripts.gui_funcs import (
     save_configs,
 )
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
+from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 # from microscopy_proc.scripts.gui_funcs import ConfigsUpdater, enum2list
 
@@ -136,12 +137,16 @@ def page_configs():
 
 @page_decorator()
 def page_pipeline():
+    # Recalling session state variables
+    proj_dir = st.session_state["proj_dir"]
+    pfm = get_proj_fp_model(proj_dir)
+
     st.write("## Pipeline")
     # Overwrite box
-    st.session_state["pipeline_overwrite"] = st.toggle(
+    st.toggle(
         label="Overwrite",
         value=st.session_state["pipeline_overwrite"],
-        key="pipeline_overwrite_toggle",
+        key="pipeline_overwrite",
     )
 
     # Making pipeline checkboxes
@@ -153,18 +158,18 @@ def page_pipeline():
             key=func.__name__,
         )
     # Button to run pipeline
-    pipeline_run = st.button(
+    pipeline_run_btn = st.button(
         label="Run pipeline",
-        key="pipeline_confirm",
+        key="pipeline_run",
     )
-    if pipeline_run:
+    if st.session_state["pipeline_run_btn"]:
         st.write("Running:")
         for func in pipeline_checkboxes:
             if pipeline_checkboxes[func]:
                 st.write(f"- {func.__name__}")
         for func in pipeline_checkboxes:
             if pipeline_checkboxes[func]:
-                func()
+                func(pfm, overwrite=st.session_state["pipeline_overwrite"])
 
 
 @page_decorator()
