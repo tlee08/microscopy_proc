@@ -1,5 +1,6 @@
 import contextlib
 import logging
+from typing import Any
 
 import dask
 import dask.array
@@ -9,9 +10,10 @@ import numpy as np
 from dask.distributed import Client
 
 from microscopy_proc.constants import DEPTH, Coords
+from microscopy_proc.utils.misc_utils import const2iter
 
 
-def block2coords(func, *args: list) -> dd.DataFrame:
+def block2coords(func, *args: Any) -> dd.DataFrame:
     """
     Applies the `func` to `ar`.
     Expects `func` to convert `ar` to coords df (of sorts).
@@ -50,7 +52,7 @@ def block2coords(func, *args: list) -> dd.DataFrame:
     n = arr0.to_delayed().ravel().shape[0]
     # Converting dask arrays to list of delayed blocks in args list
     args_blocks = [
-        i.to_delayed().ravel() if isinstance(i, da.Array) else list(const_iter(i, n))
+        i.to_delayed().ravel() if isinstance(i, da.Array) else list(const2iter(i, n))
         for i in args
     ]
     # Transposing so (block, arg) dimensions.
@@ -86,7 +88,10 @@ def block2coords(func, *args: list) -> dd.DataFrame:
 
 def coords2block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
     """
-    Converts the coords to a block.
+    Converts the coords to a block, given the block info.
+
+    The block info is from Dask, in the map_blocks function
+    (and other relevant functions like map_overlap).
     """
     # Getting block info
     z, y, x = block_info[0]["array-location"]
@@ -165,11 +170,3 @@ def cluster_proc_contxt(cluster):
     finally:
         client.close()
         cluster.close()
-
-
-def const_iter(x, n):
-    """
-    Iterates the object, `x`, `n` times.
-    """
-    for _ in range(n):
-        yield x

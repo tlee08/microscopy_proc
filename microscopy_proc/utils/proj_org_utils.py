@@ -142,6 +142,7 @@ class ProjFpModel(BaseModel):
             maxima=os.path.join(proj_dir, "cellcount", "7_maxima.zarr"),
             wshed_volumes=os.path.join(proj_dir, "cellcount", "8_wshed_volumes.zarr"),
             wshed_filt=os.path.join(proj_dir, "cellcount", "9_wshed_filt.zarr"),
+            # CELL COUNTING TRIMMED ARRAY FILES
             threshd_final=os.path.join(proj_dir, "cellcount", "10_threshd_f.zarr"),
             maxima_final=os.path.join(proj_dir, "cellcount", "10_maxima_f.zarr"),
             wshed_final=os.path.join(proj_dir, "cellcount", "10_wshed_f.zarr"),

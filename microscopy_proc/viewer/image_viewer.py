@@ -1,5 +1,6 @@
-import logging
+import functools
 import os
+from multiprocessing import Process
 
 import dask.array as da
 import napari
@@ -7,36 +8,48 @@ import tifffile
 from dask.distributed import LocalCluster
 
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
+from microscopy_proc.utils.misc_utils import dictlists2listdicts
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 
 # @flow
-def view_imgs(fp_ls, vmax_ls, slicer):
+def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
     with cluster_proc_contxt(LocalCluster()):
-        # OPTIONAL colourmaps
-        cmap_ls = ["gray", "green", "yellow"]
+        # # OPTIONAL colourmaps
+        # cmap_ls = ["gray", "green", "yellow"]
         # Reading arrays
-        ar_ls = []
+        arr_ls = []
         for i in fp_ls:
-            logging.info(i)
             if ".zarr" in i:
-                ar_ls.append(da.from_zarr(i)[*slicer].compute())
+                arr_ls.append(da.from_zarr(i)[*trimmer].compute())
             elif ".tif" in i:
-                ar_ls.append(tifffile.imread(i)[*slicer])
-        # Napari viewer adding images
+                arr_ls.append(tifffile.imread(i)[*trimmer])
+        # Asserting all kwargs_ls list lengths are equal to fp_ls length
+        for k, v in kwargs.items():
+            assert len(v) == len(fp_ls)
+        # "Transposing" kwargs from dict of lists to list of dicts
+        kwargs_ls = dictlists2listdicts(kwargs)
+        # Making napari viewer
         viewer = napari.Viewer()
-        for i, ar in enumerate(ar_ls):
-            vmax = vmax_ls[i]
-            cmap = cmap_ls[i] if i < len(cmap_ls) else "gray"
+        # Adding image to napari viewer
+        for i, arr in enumerate(arr_ls):
             viewer.add_image(
-                ar,
-                # name=ar.__name__,
-                contrast_limits=(0, vmax),
+                data=arr,
                 blending="additive",
-                colormap=cmap,
+                **kwargs_ls[i],
+                # name=ar.__name__,
+                # contrast_limits=(0, vmax),
+                # colormap=cmap,
             )
     # Running viewer
     napari.run()
+
+
+@functools.wraps(view_arrs)
+def view_arrs_mp(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
+    napari_proc = Process(target=view_arrs, args=(fp_ls, trimmer), kwargs=kwargs)
+    napari_proc.start()
+    # napari_proc.join()
 
 
 if __name__ == "__main__":
@@ -50,7 +63,7 @@ if __name__ == "__main__":
 
     pfm = get_proj_fp_model(proj_dir)
 
-    slicer = (
+    trimmer = (
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
@@ -63,42 +76,44 @@ if __name__ == "__main__":
     )
 
     imgs_ls = (
-        # ATLAS
-        # ("ref", 10000),
-        # ("annot", 10000),
-        # RAW
-        ("raw", 14000),
-        # REG
-        # ("downsmpl_1", 10000),
-        # ("downsmpl_2", 10000),
-        # ("trimmed", 4000),
-        # ("regresult", 500),
-        # MASK
-        # ("mask", 5),
-        # ("outline", 5),
-        # ("mask_reg", 5),
-        # CELLC
-        # ("overlap", 10000),
-        # ("bgrm", 2000),
-        # ("dog", 100),
-        # ("adaptv", 100),
-        # ("threshd", 5),
-        # ("threshd_volumes", 10000),
-        # ("threshd_filt", 5),
-        # ("maxima", 5),
-        # ("wshed_volumes", 1000),
-        # ("wshed_filt", 1000),
-        # CELLC FINAL
-        ("threshd_final", 5),
-        ("maxima_final", 5),
-        ("wshed_final", 1000),
-        # POST
-        ("points_check", 5),
-        # ("heatmap_check", 20),
-        # ("points_trfm_check", 5),
-        # ("heatmap_trfm_check", 100),
+        # # ATLAS
+        # ("ref", (0, 10000)),
+        # ("annot", (0, 10000)),
+        # # RAW
+        # ("raw", (0, 7000)),
+        # # REG
+        # ("downsmpl_1", (0, 10000)),
+        # ("downsmpl_2", (0, 10000)),
+        ("trimmed", (0, 4000)),
+        ("regresult", (0, 500)),
+        # # MASK
+        # ("mask", (0, 5)),
+        # ("outline", (0, 5)),
+        # ("mask_reg", (0, 5)),
+        # # CELLC
+        # ("overlap", (0, 10000)),
+        # ("bgrm", (0, 2000)),
+        # ("dog", (0, 100)),
+        # ("adaptv", (0, 100)),
+        # ("threshd", (0, 5)),
+        # ("threshd_volumes", (0, 10000)),
+        # ("threshd_filt", (0, 5)),
+        ("maxima", (0, 5)),
+        # ("wshed_volumes", (0, 1000)),
+        ("wshed_filt", (0, 1000)),
+        # # CELLC FINAL
+        # ("threshd_final", (0, 5)),
+        # ("maxima_final", (0, 5)),
+        # ("wshed_final", (0, 1000)),
+        # # POST
+        # ("points_check", (0, 5)),
+        # ("heatmap_check", (0, 20)),
+        # ("points_trfm_check", (0, 5)),
+        # ("heatmap_trfm_check", (0, 100)),
     )
-    fp_ls = [getattr(pfm, i) for i, j in imgs_ls]
-    vmax_ls = [j for i, j in imgs_ls]
 
-    view_imgs(fp_ls, vmax_ls, slicer)
+    view_arrs(
+        fp_ls=tuple(getattr(pfm, i) for i, j in imgs_ls),
+        trimmer=trimmer,
+        contrast_limits=tuple(j for i, j in imgs_ls),
+    )
