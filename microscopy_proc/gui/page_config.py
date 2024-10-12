@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from streamlit.delta_generator import DeltaGenerator
 
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
-from microscopy_proc.utils.misc_utils import const2ls, enum2list
+from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
 
 from .gui_funcs import page_decorator, save_configs
 
@@ -44,10 +44,12 @@ class ConfigsUpdater:
                 # disabled=is_none,
                 key=f"{label}_default",
             )
-            # If button clicked, setting curr to default and updating is_none
+            # If button clicked, setting curr to default
+            # and update widgets accordingly
             if st.session_state[f"{label}_default"]:
                 curr = default
                 st.session_state[f"{label}_is_none"] = default is None
+                st.session_state[label] = curr
         # If nullable, making nullable checkbox
         is_none = False
         if nullable:
@@ -189,11 +191,11 @@ class ConfigsUpdater:
         assert len(nullable_ls) == n
         assert len(default_ls) == n
         assert len(n_labels_ls) == n
-        # Asserting all kwargs_ls lists are equal to n
+        # Asserting all kwargs_ls list lengths are equal to n
         for k, v in kwargs_ls.items():
             assert len(v) == n
         # "Transposing" kwargs_ls so it becomes a list of dicts.
-        kwargs_ls = [{k: v[i] for k, v in kwargs_ls.items()} for i in range(n)]
+        kwargs_ls = dictlists2listdicts(kwargs_ls)
         # Making inputs
         output_ls = tuple(
             func_ls[i](

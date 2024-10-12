@@ -52,7 +52,7 @@ from microscopy_proc.funcs.reg_funcs import (
 
 # from prefect import flow
 from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
-from microscopy_proc.funcs.visual_check_funcs import coords2points
+from microscopy_proc.funcs.visual_check_funcs_dask import coords2heatmaps, coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block2coords,
@@ -900,6 +900,65 @@ def cells2csv_pipeline(
     cells_agg_df = sanitise_smb_df(cells_agg_df)
     # Saving to csv
     cells_agg_df.to_csv(pfm.cells_agg_csv)
+
+
+###################################################################################################
+# VISUAL CHECK
+###################################################################################################
+
+
+@overwrite_check_decorator
+def coords2points_raw_pipeline(
+    pfm: ProjFpModel,
+    overwrite: bool = False,
+):
+    with cluster_proc_contxt(LocalCluster()):
+        coords2points(
+            coords=dd.read_parquet(pfm.cells_raw_df).compute(),
+            shape=da.from_zarr(pfm.raw).shape,
+            out_fp=pfm.points_check,
+        )
+
+
+@overwrite_check_decorator
+def coords2heatmaps_raw_pipeline(
+    pfm: ProjFpModel,
+    overwrite: bool = False,
+):
+    with cluster_proc_contxt(LocalCluster()):
+        coords2heatmaps(
+            coords=dd.read_parquet(pfm.cells_raw_df).compute(),
+            shape=da.from_zarr(pfm.raw).shape,
+            out_fp=pfm.points_check,
+            r=5,
+        )
+
+
+@overwrite_check_decorator
+def coords2points_trfm_pipeline(
+    pfm: ProjFpModel,
+    overwrite: bool = False,
+):
+    with cluster_proc_contxt(LocalCluster()):
+        coords2points(
+            coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
+            shape=tifffile.imread(pfm.ref).shape,
+            out_fp=pfm.points_check,
+        )
+
+
+@overwrite_check_decorator
+def coords2heatmaps_trfm_pipeline(
+    pfm: ProjFpModel,
+    overwrite: bool = False,
+):
+    with cluster_proc_contxt(LocalCluster()):
+        coords2heatmaps(
+            coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
+            shape=tifffile.imread(pfm.ref).shape,
+            out_fp=pfm.points_check,
+            r=3,
+        )
 
 
 ###################################################################################################

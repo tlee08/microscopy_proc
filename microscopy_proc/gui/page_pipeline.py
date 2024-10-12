@@ -1,5 +1,31 @@
 import streamlit as st
 
+from microscopy_proc.pipelines.pipeline_funcs import (
+    cell_mapping_pipeline,
+    cellc1_pipeline,
+    cellc2_pipeline,
+    cellc3_pipeline,
+    cellc4_pipeline,
+    cellc5_pipeline,
+    cellc6_pipeline,
+    cellc7_pipeline,
+    cellc8_pipeline,
+    cellc9_pipeline,
+    cellc10_pipeline,
+    cellc11_pipeline,
+    cellc_coords_only_pipeline,
+    cells2csv_pipeline,
+    group_cells_pipeline,
+    img_fine_pipeline,
+    img_overlap_pipeline,
+    img_rough_pipeline,
+    img_trim_pipeline,
+    make_mask_pipeline,
+    ref_prepare_pipeline,
+    registration_pipeline,
+    tiff2zarr_pipeline,
+    transform_coords_pipeline,
+)
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import page_decorator
@@ -26,35 +52,33 @@ def page_pipeline():
     # Initialising session state variables (if necessary)
     if "pipeline_checkboxes" not in st.session_state:
         st.session_state["pipeline_checkboxes"] = {
-            # tiff2zarr_pipeline: False,
-            # ref_prepare_pipeline: False,
-            # img_rough_pipeline: False,
-            # img_fine_pipeline: False,
-            # img_trim_pipeline: False,
-            # registration_pipeline: False,
-            # make_mask_pipeline: False,
-            # img_overlap_pipeline: False,
-            # cellc1_pipeline: False,
-            # cellc2_pipeline: False,
-            # cellc3_pipeline: False,
-            # cellc4_pipeline: False,
-            # cellc5_pipeline: False,
-            # cellc6_pipeline: False,
-            # cellc7_pipeline: False,
-            # cellc8_pipeline: False,
-            # cellc9_pipeline: False,
-            # cellc10_pipeline: False,
-            # cellc11_pipeline: False,
-            # cellc_coords_only_pipeline: False,
-            # transform_coords_pipeline: False,
-            # cell_mapping_pipeline: False,
-            # group_cells_pipeline: False,
-            # cells2csv_pipeline: False,
+            tiff2zarr_pipeline: False,
+            ref_prepare_pipeline: False,
+            img_rough_pipeline: False,
+            img_fine_pipeline: False,
+            img_trim_pipeline: False,
+            registration_pipeline: False,
+            make_mask_pipeline: False,
+            img_overlap_pipeline: False,
+            cellc1_pipeline: False,
+            cellc2_pipeline: False,
+            cellc3_pipeline: False,
+            cellc4_pipeline: False,
+            cellc5_pipeline: False,
+            cellc6_pipeline: False,
+            cellc7_pipeline: False,
+            cellc8_pipeline: False,
+            cellc9_pipeline: False,
+            cellc10_pipeline: False,
+            cellc11_pipeline: False,
+            cellc_coords_only_pipeline: False,
+            transform_coords_pipeline: False,
+            cell_mapping_pipeline: False,
+            group_cells_pipeline: False,
+            cells2csv_pipeline: False,
         }
     if "pipeline_overwrite" not in st.session_state:
         st.session_state["pipeline_overwrite"] = False
-    if "pipeline_run_btn" not in st.session_state:
-        st.session_state["pipeline_run_btn"] = False
 
     # Recalling session state variables
     proj_dir = st.session_state["proj_dir"]
@@ -82,10 +106,12 @@ def page_pipeline():
         key="pipeline_run_btn",
     )
     if st.session_state["pipeline_run_btn"]:
+        # Showing selected pipeline
         st.write("Running:")
         for func in pipeline_checkboxes:
             if pipeline_checkboxes[func]:
                 st.write(f"- {func.__name__}")
+        # TODO: ensure this is blocking
         for func in pipeline_checkboxes:
             if pipeline_checkboxes[func]:
                 func(pfm, overwrite=st.session_state["pipeline_overwrite"])

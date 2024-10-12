@@ -59,7 +59,11 @@ def coords2points_end(arr, out_fp):
 #####################################################################
 
 
-def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], out_fp: str):
+def coords2points(
+    coords: pd.DataFrame,
+    shape: tuple[int, ...],
+    out_fp: str,
+):
     """
     Converts list of coordinates to spatial array single points.
 
@@ -79,7 +83,12 @@ def coords2points(coords: pd.DataFrame, shape: tuple[int, ...], out_fp: str):
     coords2points_end(arr, out_fp)
 
 
-def coords2heatmaps(coords: pd.DataFrame, r, shape, out_fp):
+def coords2heatmaps(
+    coords: pd.DataFrame,
+    shape: tuple[int, ...],
+    out_fp: str,
+    r: int,
+):
     """
     Converts list of coordinates to spatial array as voxels.
     Overlapping areas accumulate in intensity.
