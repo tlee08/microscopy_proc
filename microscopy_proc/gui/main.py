@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 
@@ -8,6 +9,9 @@ from microscopy_proc.gui.page_config import page_configs
 from microscopy_proc.gui.page_init_proj import page_init_proj
 from microscopy_proc.gui.page_pipeline import page_pipeline
 from microscopy_proc.gui.page_visualiser import page_visualiser
+
+logging.disable(logging.CRITICAL)
+
 
 #####################################################################
 # Streamlit application
