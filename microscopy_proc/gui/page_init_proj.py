@@ -37,7 +37,7 @@ def pdir_set_func(proj_dir: str):
             # Project directory is initialised (has configs file)
             load_configs()
             st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.VALID
-        except FileNotFoundError:
+        except (FileNotFoundError, NotADirectoryError):
             # Project directory is not initialised (give option to create)
             st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.NOT_INIT
 
