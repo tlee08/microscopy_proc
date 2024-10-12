@@ -4,11 +4,18 @@ import re
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-import SimpleITK as sitk
 import tifffile
 
+from microscopy_proc import ELASTIX_ENABLED
 from microscopy_proc.constants import TEMP_DIR, Coords
 from microscopy_proc.utils.io_utils import silentremove
+from microscopy_proc.utils.misc_utils import import_extra_error_func
+
+# Optional dependency: elastix
+if ELASTIX_ENABLED:
+    import SimpleITK as sitk
+else:
+    import_extra_error_func("elastix")()
 
 
 def registration(

@@ -1,13 +1,5 @@
-import cupy as cp
 import numpy as np
-
-# from cupyx.scipy import ndimage
 from scipy import ndimage
-
-from microscopy_proc.utils.cp_utils import clear_cuda_mem_dec
-
-xp = cp
-xdimage = ndimage
 
 
 def downsmpl_rough(
@@ -20,14 +12,13 @@ def downsmpl_rough(
     return res
 
 
-@clear_cuda_mem_dec
 def downsmpl_fine(
     arr: np.ndarray, z_scale: float, y_scale: float, x_scale: float
 ) -> np.ndarray:
     """
     Expects scales to be floats
     """
-    res = xdimage.zoom(arr, (z_scale, y_scale, x_scale))
+    res = ndimage.zoom(arr, (z_scale, y_scale, x_scale))
     return res
 
 

@@ -2,6 +2,16 @@ from enum import EnumType
 from typing import Any, Iterable
 
 
+def import_extra_error_func(extra_dep_name: str):
+    def error_func(*args, **kwargs):
+        raise ImportError(
+            f"{extra_dep_name} dependency not installed.\n"
+            + f'Install with `pip install "microscopy_proc[{extra_dep_name}]"`'
+        )
+
+    return error_func
+
+
 def enum2list(my_enum: EnumType) -> list[Any]:
     return [e.value for e in my_enum]
 

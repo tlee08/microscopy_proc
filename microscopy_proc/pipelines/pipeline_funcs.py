@@ -14,6 +14,7 @@ from dask.distributed import LocalCluster
 from natsort import natsorted
 from scipy import ndimage
 
+from microscopy_proc import ELASTIX_ENABLED, GPU_ENABLED
 from microscopy_proc.constants import (
     ANNOT_COLUMNS_FINAL,
     CELL_AGG_MAPPINGS,
@@ -50,18 +51,18 @@ from microscopy_proc.utils.dask_utils import (
     disk_cache,
 )
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
-from microscopy_proc.utils.misc_utils import enum2list
+from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     RefFpModel,
 )
 
 # Optional dependency: gpu
-try:
+if GPU_ENABLED:
     from dask_cuda import LocalCUDACluster
 
     from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
-except ImportError:
+else:
     LocalCUDACluster = LocalCluster
     Gf = Cf
     print(
@@ -70,18 +71,11 @@ except ImportError:
         + 'Can install with `pip install "microscopy_proc[gpu]"`'
     )
 # Optional dependency: elastix
-try:
+if ELASTIX_ENABLED:
     from microscopy_proc.funcs.elastix_funcs import registration, transformation_coords
-except ImportError:
-
-    def elastix_import_error(*args, **kwargs):
-        raise ImportError(
-            "Elastix dependency not installed.\n"
-            + 'Install with `pip install "microscopy_proc[elastix]"`'
-        )
-
-    registration = elastix_import_error
-    transformation_coords = elastix_import_error
+else:
+    registration = import_extra_error_func("elastix")
+    transformation_coords = import_extra_error_func("elastix")
 
 
 ###################################################################################################

@@ -1,5 +1,4 @@
 import importlib.util
-import logging
 
 
 # Checking if CPU or GPU version
@@ -8,8 +7,7 @@ def is_installed(package_name):
     return spec is not None
 
 
-if is_installed("cupy"):
-    INSTALLATION_TYPE = "gpu"
-else:
-    INSTALLATION_TYPE = "cpu"
-logging.debug(f"Installation type: {INSTALLATION_TYPE}")
+# Checking if gpu extra dependency is installed
+GPU_ENABLED = is_installed("cupy")
+# Checking if elastix extra dependency is installed
+ELASTIX_ENABLED = is_installed("SimpleITK")
