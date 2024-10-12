@@ -3,8 +3,8 @@ import os
 import dask.array as da
 import streamlit as st
 
+from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
-from microscopy_proc.viewer.image_viewer import view_arrs_mp
 
 from .gui_funcs import page_decorator
 
