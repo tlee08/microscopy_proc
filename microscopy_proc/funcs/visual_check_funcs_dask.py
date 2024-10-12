@@ -1,38 +1,11 @@
 import dask.array as da
 import dask.dataframe as dd
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 # from prefect import flow, task
 from microscopy_proc.constants import PROC_CHUNKS, AnnotColumns, Coords
 from microscopy_proc.utils.dask_utils import coords2block
-
-
-# @task
-def make_scatter(df):
-    fig, ax = plt.subplots(figsize=(5, 10))
-    sns.scatterplot(
-        x=df[Coords.X.value], y=df[Coords.Y.value], marker=".", alpha=0.2, s=10, ax=ax
-    )
-    ax.invert_yaxis()
-
-
-# @task
-def make_img(arr, **kwargs):
-    fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(arr, cmap="grey", **kwargs)
-    ax.axis("off")
-
-
-# @task
-def cell_counts_plot(df):
-    id_counts = df[AnnotColumns.ID.value].value_counts()
-    id_counts = id_counts.compute() if isinstance(id_counts, dd.Series) else id_counts
-    id_counts = id_counts.sort_values()
-    sns.scatterplot(id_counts.values)
-
 
 #####################################################################
 #             Converting coordinates to spatial
@@ -54,9 +27,11 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
         .round(0)
         .astype(np.int16)
         .query(
-            f"{Coords.Z.value} >= 0 & {Coords.Z.value} < {s[0]} & "
-            + f"{Coords.Y.value} >= 0 & {Coords.Y.value} < {s[1]} & "
-            + f"{Coords.X.value} >= 0 & {Coords.X.value} < {s[2]}"
+            f"""
+            ({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) &
+            ({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) &
+            ({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})
+            """
         )
     )
     # Dask to numpy
@@ -94,9 +69,11 @@ def coords2sphere_workers(
         .round(0)
         .astype(np.int16)
         .query(
-            f"{Coords.Z.value} > {-1*r} & {Coords.Z.value} < {s[0] + r} & "
-            + f"{Coords.Y.value} > {-1*r} & {Coords.Y.value} < {s[1]}+{r} & "
-            + f"{Coords.X.value} > -1*{r} & {Coords.X.value} < {s[2]}+{r}"
+            f"""
+            ({Coords.Z.value} > {-1*r}) & ({Coords.Z.value} < {s[0] + r}) &
+            ({Coords.Y.value} > {-1*r}) & ({Coords.Y.value} < {s[1] + r}) &
+            ({Coords.X.value} > {-1*r}) & ({Coords.X.value} < {s[2] + r})
+            """
         )
     )
     # Dask to pandas

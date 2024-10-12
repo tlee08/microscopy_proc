@@ -68,6 +68,10 @@ from microscopy_proc.utils.proj_org_utils import (
     RefFpModel,
 )
 
+###################################################################################################
+# OVERWRITE CHECK DECORATOR
+###################################################################################################
+
 
 def overwrite_check_decorator(func: Callable):
     """
@@ -96,6 +100,11 @@ def overwrite_check_decorator(func: Callable):
     return wrapper
 
 
+###################################################################################################
+# CONVERT TIFF TO ZARR FUNCS
+###################################################################################################
+
+
 # @flow
 @overwrite_check_decorator
 def tiff2zarr_pipeline(
@@ -103,6 +112,23 @@ def tiff2zarr_pipeline(
     in_fp: str,
     overwrite: bool = False,
 ):
+    """
+    _summary_
+
+    Parameters
+    ----------
+    pfm : ProjFpModel
+        _description_
+    in_fp : str
+        _description_
+    overwrite : bool, optional
+        _description_, by default False
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     # Making zarr from tiff file(s)
@@ -129,6 +155,11 @@ def tiff2zarr_pipeline(
             )
         else:
             raise ValueError(f'Input file path, "{in_fp}" does not exist.')
+
+
+###################################################################################################
+# REGISTRATION PIPELINE FUNCS
+###################################################################################################
 
 
 # @flow
@@ -228,6 +259,11 @@ def img_trim_pipeline(
     tifffile.imwrite(pfm.trimmed, trimmed_arr)
 
 
+###################################################################################################
+# Overwrite check decorator
+###################################################################################################
+
+
 # @flow
 @overwrite_check_decorator
 def registration_pipeline(
@@ -281,9 +317,11 @@ def make_mask_pipeline(
     # Filtering out of bounds coords
     s = ref_arr.shape
     outline_df = outline_df.query(
-        f"{Coords.Z.value} >= 0 & {Coords.Z.value} < {s[0]} & "
-        + f"{Coords.Y.value} >= 0 & {Coords.Y.value} < {s[1]} & "
-        + f"{Coords.X.value} >= 0 & {Coords.X.value} < {s[2]}"
+        f"""
+        ({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) &
+        ({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) &
+        ({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})
+        """
     )
 
     # Make outline img (1 for in, 2 for out)
@@ -332,6 +370,11 @@ def make_mask_pipeline(
     mask_df = mask_df[[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]]
     # Saving
     mask_df.to_parquet(pfm.mask_df)
+
+
+###################################################################################################
+# CELL COUNTING PIPELINE FUNCS
+###################################################################################################
 
 
 # @flow
@@ -654,8 +697,10 @@ def cellc11_pipeline(
         )
         # Filtering out by volume (same filter cellc9_pipeline volume_filter)
         cells_df = cells_df.query(
-            f"{CellColumns.VOLUME.value} >= {configs.min_wshed} & "
-            + f"{CellColumns.VOLUME.value} <= {configs.max_wshed}"
+            f"""
+            ({CellColumns.VOLUME.value} >= {configs.min_wshed}) &
+            ({CellColumns.VOLUME.value} <= {configs.max_wshed})
+            """
         )
         # Computing and saving as parquet
         cells_df.to_parquet(pfm.cells_raw_df, overwrite=True)
@@ -682,6 +727,11 @@ def cellc_coords_only_pipeline(
         )
         # Computing and saving as parquet
         coords_df.to_parquet(pfm.maxima_df, overwrite=True)
+
+
+###################################################################################################
+# CELL COUNT REALIGNMENT TO REFERENCE AND AGGREGATION PIPELINE FUNCS
+###################################################################################################
 
 
 # @flow
@@ -776,9 +826,11 @@ def cell_mapping_pipeline(
             .round(0)
             .astype(np.int32)
             .query(
-                f"{Coords.Z.value}_{TRFM} >= 0 & {Coords.Z.value}_{TRFM} < {s[0]} & "
-                + f"{Coords.Y.value}_{TRFM} >= 0 & {Coords.Y.value}_{TRFM} < {s[1]} & "
-                + f"{Coords.X.value}_{TRFM} >= 0 & {Coords.X.value}_{TRFM} < {s[2]}"
+                f"""
+                ({Coords.Z.value}_{TRFM} >= 0) & ({Coords.Z.value}_{TRFM} < {s[0]}) &
+                ({Coords.Y.value}_{TRFM} >= 0) & ({Coords.Y.value}_{TRFM} < {s[1]}) &
+                ({Coords.X.value}_{TRFM} >= 0) & ({Coords.X.value}_{TRFM} < {s[2]})
+                """
             )
         )
         # Getting the pixel values of each valid transformed coord (hence the specified index)
@@ -850,6 +902,11 @@ def cells2csv_pipeline(
     cells_agg_df.to_csv(pfm.cells_agg_csv)
 
 
+###################################################################################################
+# ALL PIPELINE FUNCTION
+###################################################################################################
+
+
 def all_pipeline(
     in_fp: str,
     pfm: ProjFpModel,
@@ -883,6 +940,11 @@ def all_pipeline(
     cell_mapping_pipeline(pfm, overwrite=overwrite)
     group_cells_pipeline(pfm, overwrite=overwrite)
     cells2csv_pipeline(pfm, overwrite=overwrite)
+
+
+###################################################################################################
+# OVERWRITE CHECK DICT - FOR overwrite_check_decorator
+###################################################################################################
 
 
 overwrite_fp_map = {
