@@ -115,5 +115,6 @@ if __name__ == "__main__":
     view_arrs(
         fp_ls=tuple(getattr(pfm, i) for i, j in imgs_ls),
         trimmer=trimmer,
+        name=tuple(i for i, j in imgs_ls),
         contrast_limits=tuple(j for i, j in imgs_ls),
     )

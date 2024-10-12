@@ -277,6 +277,7 @@ def page_visualiser():
         view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i["name"]) for i in imgs_to_run_ls),
             trimmer=trimmer,
+            name=tuple(i["name"] for i in imgs_to_run_ls),
             contrast_limits=tuple(i["vrange"] for i in imgs_to_run_ls),
             colormap=tuple(i["cmap"] for i in imgs_to_run_ls),
         )
