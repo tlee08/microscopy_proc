@@ -1,13 +1,13 @@
 import contextlib
 import logging
-from typing import Any
+from typing import Any, Callable
 
 import dask
 import dask.array
 import dask.array as da
 import dask.dataframe as dd
 import numpy as np
-from dask.distributed import Client
+from dask.distributed import Client, SpecCluster
 
 from microscopy_proc.constants import DEPTH, Coords
 from microscopy_proc.utils.misc_utils import const2iter
@@ -135,10 +135,10 @@ def my_configs():
     )
 
 
-def cluster_proc_dec(cluster_factory):
+def cluster_proc_dec(cluster_factory: Callable[[], SpecCluster]):
     """
-    `cluster_factory` is a function that returns a cluster.
-    Makes a Dask cluster and client, runs the function,
+    `cluster_factory` is a function that returns a Dask cluster.
+    This function makes the Dask cluster and client, runs the function,
     then closes the client and cluster.
     """
 
@@ -158,7 +158,7 @@ def cluster_proc_dec(cluster_factory):
 
 
 @contextlib.contextmanager
-def cluster_proc_contxt(cluster):
+def cluster_proc_contxt(cluster: SpecCluster):
     """
     Makes a Dask cluster and client, runs the body in the context manager,
     then closes the client and cluster.
