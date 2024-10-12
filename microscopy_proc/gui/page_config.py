@@ -9,7 +9,7 @@ from streamlit.delta_generator import DeltaGenerator
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
 
-from .gui_funcs import page_decorator, save_configs
+from .gui_funcs import load_configs, page_decorator, save_configs
 
 
 class NO_DEFAULT:
@@ -376,8 +376,20 @@ def page_configs():
         # JSON configs
         st.json(configs.model_dump())
 
+    columns = st.columns(2)
+    # Button: Reset to old saved configs
+    st.button(
+        label="Reset",
+        on_click=load_configs,
+        key="configs_reset",
+    )
+    if st.session_state["configs_reset"]:
+        st.success("Resetted project directory and configs")
     # Button: Save new configs
-    st.button(label="Save", key="configs_save")
+    st.button(
+        label="Save",
+        on_click=save_configs,
+        key="configs_save",
+    )
     if st.session_state["configs_save"]:
-        save_configs()
         st.success("New configs saved to project directory")
