@@ -1,7 +1,6 @@
 import os
 
 import dask.array as da
-import numpy as np
 import streamlit as st
 
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
@@ -196,7 +195,6 @@ def page_visualiser():
                 "No overlap or raw array files found.\n\n"
                 + "No trimming is available (if image too big this may crash application)."
             )
-    arr = np.zeros((100, 100, 100))  # NOTE: remove this line
     # Making slicer/trimmer sliders
     trimmer = tuple(slice(None) for _ in "ZYX")
     if arr is not None:
