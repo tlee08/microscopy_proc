@@ -274,9 +274,6 @@ def page_visualiser():
                     # Also saving to imgs_to_run_ls list
                     imgs_to_run_ls.append({"name": img_k, **img_v})
         # Running visualiser
-        print(imgs_to_run_ls)
-        print([i["name"] for i in imgs_to_run_ls])
-
         view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i["name"]) for i in imgs_to_run_ls),
             trimmer=trimmer,
