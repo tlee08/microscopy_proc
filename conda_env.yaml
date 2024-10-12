@@ -13,4 +13,5 @@ dependencies:
   # - cuda-toolkit
   - cupy
   - pip:
+      # - -e .
       - -e ".[gpu,elastix]"
