@@ -32,8 +32,6 @@ def load_configs():
     pfm = get_proj_fp_model(proj_dir)
     fp = pfm.config_params
     st.session_state["configs"] = ConfigParamsModel.model_validate(read_json(fp))
-    print("LOADED")
-    print(st.session_state["configs"])
 
 
 #####################################################################
