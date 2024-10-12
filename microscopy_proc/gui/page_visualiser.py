@@ -6,7 +6,7 @@ import streamlit as st
 from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import page_decorator
+from .gui_funcs import PROJ_DIR, page_decorator
 
 # NOTE: could plt.colourmaps() work?
 CMAP = [
@@ -178,7 +178,7 @@ def page_visualiser():
         }
 
     # Recalling session state variables
-    proj_dir = st.session_state["proj_dir"]
+    proj_dir = st.session_state[PROJ_DIR]
     pfm = get_proj_fp_model(proj_dir)
 
     st.write("## Visualiser")

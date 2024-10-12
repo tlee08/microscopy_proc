@@ -28,7 +28,7 @@ from microscopy_proc.pipelines.pipeline_funcs import (
 )
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import page_decorator
+from .gui_funcs import PROJ_DIR, page_decorator
 
 
 @page_decorator()
@@ -81,7 +81,7 @@ def page_pipeline():
         st.session_state["pipeline_overwrite"] = False
 
     # Recalling session state variables
-    proj_dir = st.session_state["proj_dir"]
+    proj_dir = st.session_state[PROJ_DIR]
     pfm = get_proj_fp_model(proj_dir)
 
     st.write("## Pipeline")

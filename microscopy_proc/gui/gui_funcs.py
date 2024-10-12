@@ -9,6 +9,10 @@ from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
 
+PROJ_DIR = "proj_dir"
+PROJ_DIR_STATUS = "proj_dir_status"
+CONFIGS = "configs"
+
 
 class ProjDirStatus(Enum):
     NOT_SET = "not_set"
@@ -28,10 +32,10 @@ def load_configs():
 
     NOTE: does not catch errors
     """
-    proj_dir = st.session_state["proj_dir"]
+    proj_dir = st.session_state[PROJ_DIR]
     pfm = get_proj_fp_model(proj_dir)
     fp = pfm.config_params
-    st.session_state["configs"] = ConfigParamsModel.model_validate(read_json(fp))
+    st.session_state[CONFIGS] = ConfigParamsModel.model_validate(read_json(fp))
 
 
 #####################################################################
@@ -44,8 +48,8 @@ def page_decorator(check_proj_dir=True):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             # Recalling session state variables
-            proj_dir = st.session_state["proj_dir"]
-            proj_dir_status = st.session_state["proj_dir_status"]
+            proj_dir = st.session_state[PROJ_DIR]
+            proj_dir_status = st.session_state[PROJ_DIR_STATUS]
             # Checking whether project exists
             with st.sidebar:
                 st.subheader(f"Root Directory: {proj_dir}")

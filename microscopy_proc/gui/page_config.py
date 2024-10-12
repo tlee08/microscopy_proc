@@ -11,7 +11,7 @@ from microscopy_proc.utils.io_utils import write_json
 from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import load_configs, page_decorator
+from .gui_funcs import CONFIGS, PROJ_DIR, load_configs, page_decorator
 
 
 class NO_DEFAULT:
@@ -307,7 +307,7 @@ def configs_reset_func():
     """
     # Loading and getting configs from disk
     load_configs()
-    configs: ConfigParamsModel = st.session_state["configs"]
+    configs: ConfigParamsModel = st.session_state[CONFIGS]
     # For each field, setting the value to the value from disk
     for k, v in configs.model_dump().items():
         st.session_state[k] = v
@@ -320,8 +320,8 @@ def configs_save_func():
 
     NOTE: does not catch errors
     """
-    configs: ConfigParamsModel = st.session_state["configs"]
-    proj_dir = st.session_state["proj_dir"]
+    configs: ConfigParamsModel = st.session_state[CONFIGS]
+    proj_dir = st.session_state[PROJ_DIR]
     pfm = get_proj_fp_model(proj_dir)
     fp = pfm.config_params
     write_json(fp, configs.model_dump())
@@ -354,7 +354,7 @@ def page_configs():
         ValidationError: If the configuration parameters do not pass validation.
     """
     # Recalling session state variables
-    configs: ConfigParamsModel = st.session_state["configs"]
+    configs: ConfigParamsModel = st.session_state[CONFIGS]
     l_zyx = ("z", "y", "x")
     l_slc = ("start", "stop", "step")
 
@@ -401,7 +401,7 @@ def page_configs():
     # Checking configs and updating in session_state
     # NOTE: an error can occur with the validation here
     configs = ConfigParamsModel.model_validate(configs)
-    st.session_state["configs"] = configs
+    st.session_state[CONFIGS] = configs
 
     # Showing updated configs
     st.write("# See Project Configs")

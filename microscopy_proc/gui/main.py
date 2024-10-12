@@ -4,7 +4,7 @@ import subprocess
 
 import streamlit as st
 
-from microscopy_proc.gui.gui_funcs import ProjDirStatus
+from microscopy_proc.gui.gui_funcs import PROJ_DIR, PROJ_DIR_STATUS, ProjDirStatus
 from microscopy_proc.gui.page_config import page_configs
 from microscopy_proc.gui.page_init_proj import page_init_proj
 from microscopy_proc.gui.page_pipeline import page_pipeline
@@ -20,9 +20,9 @@ logging.disable(logging.CRITICAL)
 
 def main():
     # Initialising session state
-    if "proj_dir" not in st.session_state:
-        st.session_state["proj_dir"] = None
-        st.session_state["proj_dir_status"] = ProjDirStatus.NOT_SET
+    if PROJ_DIR not in st.session_state:
+        st.session_state[PROJ_DIR] = None
+        st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.NOT_SET
     # Title
     st.title("Microscopy Processing Pipeline")
     # Multi-page navigation
