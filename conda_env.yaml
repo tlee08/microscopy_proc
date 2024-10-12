@@ -1,18 +1,16 @@
 name: microscopy_proc
 channels:
-  # - nvidia
   - conda-forge
-  - bioconda
 dependencies:
   - python=3.12
   - pip
   # Interactivity
   - ipykernel
-  - fiji
+  - bioconda::fiji
   # Visualisation
   - python-graphviz
   # GPU acceleration
-  # - cudatoolkit
+  # - cuda-toolkit
   - cupy
   - pip:
-      - -e .
+      - -e ".[gpu,elastix]"

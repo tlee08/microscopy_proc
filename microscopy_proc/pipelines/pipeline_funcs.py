@@ -11,11 +11,9 @@ import numpy as np
 import pandas as pd
 import tifffile
 from dask.distributed import LocalCluster
-from dask_cuda import LocalCUDACluster
 from natsort import natsorted
 from scipy import ndimage
 
-# from prefect import flow
 from microscopy_proc.constants import (
     ANNOT_COLUMNS_FINAL,
     CELL_AGG_MAPPINGS,
@@ -25,13 +23,7 @@ from microscopy_proc.constants import (
     Coords,
     MaskColumns,
 )
-
-# from prefect import flow
 from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs as Cf
-
-# from prefect import flow
-from microscopy_proc.funcs.elastix_funcs import registration, transformation_coords
-from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
 from microscopy_proc.funcs.map_funcs import (
     annot_dict2df,
     combine_nested_regions,
@@ -42,15 +34,11 @@ from microscopy_proc.funcs.mask_funcs import (
     make_outline,
     mask2region_counts,
 )
-
-# from prefect import flow
 from microscopy_proc.funcs.reg_funcs import (
     downsmpl_fine,
     downsmpl_rough,
     reorient,
 )
-
-# from prefect import flow
 from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
 from microscopy_proc.funcs.visual_check_funcs_dask import coords2heatmaps, coords2points
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
@@ -67,6 +55,34 @@ from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     RefFpModel,
 )
+
+# Optional dependency: gpu
+try:
+    from dask_cuda import LocalCUDACluster
+
+    from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
+except ImportError:
+    LocalCUDACluster = LocalCluster
+    Gf = Cf
+    print(
+        "Warning GPU functionality not installed.\n"
+        + "Using CPU functionality instead (much slower).\n"
+        + 'Can install with `pip install "microscopy_proc[gpu]"`'
+    )
+# Optional dependency: elastix
+try:
+    from microscopy_proc.funcs.elastix_funcs import registration, transformation_coords
+except ImportError:
+
+    def elastix_import_error(*args, **kwargs):
+        raise ImportError(
+            "Elastix dependency not installed.\n"
+            + 'Install with `pip install "microscopy_proc[elastix]"`'
+        )
+
+    registration = elastix_import_error
+    transformation_coords = elastix_import_error
+
 
 ###################################################################################################
 # OVERWRITE CHECK DECORATOR

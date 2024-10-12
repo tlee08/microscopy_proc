@@ -81,19 +81,41 @@ def page_init_proj():
     """
     # Title
     st.write("## Init Project")
-    # Input: Project Directory
-    st.text_input(
-        label="Root Directory",
-        value=st.session_state.get("proj_dir", "/"),
-        key="proj_dir_input",
-    )
+    # tabs: single or multi project
+    tabs = st.tabs(["Single Project", "Multiple Projects"])
+    with tabs[0]:
+        # Input: Project Directory
+        st.text_input(
+            label="Project Directory",
+            value=st.session_state.get("proj_dir", "/"),
+            key="proj_dir_input",
+        )
+    with tabs[1]:
+        # Input: Root Projects Directory
+        st.text_input(
+            label="Root Directory",
+            value=st.session_state.get("proj_dir", "/"),
+            key="root_projs_dir_input",
+        )
+        # selectbox: folders (i.e. projects) inside root directory
+        st.selectbox(
+            label="Projects",
+            options=os.listdir(st.session_state["root_projs_dir_input"]),
+            index=st.session_state.get("proj_dir_select", 0),
+        )
+        # Setting project directory
+        st.session_state["proj_dir"] = os.path.join(
+            st.session_state["root_projs_dir_input"],
+            st.session_state["proj_dir_select"],
+        )
+
     # Button: Set project directory
     st.button(
         label="Set project directory",
         on_click=proj_dir_set_func,
         key="proj_dir_set",
     )
-    # Container: outcome of project directory input
+    # container: outcome of project directory input
     with st.container():
         if st.session_state["proj_dir_status"] == ProjDirStatus.NOT_SET:
             st.warning("Project directory not set")
