@@ -46,18 +46,20 @@ if __name__ == "__main__":
     proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
     proj_dir = os.path.join(proj_dir, "P15_2.5x_1x_zoom_07082024")
 
+    proj_dir = "/home/linux1/Desktop/example_proj"
+
     pfm = get_proj_fp_model(proj_dir)
 
     slicer = (
         # slice(400, 500, None),  #  slice(None, None, 3),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
         # slice(1000, 3000, None),  #  slice(None, None, 12),
-        # slice(600, 650, None),
-        # slice(1400, 3100, None),
-        # slice(500, 3100, None),
-        slice(None, None, None),
-        slice(None, None, None),
-        slice(None, None, None),
+        slice(600, 650, None),
+        slice(1400, 3100, None),
+        slice(500, 3100, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
+        # slice(None, None, None),
     )
 
     imgs_ls = (
@@ -65,12 +67,12 @@ if __name__ == "__main__":
         # ("ref", 10000),
         # ("annot", 10000),
         # RAW
-        # ("raw", 7000),
+        ("raw", 14000),
         # REG
         # ("downsmpl_1", 10000),
         # ("downsmpl_2", 10000),
-        ("trimmed", 4000),
-        ("regresult", 500),
+        # ("trimmed", 4000),
+        # ("regresult", 500),
         # MASK
         # ("mask", 5),
         # ("outline", 5),
@@ -87,11 +89,11 @@ if __name__ == "__main__":
         # ("wshed_volumes", 1000),
         # ("wshed_filt", 1000),
         # CELLC FINAL
-        # ("threshd_final", 5),
-        # ("maxima_final", 5),
-        # ("wshed_final", 1000),
+        ("threshd_final", 5),
+        ("maxima_final", 5),
+        ("wshed_final", 1000),
         # POST
-        # ("points_check", 5),
+        ("points_check", 5),
         # ("heatmap_check", 20),
         # ("points_trfm_check", 5),
         # ("heatmap_trfm_check", 100),
