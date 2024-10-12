@@ -7,9 +7,11 @@ from pydantic import BaseModel
 from streamlit.delta_generator import DeltaGenerator
 
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
+from microscopy_proc.utils.io_utils import write_json
 from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
+from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import load_configs, page_decorator, save_configs
+from .gui_funcs import load_configs, page_decorator
 
 
 class NO_DEFAULT:
@@ -294,6 +296,37 @@ class ConfigsUpdater:
         setattr(pydantic_instance, field_name, output)
 
 
+@staticmethod
+def configs_reset_func():
+    """
+    For each config parameter, resets the value to the value from disk.
+
+    Also updates the session state variable that are dependent on this value:
+    - `{label}`: the value
+    - `{label}_is_none`: whether the value is None
+    """
+    # Loading and getting configs from disk
+    load_configs()
+    configs: ConfigParamsModel = st.session_state["configs"]
+    # For each field, setting the value to the value from disk
+    for k, v in configs.model_dump().items():
+        st.session_state[k] = v
+        st.session_state[f"{k}_is_none"] = v is None
+
+
+def configs_save_func():
+    """
+    Saving configs from session state to project directory.
+
+    NOTE: does not catch errors
+    """
+    configs: ConfigParamsModel = st.session_state["configs"]
+    proj_dir = st.session_state["proj_dir"]
+    pfm = get_proj_fp_model(proj_dir)
+    fp = pfm.config_params
+    write_json(fp, configs.model_dump())
+
+
 @page_decorator()
 def page_configs():
     """
@@ -321,7 +354,7 @@ def page_configs():
         ValidationError: If the configuration parameters do not pass validation.
     """
     # Recalling session state variables
-    configs: ConfigParamsModel = st.session_state.get("configs", None)
+    configs: ConfigParamsModel = st.session_state["configs"]
     l_zyx = ("z", "y", "x")
     l_slc = ("start", "stop", "step")
 
@@ -380,7 +413,7 @@ def page_configs():
     # Button: Reset to old saved configs
     columns[0].button(
         label="Reset",
-        on_click=load_configs,
+        on_click=configs_reset_func,
         key="configs_reset",
     )
     if st.session_state["configs_reset"]:
@@ -388,7 +421,7 @@ def page_configs():
     # Button: Save new configs
     columns[1].button(
         label="Save",
-        on_click=save_configs,
+        on_click=configs_save_func,
         key="configs_save",
     )
     if st.session_state["configs_save"]:

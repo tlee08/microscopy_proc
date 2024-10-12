@@ -4,7 +4,7 @@ from enum import Enum
 import streamlit as st
 
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
-from microscopy_proc.utils.io_utils import read_json, write_json
+from microscopy_proc.utils.io_utils import read_json
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
@@ -32,19 +32,8 @@ def load_configs():
     pfm = get_proj_fp_model(proj_dir)
     fp = pfm.config_params
     st.session_state["configs"] = ConfigParamsModel.model_validate(read_json(fp))
-
-
-def save_configs():
-    """
-    Saving configs from session state to project directory.
-
-    NOTE: does not catch errors
-    """
-    configs = st.session_state["configs"]
-    proj_dir = st.session_state["proj_dir"]
-    pfm = get_proj_fp_model(proj_dir)
-    fp = pfm.config_params
-    write_json(fp, configs.model_dump())
+    print("LOADED")
+    print(st.session_state["configs"])
 
 
 #####################################################################
