@@ -58,7 +58,7 @@ def page_visualiser():
                 },
                 "regresult": {
                     "vrange_default": (0, 1000),
-                    "cmap_default": "gray",
+                    "cmap_default": "green",
                     "sel": False,
                 },
             },
