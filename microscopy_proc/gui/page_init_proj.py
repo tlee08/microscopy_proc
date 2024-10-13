@@ -176,7 +176,7 @@ def page_init_proj():
         label="Set project directory",
         on_click=set_func,
         disabled=st.session_state[DISABLED],
-        key=f"{SET}_w",
+        key=SET,
     )
     # container: outcome of project directory input
     with st.container():
@@ -195,7 +195,7 @@ def page_init_proj():
             st.button(
                 label="Create new project",
                 on_click=create_func,
-                key=f"{CREATE}_w",
+                key=CREATE,
             )
         elif st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.VALID:
             st.success("Project directory loaded")

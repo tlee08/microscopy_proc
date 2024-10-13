@@ -419,7 +419,7 @@ def page_configs():
     columns = st.columns(2)
     with columns[0]:
         # Button: Reset to old saved configs
-        st.session_state[CONFIGS_RESET] = st.button(
+        st.button(
             label="Reset",
             on_click=configs_reset_func,
             key=CONFIGS_RESET,
@@ -428,7 +428,7 @@ def page_configs():
             st.success("Resetted project directory and configs")
     with columns[1]:
         # Button: Save new configs
-        st.session_state[CONFIGS_RESET] = columns[1].button(
+        columns[1].button(
             label="Save",
             on_click=configs_save_func,
             key=CONFIGS_SAVE,
