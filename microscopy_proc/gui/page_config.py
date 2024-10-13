@@ -51,13 +51,13 @@ class ConfigsUpdater:
             container.button(
                 label=f"Set as default (`{default}`)",
                 # disabled=is_none,
-                key=f"{label}_{DEFAULT}",
+                key=f"{CONFIGS}_{label}_{DEFAULT}",
             )
             # If button clicked, setting curr to default
             # and update widgets accordingly
-            if st.session_state[f"{label}_{DEFAULT}"]:
+            if st.session_state[f"{CONFIGS}_{label}_{DEFAULT}"]:
                 curr = default
-                st.session_state[f"{label}_{IS_NONE}"] = default is None
+                st.session_state[f"{CONFIGS}_{label}_{IS_NONE}"] = default is None
                 st.session_state[label] = curr
         # If nullable, making nullable checkbox
         is_none = False
@@ -65,7 +65,7 @@ class ConfigsUpdater:
             is_none = container.toggle(
                 label="Set to None",
                 value=curr is None,
-                key=f"{label}_{IS_NONE}",
+                key=f"{CONFIGS}_{label}_{IS_NONE}",
             )
         # Returning container, current value, and whether that value is None
         return container, curr, is_none
@@ -90,7 +90,7 @@ class ConfigsUpdater:
             options=enum2list(my_enum),
             index=enum2list(my_enum).index(curr) if curr else None,
             disabled=is_none,
-            key=f"{label}_{VALUE}",
+            key=f"{CONFIGS}_{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -114,7 +114,7 @@ class ConfigsUpdater:
             value=curr,
             step=1,
             disabled=is_none,
-            key=f"{label}_{VALUE}",
+            key=f"{CONFIGS}_{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -138,7 +138,7 @@ class ConfigsUpdater:
             value=curr,
             step=0.05,
             disabled=is_none,
-            key=f"{label}_{VALUE}",
+            key=f"{CONFIGS}_{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -161,7 +161,7 @@ class ConfigsUpdater:
             label=label,
             value=curr,
             disabled=is_none,
-            key=f"{label}_{VALUE}",
+            key=f"{CONFIGS}_{label}_{VALUE}",
             label_visibility="collapsed",
         )
         return None if is_none else output
@@ -190,7 +190,7 @@ class ConfigsUpdater:
         nullable_ls = nullable if isinstance(nullable, tuple) else const2ls(nullable, n)
         default_ls = default if isinstance(default, tuple) else const2ls(default, n)
         n_labels_ls = n_labels if isinstance(n_labels, tuple) else range(n)
-        n_labels_ls = [f"{label} - {n_label}" for n_label in n_labels_ls]
+        n_labels_ls = [f"{CONFIGS}_{label} - {n_label}" for n_label in n_labels_ls]
         # Making kwargs into kwargs_ls dict of lists
         kwargs_ls = {
             k: v if isinstance(v, tuple) else const2ls(v, n) for k, v in kwargs.items()
@@ -317,8 +317,8 @@ def configs_reset_func():
     configs: ConfigParamsModel = st.session_state[CONFIGS]
     # For each field, setting the value to the value from disk
     for k, v in configs.model_dump().items():
-        st.session_state[f"{k}_{VALUE}"] = v
-        st.session_state[f"{k}_is_none"] = v is None
+        st.session_state[f"{CONFIGS}_{k}_{VALUE}"] = v
+        st.session_state[f"{CONFIGS}_{k}_is_none"] = v is None
 
 
 def configs_save_func():
@@ -422,7 +422,7 @@ def page_configs():
         st.session_state[CONFIGS_RESET] = st.button(
             label="Reset",
             on_click=configs_reset_func,
-            key=f"{CONFIGS_RESET}_w",
+            key=CONFIGS_RESET,
         )
         if st.session_state[CONFIGS_RESET]:
             st.success("Resetted project directory and configs")
@@ -431,7 +431,7 @@ def page_configs():
         st.session_state[CONFIGS_RESET] = columns[1].button(
             label="Save",
             on_click=configs_save_func,
-            key=f"{CONFIGS_SAVE}_w",
+            key=CONFIGS_SAVE,
         )
         if st.session_state[CONFIGS_SAVE]:
             st.success("New configs saved to project directory")
