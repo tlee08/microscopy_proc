@@ -5,10 +5,11 @@ import subprocess
 import streamlit as st
 
 from microscopy_proc.gui.gui_funcs import PROJ_DIR, PROJ_DIR_STATUS, ProjDirStatus
-from microscopy_proc.gui.page_config import page_configs
-from microscopy_proc.gui.page_init_proj import page_init_proj
-from microscopy_proc.gui.page_pipeline import page_pipeline
-from microscopy_proc.gui.page_visualiser import page_visualiser
+from microscopy_proc.gui.page1_init import page1_init
+from microscopy_proc.gui.page2_config import page2_configs
+from microscopy_proc.gui.page3_pipeline import page3_pipeline
+from microscopy_proc.gui.page4_visualiser import page4_visualiser
+from microscopy_proc.gui.page5_combine import page5_combine
 
 logging.disable(logging.CRITICAL)
 
@@ -28,10 +29,11 @@ def main():
     # Multi-page navigation
     pg = st.navigation(
         [
-            st.Page(page_init_proj),
-            st.Page(page_configs),
-            st.Page(page_pipeline),
-            st.Page(page_visualiser),
+            st.Page(page1_init),
+            st.Page(page2_configs),
+            st.Page(page3_pipeline),
+            st.Page(page4_visualiser),
+            st.Page(page5_combine),
         ]
     )
     pg.run()

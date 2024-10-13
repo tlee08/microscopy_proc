@@ -10,7 +10,6 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, page_decorator
 
 # NOTE: could plt.colourmaps() work?
-
 VIEWER = "viewer"
 IMGS = "visualiser_imgs"
 TRIMMER = "trimmer"
@@ -35,7 +34,7 @@ class Colormaps(Enum):
 
 
 @page_decorator()
-def page_visualiser():
+def page4_visualiser():
     if IMGS not in st.session_state:
         st.session_state[IMGS] = {
             "Atlas": {

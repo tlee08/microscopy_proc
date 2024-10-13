@@ -75,7 +75,9 @@ def set_func():
     pdir_input = st.session_state[INPUT]
     # Setting session_state variables based on proj_dir checks
     # Checking if project directory exists
-    if not os.path.isdir(pdir_input):
+    if pdir_input is None:
+        st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.NOT_SET
+    elif not os.path.isdir(pdir_input):
         st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.NOT_EXIST
     else:
         # Storing project directory
@@ -105,7 +107,7 @@ def create_func():
 
 
 @page_decorator(check_proj_dir=False)
-def page_init_proj():
+def page1_init():
     """
     Initializes the project page in the GUI.
     This function sets up the user interface for initializing a project directory.

@@ -36,7 +36,7 @@ RUN = "pipeline_run"
 
 
 @page_decorator()
-def page_pipeline():
+def page3_pipeline():
     """
     Displays the pipeline page in the GUI, allowing users to select and run various pipeline functions.
 

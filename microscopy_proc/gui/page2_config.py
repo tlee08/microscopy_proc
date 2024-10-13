@@ -25,6 +25,18 @@ class NO_DEFAULT:
     pass
 
 
+SUBLABEL_MAP = {
+    "chunksize": L_ZYX,
+    "ref_orient_ls": L_ZYX,
+    "ref_z_trim": L_SLC,
+    "ref_y_trim": L_SLC,
+    "ref_x_trim": L_SLC,
+    "z_trim": L_SLC,
+    "y_trim": L_SLC,
+    "x_trim": L_SLC,
+}
+
+
 class ConfigsUpdater:
     """
     There's containers and columns, but returns
@@ -57,8 +69,8 @@ class ConfigsUpdater:
             # and update widgets accordingly
             if st.session_state[f"{CONFIGS}_{label}_{DEFAULT}"]:
                 curr = default
+                st.session_state[f"{CONFIGS}_{label}_{VALUE}"] = curr
                 st.session_state[f"{CONFIGS}_{label}_{IS_NONE}"] = default is None
-                st.session_state[label] = curr
         # If nullable, making nullable checkbox
         is_none = False
         if nullable:
@@ -79,6 +91,7 @@ class ConfigsUpdater:
         nullable: bool = False,
         default: Any = NO_DEFAULT,
         container=None,
+        **kwargs,
     ) -> Optional[Any]:
         # Initialising container, nullable, and default widgets
         container, curr, is_none = cls.init_inputter(
@@ -104,6 +117,7 @@ class ConfigsUpdater:
         nullable: bool = False,
         default: Any = NO_DEFAULT,
         container=None,
+        **kwargs,
     ) -> Optional[int]:
         # Initialising container, nullable, and default widgets
         container, curr, is_none = cls.init_inputter(
@@ -128,6 +142,7 @@ class ConfigsUpdater:
         nullable: bool = False,
         default: Any = NO_DEFAULT,
         container=None,
+        **kwargs,
     ) -> Optional[float]:
         # Initialising container, nullable, and default widgets
         container, curr, is_none = cls.init_inputter(
@@ -152,6 +167,7 @@ class ConfigsUpdater:
         nullable: bool = False,
         default: Any = NO_DEFAULT,
         container=None,
+        **kwargs,
     ) -> Optional[str]:
         # Initialising container, nullable, and default widgets
         container, curr, is_none = cls.init_inputter(
@@ -190,7 +206,7 @@ class ConfigsUpdater:
         nullable_ls = nullable if isinstance(nullable, tuple) else const2ls(nullable, n)
         default_ls = default if isinstance(default, tuple) else const2ls(default, n)
         n_labels_ls = n_labels if isinstance(n_labels, tuple) else range(n)
-        n_labels_ls = [f"{CONFIGS}_{label} - {n_label}" for n_label in n_labels_ls]
+        n_labels_ls = [f"{label}_{n_label}" for n_label in n_labels_ls]
         # Making kwargs into kwargs_ls dict of lists
         kwargs_ls = {
             k: v if isinstance(v, tuple) else const2ls(v, n) for k, v in kwargs.items()
@@ -271,7 +287,7 @@ class ConfigsUpdater:
         nullable, my_type = cls.check_type_n_nullable(field_info.annotation)
         args = get_args(field_info.annotation)
 
-        # If a tuple (e.g. tuple)
+        # If a tuple, then building tuple inputs
         output = None
         if issubclass(my_type, tuple):
             # Building tuple inputs
@@ -302,6 +318,21 @@ class ConfigsUpdater:
         # Setting to pydantic_instance
         setattr(pydantic_instance, field_name, output)
 
+    @classmethod
+    def field2updater_nice(
+        cls,
+        pydantic_instance: BaseModel,
+        field_name: str,
+        **kwargs,
+    ):
+        n_labels = SUBLABEL_MAP.get(field_name, None)
+        cls.field2updater(
+            pydantic_instance=pydantic_instance,
+            field_name=field_name,
+            n_labels=n_labels,
+            **kwargs,
+        )
+
 
 @staticmethod
 def configs_reset_func():
@@ -316,9 +347,21 @@ def configs_reset_func():
     load_configs()
     configs: ConfigParamsModel = st.session_state[CONFIGS]
     # For each field, setting the value to the value from disk
-    for k, v in configs.model_dump().items():
-        st.session_state[f"{CONFIGS}_{k}_{VALUE}"] = v
-        st.session_state[f"{CONFIGS}_{k}_is_none"] = v is None
+    for label, value in configs.model_dump().items():
+        if isinstance(value, tuple):
+            # If field is a tuple, then setting each value in tuple separately
+            # Expects an entry in SUBLABEL_MAP
+            for i, sublabel in enumerate(SUBLABEL_MAP[label]):
+                label_value = f"{CONFIGS}_{label}_{sublabel}_{VALUE}"
+                label_is_none = f"{CONFIGS}_{label}_{sublabel}_is_none"
+                st.session_state[label_value] = value[i]
+                st.session_state[label_is_none] = value[i] is None
+        else:
+            # Otherwise, setting the value directly
+            label_value = f"{CONFIGS}_{label}_{VALUE}"
+            label_is_none = f"{CONFIGS}_{label}_is_none"
+            st.session_state[label_value] = value
+            st.session_state[label_is_none] = value is None
 
 
 def configs_save_func():
@@ -335,7 +378,7 @@ def configs_save_func():
 
 
 @page_decorator()
-def page_configs():
+def page2_configs():
     """
     Displays and allows editing of configuration parameters for the project.
     This function uses Streamlit to create an interactive GUI for editing various
@@ -367,43 +410,43 @@ def page_configs():
 
     st.write("# Edit Configs")
     with st.expander("Reference"):
-        ConfigsUpdater.field2updater(configs, "atlas_dir")
-        ConfigsUpdater.field2updater(configs, "ref_v")
-        ConfigsUpdater.field2updater(configs, "annot_v")
-        ConfigsUpdater.field2updater(configs, "map_v")
+        ConfigsUpdater.field2updater_nice(configs, "atlas_dir")
+        ConfigsUpdater.field2updater_nice(configs, "ref_v")
+        ConfigsUpdater.field2updater_nice(configs, "annot_v")
+        ConfigsUpdater.field2updater_nice(configs, "map_v")
     with st.expander("Raw"):
-        ConfigsUpdater.field2updater(configs, "chunksize", n_labels=L_ZYX)
+        ConfigsUpdater.field2updater_nice(configs, "chunksize")
     with st.expander("Registration"):
         # TODO: numerical is unintuitive for selecting axes in ref_orienf_ls
-        ConfigsUpdater.field2updater(configs, "ref_orient_ls", n_labels=L_ZYX)
-        ConfigsUpdater.field2updater(configs, "ref_z_trim", n_labels=L_SLC)
-        ConfigsUpdater.field2updater(configs, "ref_y_trim", n_labels=L_SLC)
-        ConfigsUpdater.field2updater(configs, "ref_x_trim", n_labels=L_SLC)
-        ConfigsUpdater.field2updater(configs, "z_rough")
-        ConfigsUpdater.field2updater(configs, "y_rough")
-        ConfigsUpdater.field2updater(configs, "x_rough")
-        ConfigsUpdater.field2updater(configs, "z_fine")
-        ConfigsUpdater.field2updater(configs, "y_fine")
-        ConfigsUpdater.field2updater(configs, "x_fine")
-        ConfigsUpdater.field2updater(configs, "z_trim", n_labels=L_SLC)
-        ConfigsUpdater.field2updater(configs, "y_trim", n_labels=L_SLC)
-        ConfigsUpdater.field2updater(configs, "x_trim", n_labels=L_SLC)
+        ConfigsUpdater.field2updater_nice(configs, "ref_orient_ls")
+        ConfigsUpdater.field2updater_nice(configs, "ref_z_trim")
+        ConfigsUpdater.field2updater_nice(configs, "ref_y_trim")
+        ConfigsUpdater.field2updater_nice(configs, "ref_x_trim")
+        ConfigsUpdater.field2updater_nice(configs, "z_rough")
+        ConfigsUpdater.field2updater_nice(configs, "y_rough")
+        ConfigsUpdater.field2updater_nice(configs, "x_rough")
+        ConfigsUpdater.field2updater_nice(configs, "z_fine")
+        ConfigsUpdater.field2updater_nice(configs, "y_fine")
+        ConfigsUpdater.field2updater_nice(configs, "x_fine")
+        ConfigsUpdater.field2updater_nice(configs, "z_trim")
+        ConfigsUpdater.field2updater_nice(configs, "y_trim")
+        ConfigsUpdater.field2updater_nice(configs, "x_trim")
     with st.expander("Mask"):
-        ConfigsUpdater.field2updater(configs, "mask_gaus_blur")
-        ConfigsUpdater.field2updater(configs, "mask_thresh")
+        ConfigsUpdater.field2updater_nice(configs, "mask_gaus_blur")
+        ConfigsUpdater.field2updater_nice(configs, "mask_thresh")
     with st.expander("Overlap"):
-        ConfigsUpdater.field2updater(configs, "depth")
+        ConfigsUpdater.field2updater_nice(configs, "depth")
     with st.expander("Cell Counting"):
-        ConfigsUpdater.field2updater(configs, "tophat_sigma")
-        ConfigsUpdater.field2updater(configs, "dog_sigma1")
-        ConfigsUpdater.field2updater(configs, "dog_sigma2")
-        ConfigsUpdater.field2updater(configs, "gauss_sigma")
-        ConfigsUpdater.field2updater(configs, "thresh_p")
-        ConfigsUpdater.field2updater(configs, "min_threshd")
-        ConfigsUpdater.field2updater(configs, "max_threshd")
-        ConfigsUpdater.field2updater(configs, "maxima_sigma")
-        ConfigsUpdater.field2updater(configs, "min_wshed")
-        ConfigsUpdater.field2updater(configs, "max_wshed")
+        ConfigsUpdater.field2updater_nice(configs, "tophat_sigma")
+        ConfigsUpdater.field2updater_nice(configs, "dog_sigma1")
+        ConfigsUpdater.field2updater_nice(configs, "dog_sigma2")
+        ConfigsUpdater.field2updater_nice(configs, "gauss_sigma")
+        ConfigsUpdater.field2updater_nice(configs, "thresh_p")
+        ConfigsUpdater.field2updater_nice(configs, "min_threshd")
+        ConfigsUpdater.field2updater_nice(configs, "max_threshd")
+        ConfigsUpdater.field2updater_nice(configs, "maxima_sigma")
+        ConfigsUpdater.field2updater_nice(configs, "min_wshed")
+        ConfigsUpdater.field2updater_nice(configs, "max_wshed")
 
     # Checking configs and updating in session_state
     # NOTE: an error can occur with the validation here
