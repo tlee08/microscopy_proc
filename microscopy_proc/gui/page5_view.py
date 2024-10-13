@@ -11,15 +11,15 @@ from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, page_decorator
 
 # NOTE: could plt.colourmaps() work?
 VIEWER = "viewer"
-IMGS = "visualiser_imgs"
-TRIMMER = "trimmer"
-NAME = "name"
-VRANGE = "vrange"
-VRANGE_D = "vrange_default"
-CMAP = "cmap"
-CMAP_D = "cmap_default"
-SEL = "sel"
-RUN = "visualiser_run"
+IMGS = f"{VIEWER}_imgs"
+TRIMMER = f"{VIEWER}_trimmer"
+NAME = f"{VIEWER}_name"
+VRANGE = f"{VIEWER}_vrange"
+VRANGE_D = f"{VIEWER}_vrange_default"
+CMAP = f"{VIEWER}_cmap"
+CMAP_D = f"{VIEWER}_cmap_default"
+SEL = f"{VIEWER}_sel"
+RUN = f"{VIEWER}_visualiser_run"
 
 
 class Colormaps(Enum):
@@ -34,7 +34,7 @@ class Colormaps(Enum):
 
 
 @page_decorator()
-def page4_visualiser():
+def page5_view():
     if IMGS not in st.session_state:
         st.session_state[IMGS] = {
             "Atlas": {
@@ -221,7 +221,10 @@ def page4_visualiser():
                 min_value=0,
                 max_value=arr.shape[i],
                 step=10,
-                value=(0, arr.shape[i]),
+                value=(
+                    0,
+                    st.session_state.get(f"{VIEWER}_{v}_{TRIMMER}", arr.shape[i]),
+                ),
                 key=f"{VIEWER}_{v}_{TRIMMER}",
             )
         sliders = [st.session_state[f"{VIEWER}_{v}_{TRIMMER}"] for v in L_ZYX]

@@ -6,19 +6,25 @@ import streamlit as st
 from pydantic import BaseModel
 from streamlit.delta_generator import DeltaGenerator
 
+from microscopy_proc.gui.gui_funcs import (
+    CONFIGS,
+    L_SLC,
+    L_ZYX,
+    PROJ_DIR,
+    load_configs,
+    page_decorator,
+)
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import write_json
 from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, load_configs, page_decorator
-
-CONFIGS = "configs"
+UPDATE = "update"
 VALUE = "value"
 IS_NONE = "is_none"
 DEFAULT = "default"
-CONFIGS_RESET = f"{CONFIGS}_reset"
-CONFIGS_SAVE = f"{CONFIGS}_save"
+CONFIGS_RESET = f"{UPDATE}_reset"
+CONFIGS_SAVE = f"{UPDATE}_save"
 
 
 class NO_DEFAULT:
@@ -63,21 +69,21 @@ class ConfigsUpdater:
             container.button(
                 label=f"Set as default (`{default}`)",
                 # disabled=is_none,
-                key=f"{CONFIGS}_{label}_{DEFAULT}",
+                key=f"{UPDATE}_{label}_{DEFAULT}",
             )
             # If button clicked, setting curr to default
             # and update widgets accordingly
-            if st.session_state[f"{CONFIGS}_{label}_{DEFAULT}"]:
+            if st.session_state[f"{UPDATE}_{label}_{DEFAULT}"]:
                 curr = default
-                st.session_state[f"{CONFIGS}_{label}_{VALUE}"] = curr
-                st.session_state[f"{CONFIGS}_{label}_{IS_NONE}"] = default is None
+                st.session_state[f"{UPDATE}_{label}_{VALUE}"] = curr
+                st.session_state[f"{UPDATE}_{label}_{IS_NONE}"] = default is None
         # If nullable, making nullable checkbox
         is_none = False
         if nullable:
             is_none = container.toggle(
                 label="Set to None",
                 value=curr is None,
-                key=f"{CONFIGS}_{label}_{IS_NONE}",
+                key=f"{UPDATE}_{label}_{IS_NONE}",
             )
         # Returning container, current value, and whether that value is None
         return container, curr, is_none
@@ -103,7 +109,7 @@ class ConfigsUpdater:
             options=enum2list(my_enum),
             index=enum2list(my_enum).index(curr) if curr else None,
             disabled=is_none,
-            key=f"{CONFIGS}_{label}_{VALUE}",
+            key=f"{UPDATE}_{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -128,7 +134,7 @@ class ConfigsUpdater:
             value=curr,
             step=1,
             disabled=is_none,
-            key=f"{CONFIGS}_{label}_{VALUE}",
+            key=f"{UPDATE}_{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -153,7 +159,7 @@ class ConfigsUpdater:
             value=curr,
             step=0.05,
             disabled=is_none,
-            key=f"{CONFIGS}_{label}_{VALUE}",
+            key=f"{UPDATE}_{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -173,11 +179,11 @@ class ConfigsUpdater:
         container, curr, is_none = cls.init_inputter(
             label, curr, nullable, default, container
         )
-        output = st.text_input(
+        output = container.text_input(
             label=label,
             value=curr,
             disabled=is_none,
-            key=f"{CONFIGS}_{label}_{VALUE}",
+            key=f"{UPDATE}_{label}_{VALUE}",
             label_visibility="collapsed",
         )
         return None if is_none else output
@@ -352,14 +358,14 @@ def configs_reset_func():
             # If field is a tuple, then setting each value in tuple separately
             # Expects an entry in SUBLABEL_MAP
             for i, sublabel in enumerate(SUBLABEL_MAP[label]):
-                label_value = f"{CONFIGS}_{label}_{sublabel}_{VALUE}"
-                label_is_none = f"{CONFIGS}_{label}_{sublabel}_is_none"
+                label_value = f"{UPDATE}_{label}_{sublabel}_{VALUE}"
+                label_is_none = f"{UPDATE}_{label}_{sublabel}_is_none"
                 st.session_state[label_value] = value[i]
                 st.session_state[label_is_none] = value[i] is None
         else:
             # Otherwise, setting the value directly
-            label_value = f"{CONFIGS}_{label}_{VALUE}"
-            label_is_none = f"{CONFIGS}_{label}_is_none"
+            label_value = f"{UPDATE}_{label}_{VALUE}"
+            label_is_none = f"{UPDATE}_{label}_is_none"
             st.session_state[label_value] = value
             st.session_state[label_is_none] = value is None
 
@@ -404,6 +410,8 @@ def page2_configs():
         ValidationError: If the configuration parameters do not pass validation.
     """
     # Initialising session state variables
+    if UPDATE not in st.session_state:
+        pass
 
     # Recalling session state variables
     configs: ConfigParamsModel = st.session_state[CONFIGS]

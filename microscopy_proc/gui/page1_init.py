@@ -52,7 +52,7 @@ def select_m_func():
     st.session_state[SELECT_M_INDEX] = st.session_state[SELECT_M_OPTIONS].index(
         st.session_state[SELECT_M]
     )
-    # Updating disabled and input variables
+    # Updating input and disabled variables
     if st.session_state[INPUT_M] and st.session_state[SELECT_M]:
         st.session_state[INPUT] = os.path.join(
             st.session_state[INPUT_M], st.session_state[SELECT_M]
@@ -132,7 +132,7 @@ def page1_init():
       configuration files.
     """
     # Initialising session state variables
-    if INPUT_S not in st.session_state:
+    if INIT not in st.session_state:
         st.session_state[INPUT_S] = "/"
         st.session_state[INPUT_M] = "/"
         st.session_state[SELECT_M] = None

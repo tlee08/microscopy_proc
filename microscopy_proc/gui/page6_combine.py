@@ -11,13 +11,14 @@ from .gui_funcs import ProjDirStatus, page_decorator
 
 COMBINE = "combine"
 USE_PDIR = f"{COMBINE}_use_pdir"
+OVERWRITE = f"{COMBINE}_overwrite"
 INPUT_ROOT = f"{COMBINE}_input_root"
 INPUT_ROOT_STATUS = f"{COMBINE}_input_root_status"
 INPUT_OUT = f"{COMBINE}_input_out"
 INPUT_OUT_STATUS = f"{COMBINE}_input_out_status"
 CHECKBOXES = f"{COMBINE}_checkboxes"
-RUN = f"{COMBINE}_run"
 DISABLED = f"{COMBINE}_disabled"
+RUN = f"{COMBINE}_run"
 
 
 def update_disabled():
@@ -29,7 +30,7 @@ def update_disabled():
 
 
 def use_pdir_func():
-    # Updating session_state
+    # Updating session_state: INPUT_ROOT from PDIR_INPUT_M (in page1_init)
     st.session_state[INPUT_ROOT] = st.session_state.get(PDIR_INPUT_M, None)
 
 
@@ -58,9 +59,10 @@ def input_out_func():
 
 
 @page_decorator(check_proj_dir=False)
-def page5_combine():
+def page6_combine():
     # Initialising session state variables
     if INPUT_ROOT not in st.session_state:
+        st.session_state[OVERWRITE] = False
         st.session_state[INPUT_ROOT] = None
         st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.NOT_SET
         st.session_state[INPUT_OUT] = None
@@ -76,8 +78,14 @@ def page5_combine():
     st.button(
         label="Use Root Directory from 'Init Project'",
         on_click=use_pdir_func,
-        # disabled=st.session_state[PDIR_INPUT_M],
+        disabled=st.session_state[PDIR_INPUT_M] is None,
         key=USE_PDIR,
+    )
+    # Overwrite box
+    st.toggle(
+        label="Overwrite",
+        value=st.session_state[OVERWRITE],
+        key=OVERWRITE,
     )
     # Input: Root Projects Directory
     st.text_input(
@@ -127,4 +135,8 @@ def page5_combine():
         for i in proj_dir_ls:
             st.write(f"- {i}")
         # Running combine func
-        combine_ls_pipeline(proj_dir_ls, st.session_state[INPUT_OUT])
+        combine_ls_pipeline(
+            proj_dir_ls,
+            st.session_state[INPUT_OUT],
+            overwrite=st.session_state[OVERWRITE],
+        )

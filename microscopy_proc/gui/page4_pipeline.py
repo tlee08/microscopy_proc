@@ -23,20 +23,20 @@ from microscopy_proc.pipelines.pipeline_funcs import (
     make_mask_pipeline,
     ref_prepare_pipeline,
     registration_pipeline,
-    tiff2zarr_pipeline,
     transform_coords_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import PROJ_DIR, page_decorator
 
-CHECKBOXES = "pipeline_checkboxes"
-OVERWRITE = "pipeline_overwrite"
-RUN = "pipeline_run"
+PIPELINE = "pipeline"
+CHECKBOXES = f"{PIPELINE}_checkboxes"
+OVERWRITE = f"{PIPELINE}_overwrite"
+RUN = f"{PIPELINE}_run"
 
 
 @page_decorator()
-def page3_pipeline():
+def page4_pipeline():
     """
     Displays the pipeline page in the GUI, allowing users to select and run various pipeline functions.
 
@@ -54,9 +54,9 @@ def page3_pipeline():
     - pipeline_run_btn: Boolean indicating whether the "Run pipeline" button has been pressed.
     """
     # Initialising session state variables (if necessary)
-    if CHECKBOXES not in st.session_state:
+    if PIPELINE not in st.session_state:
         st.session_state[CHECKBOXES] = {
-            tiff2zarr_pipeline: False,
+            # tiff2zarr_pipeline: False,
             ref_prepare_pipeline: False,
             img_rough_pipeline: False,
             img_fine_pipeline: False,
@@ -94,14 +94,13 @@ def page3_pipeline():
         value=st.session_state[OVERWRITE],
         key=OVERWRITE,
     )
-
     # Making pipeline checkboxes
     pipeline_checkboxes = st.session_state[CHECKBOXES]
     for func in pipeline_checkboxes:
-        pipeline_checkboxes[func] = st.checkbox(
+        st.checkbox(
             label=func.__name__,
             value=pipeline_checkboxes[func],
-            key=func.__name__,
+            key=f"{PIPELINE}_{func.__name__}",
         )
     # Button: run pipeline
     st.button(
@@ -117,4 +116,7 @@ def page3_pipeline():
         # TODO: ensure this is blocking
         for func in pipeline_checkboxes:
             if pipeline_checkboxes[func]:
-                func(pfm, overwrite=st.session_state[OVERWRITE])
+                func(
+                    pfm=pfm,
+                    overwrite=st.session_state[OVERWRITE],
+                )
