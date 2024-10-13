@@ -68,7 +68,6 @@ class ConfigsUpdater:
         if default != NO_DEFAULT:
             container.button(
                 label=f"Set as default (`{default}`)",
-                # disabled=is_none,
                 key=f"{UPDATE}_{label}_{DEFAULT}",
             )
             # If button clicked, setting curr to default
@@ -76,7 +75,7 @@ class ConfigsUpdater:
             if st.session_state[f"{UPDATE}_{label}_{DEFAULT}"]:
                 curr = default
                 st.session_state[f"{UPDATE}_{label}_{VALUE}"] = curr
-                st.session_state[f"{UPDATE}_{label}_{IS_NONE}"] = default is None
+                st.session_state[f"{UPDATE}_{label}_{IS_NONE}"] = curr is None
         # If nullable, making nullable checkbox
         is_none = False
         if nullable:
