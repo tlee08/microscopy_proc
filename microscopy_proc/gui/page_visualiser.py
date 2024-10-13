@@ -1,4 +1,6 @@
 import os
+from enum import Enum
+from multiprocessing.pool import RUN
 
 import dask.array as da
 import streamlit as st
@@ -6,173 +8,189 @@ import streamlit as st
 from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import PROJ_DIR, page_decorator
+from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, page_decorator
 
 # NOTE: could plt.colourmaps() work?
-CMAP = [
-    "gray",
-    "red",
-    "green",
-    "Set1",
-]
+
+VIEWER = "viewer"
+IMGS = "visualiser_imgs"
+TRIMMER = "trimmer"
+NAME = "name"
+VRANGE = "vrange"
+VRANGE_D = "vrange_default"
+CMAP = "cmap"
+CMAP_D = "cmap_default"
+SEL = "sel"
+RUN = "visualiser_run"
+
+
+class Colormaps(Enum):
+    GRAY = "gray"
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    YELLOW = "yellow"
+    VIRIDIS = "viridis"
+    MAGMA = "magma"
+    SET1 = "Set1"
 
 
 @page_decorator()
 def page_visualiser():
-    if "visualiser_imgs" not in st.session_state:
-        st.session_state["visualiser_imgs"] = {
+    if IMGS not in st.session_state:
+        st.session_state[IMGS] = {
             "Atlas": {
                 "ref": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "annot": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "Set1",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.SET1.value,
+                    SEL: False,
                 },
             },
             "Raw": {
                 "raw": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
             },
             "Registration": {
                 "downsmpl1": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
                 "downsmpl2": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
                 "trimmed": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
                 "regresult": {
-                    "vrange_default": (0, 1000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 1000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
             },
             "Mask": {
                 "premask_blur": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "mask": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "outline": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "mask_reg": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
             },
             "Cell Counting (overlapped)": {
                 "overlap": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
                 "bgrm": {
-                    "vrange_default": (0, 2000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 2000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "dog": {
-                    "vrange_default": (0, 100),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 100),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "adaptv": {
-                    "vrange_default": (0, 100),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 100),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "threshd": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
                 "threshd_volumes": {
-                    "vrange_default": (0, 10000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 10000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "threshd_filt": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "maxima": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "wshed_volumes": {
-                    "vrange_default": (0, 1000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 1000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "wshed_filt": {
-                    "vrange_default": (0, 1000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 1000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
             },
             "Cell Counting (trimmed)": {
                 "threshd_final": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "gray",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.GRAY.value,
+                    SEL: False,
                 },
                 "maxima_final": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "wshed_final": {
-                    "vrange_default": (0, 1000),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 1000),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
             },
             "Post Processing Checks": {
                 "points_check": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "heatmap_check": {
-                    "vrange_default": (0, 20),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 20),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
                 "points_trfm_check": {
-                    "vrange_default": (0, 5),
-                    "cmap_default": "green",
-                    "sel": False,
+                    VRANGE_D: (0, 5),
+                    CMAP_D: Colormaps.GREEN.value,
+                    SEL: False,
                 },
                 "heatmap_trfm_check": {
-                    "vrange_default": (0, 100),
-                    "cmap_default": "red",
-                    "sel": False,
+                    VRANGE_D: (0, 100),
+                    CMAP_D: Colormaps.RED.value,
+                    SEL: False,
                 },
             },
         }
@@ -206,17 +224,17 @@ def page_visualiser():
                 max_value=arr.shape[i],
                 step=10,
                 value=(0, arr.shape[i]),
-                key=f"viewer_{v}_slicer",
+                key=f"{VIEWER}_{v}_{TRIMMER}",
             )
-        sliders = [st.session_state[f"viewer_{v}_slicer"] for v in "ZYX"]
+        sliders = [st.session_state[f"{VIEWER}_{v}_{TRIMMER}"] for v in L_ZYX]
         trimmer = tuple(slice(*i) for i in sliders)
     else:
         # Otherwise slicers are set to None
         st.write("No Z trimming")
         st.write("No Y trimming")
         st.write("No X trimming")
-    # Making visualiser checkboxes
-    visualiser_imgs = st.session_state["visualiser_imgs"]
+    # Making visualiser checkboxes for each array
+    visualiser_imgs = st.session_state[IMGS]
     for group_k, group_v in visualiser_imgs.items():
         with st.expander(f"{group_k}"):
             for img_k, img_v in group_v.items():
@@ -225,25 +243,25 @@ def page_visualiser():
                     # Checking if image file exists
                     if os.path.exists(getattr(pfm, img_k)):
                         columns = st.columns(3)
-                        img_v["sel"] = columns[0].checkbox(
+                        img_v[SEL] = columns[0].checkbox(
                             label="view image",
-                            value=img_v["sel"],
-                            key=f"viewer_{img_k}_sel",
+                            value=img_v[SEL],
+                            key=f"{VIEWER}_{img_k}_{SEL}",
                         )
-                        img_v["vrange"] = columns[1].slider(
+                        img_v[VRANGE] = columns[1].slider(
                             label="intensity range",
-                            min_value=img_v["vrange_default"][0],
-                            max_value=img_v["vrange_default"][1],
-                            value=img_v.get("vrange", img_v["vrange_default"]),
-                            disabled=not img_v["sel"],
-                            key=f"viewer_{img_k}_vrange",
+                            min_value=img_v[VRANGE_D][0],
+                            max_value=img_v[VRANGE_D][1],
+                            value=img_v.get(VRANGE, img_v[VRANGE_D]),
+                            disabled=not img_v[SEL],
+                            key=f"{VIEWER}_{img_k}_{VRANGE}",
                         )
-                        img_v["cmap"] = columns[2].selectbox(
+                        img_v[CMAP] = columns[2].selectbox(
                             label="colourmap",
                             options=CMAP,
-                            index=CMAP.index(img_v.get("cmap", img_v["cmap_default"])),
-                            disabled=not img_v["sel"],
-                            key=f"viewer_{img_k}_cmap",
+                            index=CMAP.index(img_v.get(CMAP, img_v[CMAP_D])),
+                            disabled=not img_v[SEL],
+                            key=f"{VIEWER}{img_k}_{CMAP}",
                         )
                     else:
                         # If image file does not exist, then display warning
@@ -251,33 +269,33 @@ def page_visualiser():
     # Button: run visualiser
     st.button(
         label="Run visualiser",
-        key="visualiser_run_btn",
+        key=RUN,
     )
-    if st.session_state["visualiser_run_btn"]:
+    if st.session_state[RUN]:
         # Showing selected visualiser
         st.write("### Running visualiser")
         st.write(
             "With trim of:\n"
-            + f" - Z trim: {trimmer[0].start or "start"} - {trimmer[0].stop or "end"}\n"
-            + f" - Y trim: {trimmer[1].start or "start"} - {trimmer[1].stop or "end"}\n"
-            + f" - X trim: {trimmer[2].start or "start"} - {trimmer[2].stop or "end"}\n"
+            + f" - Z trim: {trimmer[0].start or L_SLC[0]} - {trimmer[0].stop or L_SLC[1]}\n"
+            + f" - Y trim: {trimmer[1].start or L_SLC[0]} - {trimmer[1].stop or L_SLC[1]}\n"
+            + f" - X trim: {trimmer[2].start or L_SLC[0]} - {trimmer[2].stop or L_SLC[1]}\n"
         )
         imgs_to_run_ls = []
         for group_k, group_v in visualiser_imgs.items():
             for img_k, img_v in group_v.items():
-                if img_v["sel"]:
+                if img_v[SEL]:
                     st.write(
                         f"- Showing {group_k} - {img_k}\n"
-                        + f"    - intensity range: {img_v["vrange"][0]} - {img_v["vrange"][1]}\n"
-                        + f"    - colourmap: {img_v["cmap"]}\n"
+                        + f"    - intensity range: {img_v[VRANGE][0]} - {img_v[VRANGE][1]}\n"
+                        + f"    - colourmap: {img_v[CMAP]}\n"
                     )
                     # Also saving to imgs_to_run_ls list
-                    imgs_to_run_ls.append({"name": img_k, **img_v})
+                    imgs_to_run_ls.append({NAME: img_k, **img_v})
         # Running visualiser
         view_arrs_mp(
-            fp_ls=tuple(getattr(pfm, i["name"]) for i in imgs_to_run_ls),
+            fp_ls=tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
             trimmer=trimmer,
-            name=tuple(i["name"] for i in imgs_to_run_ls),
-            contrast_limits=tuple(i["vrange"] for i in imgs_to_run_ls),
-            colormap=tuple(i["cmap"] for i in imgs_to_run_ls),
+            name=tuple(i[NAME] for i in imgs_to_run_ls),
+            contrast_limits=tuple(i[VRANGE] for i in imgs_to_run_ls),
+            colormap=tuple(i[CMAP] for i in imgs_to_run_ls),
         )

@@ -11,7 +11,14 @@ from microscopy_proc.utils.io_utils import write_json
 from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import CONFIGS, PROJ_DIR, load_configs, page_decorator
+from .gui_funcs import CONFIGS, L_SLC, L_ZYX, PROJ_DIR, load_configs, page_decorator
+
+VALUE = "value"
+IS_NONE = "is_none"
+DEFAULT = "default"
+
+CONFIGS_RESET = "configs_reset"
+CONFIGS_SAVE = "configs_save"
 
 
 class NO_DEFAULT:
@@ -44,13 +51,13 @@ class ConfigsUpdater:
             container.button(
                 label=f"Set as default (`{default}`)",
                 # disabled=is_none,
-                key=f"{label}_default",
+                key=f"{label}_{DEFAULT}",
             )
             # If button clicked, setting curr to default
             # and update widgets accordingly
-            if st.session_state[f"{label}_default"]:
+            if st.session_state[f"{label}_{DEFAULT}"]:
                 curr = default
-                st.session_state[f"{label}_is_none"] = default is None
+                st.session_state[f"{label}_{IS_NONE}"] = default is None
                 st.session_state[label] = curr
         # If nullable, making nullable checkbox
         is_none = False
@@ -58,7 +65,7 @@ class ConfigsUpdater:
             is_none = container.toggle(
                 label="Set to None",
                 value=curr is None,
-                key=f"{label}_is_none",
+                key=f"{label}_{IS_NONE}",
             )
         # Returning container, current value, and whether that value is None
         return container, curr, is_none
@@ -83,7 +90,7 @@ class ConfigsUpdater:
             options=enum2list(my_enum),
             index=enum2list(my_enum).index(curr) if curr else None,
             disabled=is_none,
-            key=label,
+            key=f"{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -107,7 +114,7 @@ class ConfigsUpdater:
             value=curr,
             step=1,
             disabled=is_none,
-            key=label,
+            key=f"{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -131,7 +138,7 @@ class ConfigsUpdater:
             value=curr,
             step=0.05,
             disabled=is_none,
-            key=label,
+            key=f"{label}_{VALUE}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -154,7 +161,7 @@ class ConfigsUpdater:
             label=label,
             value=curr,
             disabled=is_none,
-            key=label,
+            key=f"{label}_{VALUE}",
             label_visibility="collapsed",
         )
         return None if is_none else output
@@ -310,7 +317,7 @@ def configs_reset_func():
     configs: ConfigParamsModel = st.session_state[CONFIGS]
     # For each field, setting the value to the value from disk
     for k, v in configs.model_dump().items():
-        st.session_state[k] = v
+        st.session_state[f"{k}_{VALUE}"] = v
         st.session_state[f"{k}_is_none"] = v is None
 
 
@@ -353,10 +360,10 @@ def page_configs():
     ------
         ValidationError: If the configuration parameters do not pass validation.
     """
+    # Initialising session state variables
+
     # Recalling session state variables
     configs: ConfigParamsModel = st.session_state[CONFIGS]
-    l_zyx = ("z", "y", "x")
-    l_slc = ("start", "stop", "step")
 
     st.write("# Edit Configs")
     with st.expander("Reference"):
@@ -365,22 +372,22 @@ def page_configs():
         ConfigsUpdater.field2updater(configs, "annot_v")
         ConfigsUpdater.field2updater(configs, "map_v")
     with st.expander("Raw"):
-        ConfigsUpdater.field2updater(configs, "chunksize", n_labels=l_zyx)
+        ConfigsUpdater.field2updater(configs, "chunksize", n_labels=L_ZYX)
     with st.expander("Registration"):
         # TODO: numerical is unintuitive for selecting axes in ref_orienf_ls
-        ConfigsUpdater.field2updater(configs, "ref_orient_ls", n_labels=l_zyx)
-        ConfigsUpdater.field2updater(configs, "ref_z_trim", n_labels=l_slc)
-        ConfigsUpdater.field2updater(configs, "ref_y_trim", n_labels=l_slc)
-        ConfigsUpdater.field2updater(configs, "ref_x_trim", n_labels=l_slc)
+        ConfigsUpdater.field2updater(configs, "ref_orient_ls", n_labels=L_ZYX)
+        ConfigsUpdater.field2updater(configs, "ref_z_trim", n_labels=L_SLC)
+        ConfigsUpdater.field2updater(configs, "ref_y_trim", n_labels=L_SLC)
+        ConfigsUpdater.field2updater(configs, "ref_x_trim", n_labels=L_SLC)
         ConfigsUpdater.field2updater(configs, "z_rough")
         ConfigsUpdater.field2updater(configs, "y_rough")
         ConfigsUpdater.field2updater(configs, "x_rough")
         ConfigsUpdater.field2updater(configs, "z_fine")
         ConfigsUpdater.field2updater(configs, "y_fine")
         ConfigsUpdater.field2updater(configs, "x_fine")
-        ConfigsUpdater.field2updater(configs, "z_trim", n_labels=l_slc)
-        ConfigsUpdater.field2updater(configs, "y_trim", n_labels=l_slc)
-        ConfigsUpdater.field2updater(configs, "x_trim", n_labels=l_slc)
+        ConfigsUpdater.field2updater(configs, "z_trim", n_labels=L_SLC)
+        ConfigsUpdater.field2updater(configs, "y_trim", n_labels=L_SLC)
+        ConfigsUpdater.field2updater(configs, "x_trim", n_labels=L_SLC)
     with st.expander("Mask"):
         ConfigsUpdater.field2updater(configs, "mask_gaus_blur")
         ConfigsUpdater.field2updater(configs, "mask_thresh")
@@ -410,19 +417,21 @@ def page_configs():
         st.json(configs.model_dump())
 
     columns = st.columns(2)
-    # Button: Reset to old saved configs
-    columns[0].button(
-        label="Reset",
-        on_click=configs_reset_func,
-        key="configs_reset",
-    )
-    if st.session_state["configs_reset"]:
-        st.success("Resetted project directory and configs")
-    # Button: Save new configs
-    columns[1].button(
-        label="Save",
-        on_click=configs_save_func,
-        key="configs_save",
-    )
-    if st.session_state["configs_save"]:
-        st.success("New configs saved to project directory")
+    with columns[0]:
+        # Button: Reset to old saved configs
+        st.session_state[CONFIGS_RESET] = st.button(
+            label="Reset",
+            on_click=configs_reset_func,
+            key=f"{CONFIGS_RESET}_w",
+        )
+        if st.session_state[CONFIGS_RESET]:
+            st.success("Resetted project directory and configs")
+    with columns[1]:
+        # Button: Save new configs
+        st.session_state[CONFIGS_RESET] = columns[1].button(
+            label="Save",
+            on_click=configs_save_func,
+            key=f"{CONFIGS_SAVE}_w",
+        )
+        if st.session_state[CONFIGS_SAVE]:
+            st.success("New configs saved to project directory")

@@ -11,28 +11,75 @@ from microscopy_proc.utils.proj_org_utils import (
 
 from .gui_funcs import ProjDirStatus, page_decorator
 
+INPUT_S = "pdir_input_s"
+INPUT_M = "pdir_input_m"
+SELECT_M = "pdir_select_m"
+SELECT_M_OPTIONS = "pdir_select_m_options"
+SELECT_M_INDEX = "pdir_select_m_index"
+INPUT = "pdir_input"
+DISABLED = "pdir_disabled"
+SET = "pdir_set"
+CREATE = "pdir_create"
 
-def pdir_input_m_func():
+
+def input_s_func():
+    # Updating session_state value
+    st.session_state[INPUT_S] = st.session_state[f"{INPUT_S}_w"]
+    # Updating input and disabled variables
+    st.session_state[INPUT] = st.session_state[INPUT_S]
+    st.session_state[DISABLED] = st.session_state[INPUT] is None
+
+
+def input_m_func():
+    # Updating session_state value
+    st.session_state[INPUT_M] = st.session_state[f"{INPUT_M}_w"]
+    # Determining options based on input string
     options = []
-    if st.session_state["pdir_input_m"] is not None:
-        if os.path.isdir(st.session_state["pdir_input_m"]):
-            options = os.listdir(st.session_state["pdir_input_m"])
+    if st.session_state[INPUT_M] is not None:
+        # If input string is not None
+        if os.path.isdir(st.session_state[INPUT_M]):
+            # If input string is a directory
+            # Getting all directories in the input string
+            options = os.listdir(st.session_state[INPUT_M])
     # Setting pdir_select_options
-    st.session_state["pdir_select_options"] = options
+    st.session_state[SELECT_M_OPTIONS] = options
+    st.session_state[SELECT_M_INDEX] = None
+    # Resetting input and disabled variables
+    st.session_state[INPUT] = None
+    st.session_state[DISABLED] = True
 
 
-def pdir_set_func(proj_dir: str):
+def select_m_func():
+    # Updating session_state value
+    st.session_state[SELECT_M] = st.session_state[f"{SELECT_M}_w"]
+    # Updatating selectbox index
+    st.session_state[SELECT_M_INDEX] = st.session_state[SELECT_M_OPTIONS].index(
+        st.session_state[SELECT_M]
+    )
+    # Updating disabled and input variables
+    if st.session_state[INPUT_M] and st.session_state[SELECT_M]:
+        st.session_state[INPUT] = os.path.join(
+            st.session_state[INPUT_M], st.session_state[SELECT_M]
+        )
+        st.session_state[DISABLED] = False
+    else:
+        st.session_state[INPUT] = None
+        st.session_state[DISABLED] = True
+
+
+def set_func():
     """
     Changes the project directory in session state.
     Runs relevant checks.
     """
+    pdir_input = st.session_state[INPUT]
     # Setting session_state variables based on proj_dir checks
     # Checking if project directory exists
-    if not os.path.exists(proj_dir):
+    if not os.path.isdir(pdir_input):
         st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.NOT_EXIST
     else:
         # Storing project directory
-        st.session_state[PROJ_DIR] = proj_dir
+        st.session_state[PROJ_DIR] = pdir_input
         try:
             # Project directory is initialised (has configs file)
             load_configs()
@@ -42,7 +89,7 @@ def pdir_set_func(proj_dir: str):
             st.session_state[PROJ_DIR_STATUS] = ProjDirStatus.NOT_INIT
 
 
-def pdir_create_func():
+def create_func():
     """
     Function to make new project.
 
@@ -53,7 +100,8 @@ def pdir_create_func():
     pfm = get_proj_fp_model(proj_dir)
     update_configs(pfm)
     # Rerunning set func to update session state
-    pdir_set_func(proj_dir)
+    st.session_state[INPUT] = proj_dir
+    set_func()
 
 
 @page_decorator(check_proj_dir=False)
@@ -85,11 +133,15 @@ def page_init_proj():
     - FileNotFoundError: If the project directory does not contain the required
       configuration files.
     """
-    if "pdir_input_s" not in st.session_state:
-        st.session_state["pdir_input_s"] = "/"
-        st.session_state["pdir_input_m"] = "/"
-        st.session_state["pdir_select"] = None
-        st.session_state["pdir_select_options"] = []
+    # Initialising session state variables
+    if INPUT_S not in st.session_state:
+        st.session_state[INPUT_S] = "/"
+        st.session_state[INPUT_M] = "/"
+        st.session_state[SELECT_M] = None
+        st.session_state[SELECT_M_OPTIONS] = []
+        st.session_state[SELECT_M_INDEX] = None
+        st.session_state[INPUT] = None
+        st.session_state[DISABLED] = True
 
     # Title
     st.write("## Init Project")
@@ -97,57 +149,42 @@ def page_init_proj():
     tabs = st.tabs(["Single Project", "Multiple Projects"])
     with tabs[0]:
         # Input: Project Directory
-        pdir_input_s = st.text_input(
+        st.text_input(
             label="Project Directory",
-            value=st.session_state["pdir_input_s"],
-            key="pdir_input_s",
-        )
-        # Calculating disabled status
-        disabled_single = pdir_input_s is None
-        # Button: Set project directory using input
-        st.button(
-            label="Set project directory",
-            on_click=pdir_set_func,
-            args=(pdir_input_s,),
-            disabled=disabled_single,
-            key="pdir_set_s",
+            value=st.session_state[INPUT_S],
+            on_change=input_s_func,
+            key=f"{INPUT_S}_w",
         )
     with tabs[1]:
         # Input: Root Projects Directory
-        pdir_input_m = st.text_input(
+        st.text_input(
             label="Root Directory",
-            value=st.session_state["pdir_input_m"],
-            on_change=pdir_input_m_func,
-            key="pdir_input_m",
+            value=st.session_state[INPUT_M],
+            on_change=input_m_func,
+            key=f"{INPUT_M}_w",
         )
         # selectbox: folders (i.e. projects) inside root directory
-        options = st.session_state["pdir_select_options"]
-        pdir_select = st.session_state["pdir_select"]
-        index = options.index(pdir_select) if pdir_select in options else None
-        pdir_select = st.selectbox(
+        st.selectbox(
             label="Projects",
-            options=options,
-            index=index,
-            key="pdir_select",
+            options=st.session_state[SELECT_M_OPTIONS],
+            index=st.session_state[SELECT_M_INDEX],
+            on_change=select_m_func,
+            key=f"{SELECT_M}_w",
         )
-        # Calculating proj dir input path and disabled status
-        pdir_input_comb_m = os.path.join(pdir_input_m or "", pdir_select or "")
-        disabled_multi = pdir_input_m is None or pdir_select is False
-        # Button: Set project directory using root and select
-        st.button(
-            label="Set project directory",
-            on_click=pdir_set_func,
-            args=(pdir_input_comb_m,),
-            disabled=disabled_multi,
-            key="pdir_set_m",
-        )
+    # Button: Set project directory
+    st.button(
+        label="Set project directory",
+        on_click=set_func,
+        disabled=st.session_state[DISABLED],
+        key=f"{SET}_w",
+    )
     # container: outcome of project directory input
     with st.container():
         if st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.NOT_SET:
             st.warning("Project directory not set")
         elif st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.NOT_EXIST:
             st.error(
-                "Project directory does not exist.\n\n"
+                "Project directory does not exist (or is a file and not directory).\n\n"
                 + "Reverting to existing project directory (if one is set)."
             )
         elif st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.NOT_INIT:
@@ -157,8 +194,8 @@ def page_init_proj():
             )
             st.button(
                 label="Create new project",
-                on_click=pdir_create_func,
-                key="pdir_create",
+                on_click=create_func,
+                key=f"{CREATE}_w",
             )
         elif st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.VALID:
             st.success("Project directory loaded")

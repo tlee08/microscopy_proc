@@ -13,6 +13,9 @@ PROJ_DIR = "proj_dir"
 PROJ_DIR_STATUS = "proj_dir_status"
 CONFIGS = "configs"
 
+L_ZYX = ("z", "y", "x")
+L_SLC = ("start", "stop", "step")
+
 
 class ProjDirStatus(Enum):
     NOT_SET = "not_set"

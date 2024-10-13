@@ -30,6 +30,10 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import PROJ_DIR, page_decorator
 
+CHECKBOXES = "pipeline_checkboxes"
+OVERWRITE = "pipeline_overwrite"
+RUN = "pipeline_run"
+
 
 @page_decorator()
 def page_pipeline():
@@ -50,8 +54,8 @@ def page_pipeline():
     - pipeline_run_btn: Boolean indicating whether the "Run pipeline" button has been pressed.
     """
     # Initialising session state variables (if necessary)
-    if "pipeline_checkboxes" not in st.session_state:
-        st.session_state["pipeline_checkboxes"] = {
+    if CHECKBOXES not in st.session_state:
+        st.session_state[CHECKBOXES] = {
             tiff2zarr_pipeline: False,
             ref_prepare_pipeline: False,
             img_rough_pipeline: False,
@@ -77,8 +81,7 @@ def page_pipeline():
             group_cells_pipeline: False,
             cells2csv_pipeline: False,
         }
-    if "pipeline_overwrite" not in st.session_state:
-        st.session_state["pipeline_overwrite"] = False
+        st.session_state[OVERWRITE] = False
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
@@ -88,12 +91,12 @@ def page_pipeline():
     # Overwrite box
     st.toggle(
         label="Overwrite",
-        value=st.session_state["pipeline_overwrite"],
-        key="pipeline_overwrite",
+        value=st.session_state[OVERWRITE],
+        key=OVERWRITE,
     )
 
     # Making pipeline checkboxes
-    pipeline_checkboxes = st.session_state["pipeline_checkboxes"]
+    pipeline_checkboxes = st.session_state[CHECKBOXES]
     for func in pipeline_checkboxes:
         pipeline_checkboxes[func] = st.checkbox(
             label=func.__name__,
@@ -103,9 +106,9 @@ def page_pipeline():
     # Button: run pipeline
     st.button(
         label="Run pipeline",
-        key="pipeline_run_btn",
+        key=RUN,
     )
-    if st.session_state["pipeline_run_btn"]:
+    if st.session_state[RUN]:
         # Showing selected pipeline
         st.write("Running:")
         for func in pipeline_checkboxes:
@@ -114,4 +117,4 @@ def page_pipeline():
         # TODO: ensure this is blocking
         for func in pipeline_checkboxes:
             if pipeline_checkboxes[func]:
-                func(pfm, overwrite=st.session_state["pipeline_overwrite"])
+                func(pfm, overwrite=st.session_state[OVERWRITE])
