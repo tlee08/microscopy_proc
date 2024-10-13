@@ -10,16 +10,16 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, page_decorator
 
 # NOTE: could plt.colourmaps() work?
-VIEWER = "viewer"
-IMGS = f"{VIEWER}_imgs"
-TRIMMER = f"{VIEWER}_trimmer"
-NAME = f"{VIEWER}_name"
-VRANGE = f"{VIEWER}_vrange"
-VRANGE_D = f"{VIEWER}_vrange_default"
-CMAP = f"{VIEWER}_cmap"
-CMAP_D = f"{VIEWER}_cmap_default"
-SEL = f"{VIEWER}_sel"
-RUN = f"{VIEWER}_visualiser_run"
+VIEW = "viewer"
+IMGS = f"{VIEW}_imgs"
+TRIMMER = f"{VIEW}_trimmer"
+NAME = f"{VIEW}_name"
+VRANGE = f"{VIEW}_vrange"
+VRANGE_D = f"{VIEW}_vrange_default"
+CMAP = f"{VIEW}_cmap"
+CMAP_D = f"{VIEW}_cmap_default"
+SEL = f"{VIEW}_sel"
+RUN = f"{VIEW}_visualiser_run"
 
 
 class Colormaps(Enum):
@@ -35,7 +35,8 @@ class Colormaps(Enum):
 
 @page_decorator()
 def page5_view():
-    if IMGS not in st.session_state:
+    if VIEW not in st.session_state:
+        st.session_state[VIEW] = True
         st.session_state[IMGS] = {
             "Atlas": {
                 "ref": {
@@ -223,11 +224,11 @@ def page5_view():
                 step=10,
                 value=(
                     0,
-                    st.session_state.get(f"{VIEWER}_{v}_{TRIMMER}", arr.shape[i]),
+                    st.session_state.get(f"{VIEW}_{v}_{TRIMMER}", arr.shape[i]),
                 ),
-                key=f"{VIEWER}_{v}_{TRIMMER}",
+                key=f"{VIEW}_{v}_{TRIMMER}",
             )
-        sliders = [st.session_state[f"{VIEWER}_{v}_{TRIMMER}"] for v in L_ZYX]
+        sliders = [st.session_state[f"{VIEW}_{v}_{TRIMMER}"] for v in L_ZYX]
         trimmer = tuple(slice(*i) for i in sliders)
     else:
         # Otherwise slicers are set to None
@@ -247,7 +248,7 @@ def page5_view():
                         img_v[SEL] = columns[0].checkbox(
                             label="view image",
                             value=img_v[SEL],
-                            key=f"{VIEWER}_{img_k}_{SEL}",
+                            key=f"{VIEW}_{img_k}_{SEL}",
                         )
                         img_v[VRANGE] = columns[1].slider(
                             label="intensity range",
@@ -255,14 +256,14 @@ def page5_view():
                             max_value=img_v[VRANGE_D][1],
                             value=img_v.get(VRANGE, img_v[VRANGE_D]),
                             disabled=not img_v[SEL],
-                            key=f"{VIEWER}_{img_k}_{VRANGE}",
+                            key=f"{VIEW}_{img_k}_{VRANGE}",
                         )
                         img_v[CMAP] = columns[2].selectbox(
                             label="colourmap",
                             options=CMAP,
                             index=CMAP.index(img_v.get(CMAP, img_v[CMAP_D])),
                             disabled=not img_v[SEL],
-                            key=f"{VIEWER}{img_k}_{CMAP}",
+                            key=f"{VIEW}{img_k}_{CMAP}",
                         )
                     else:
                         # If image file does not exist, then display warning

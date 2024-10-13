@@ -34,6 +34,7 @@ def page3_import():
     """ """
     # Initialising session state variables
     if IMPORT not in st.session_state:
+        st.session_state[IMPORT] = True
         st.session_state[OVERWRITE] = False
         st.session_state[INPUT_SRC] = None
         st.session_state[INPUT_SRC_STATUS] = ProjDirStatus.NOT_SET

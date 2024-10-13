@@ -55,8 +55,8 @@ def page4_pipeline():
     """
     # Initialising session state variables (if necessary)
     if PIPELINE not in st.session_state:
+        st.session_state[PIPELINE] = True
         st.session_state[CHECKBOXES] = {
-            # tiff2zarr_pipeline: False,
             ref_prepare_pipeline: False,
             img_rough_pipeline: False,
             img_fine_pipeline: False,

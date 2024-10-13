@@ -133,6 +133,7 @@ def page1_init():
     """
     # Initialising session state variables
     if INIT not in st.session_state:
+        st.session_state[INIT] = True
         st.session_state[INPUT_S] = "/"
         st.session_state[INPUT_M] = "/"
         st.session_state[SELECT_M] = None

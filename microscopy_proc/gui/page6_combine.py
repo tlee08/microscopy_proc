@@ -61,7 +61,8 @@ def input_out_func():
 @page_decorator(check_proj_dir=False)
 def page6_combine():
     # Initialising session state variables
-    if INPUT_ROOT not in st.session_state:
+    if COMBINE not in st.session_state:
+        st.session_state[COMBINE] = True
         st.session_state[OVERWRITE] = False
         st.session_state[INPUT_ROOT] = None
         st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.NOT_SET

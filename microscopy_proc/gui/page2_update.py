@@ -411,7 +411,7 @@ def page2_configs():
     """
     # Initialising session state variables
     if UPDATE not in st.session_state:
-        pass
+        st.session_state[UPDATE] = True
 
     # Recalling session state variables
     configs: ConfigParamsModel = st.session_state[CONFIGS]
