@@ -1,6 +1,7 @@
 import os
 
 import streamlit as st
+from natsort import natsorted
 
 from microscopy_proc.gui.gui_funcs import PROJ_DIR, PROJ_DIR_STATUS, load_configs
 from microscopy_proc.utils.proj_org_utils import (
@@ -11,28 +12,25 @@ from microscopy_proc.utils.proj_org_utils import (
 
 from .gui_funcs import ProjDirStatus, page_decorator
 
-INPUT_S = "pdir_input_s"
-INPUT_M = "pdir_input_m"
-SELECT_M = "pdir_select_m"
-SELECT_M_OPTIONS = "pdir_select_m_options"
-SELECT_M_INDEX = "pdir_select_m_index"
-INPUT = "pdir_input"
-DISABLED = "pdir_disabled"
-SET = "pdir_set"
-CREATE = "pdir_create"
+INIT = "init"
+INPUT_S = f"{INIT}_input_s"
+INPUT_M = f"{INIT}_input_m"
+SELECT_M = f"{INIT}_select_m"
+SELECT_M_OPTIONS = f"{INIT}_select_m_options"
+SELECT_M_INDEX = f"{INIT}_select_m_index"
+INPUT = f"{INIT}_input"
+DISABLED = f"{INIT}_disabled"
+SET = f"{INIT}_set"
+CREATE = f"{INIT}_create"
 
 
 def input_s_func():
-    # Updating session_state value
-    st.session_state[INPUT_S] = st.session_state[f"{INPUT_S}_w"]
     # Updating input and disabled variables
     st.session_state[INPUT] = st.session_state[INPUT_S]
     st.session_state[DISABLED] = st.session_state[INPUT] is None
 
 
 def input_m_func():
-    # Updating session_state value
-    st.session_state[INPUT_M] = st.session_state[f"{INPUT_M}_w"]
     # Determining options based on input string
     options = []
     if st.session_state[INPUT_M] is not None:
@@ -40,7 +38,7 @@ def input_m_func():
         if os.path.isdir(st.session_state[INPUT_M]):
             # If input string is a directory
             # Getting all directories in the input string
-            options = os.listdir(st.session_state[INPUT_M])
+            options = natsorted(os.listdir(st.session_state[INPUT_M]))
     # Setting pdir_select_options
     st.session_state[SELECT_M_OPTIONS] = options
     st.session_state[SELECT_M_INDEX] = None
@@ -50,8 +48,6 @@ def input_m_func():
 
 
 def select_m_func():
-    # Updating session_state value
-    st.session_state[SELECT_M] = st.session_state[f"{SELECT_M}_w"]
     # Updatating selectbox index
     st.session_state[SELECT_M_INDEX] = st.session_state[SELECT_M_OPTIONS].index(
         st.session_state[SELECT_M]
@@ -155,7 +151,7 @@ def page1_init():
             label="Project Directory",
             value=st.session_state[INPUT_S],
             on_change=input_s_func,
-            key=f"{INPUT_S}_w",
+            key=INPUT_S,
         )
     with tabs[1]:
         # Input: Root Projects Directory
@@ -163,7 +159,7 @@ def page1_init():
             label="Root Directory",
             value=st.session_state[INPUT_M],
             on_change=input_m_func,
-            key=f"{INPUT_M}_w",
+            key=INPUT_M,
         )
         # selectbox: folders (i.e. projects) inside root directory
         st.selectbox(
@@ -171,7 +167,7 @@ def page1_init():
             options=st.session_state[SELECT_M_OPTIONS],
             index=st.session_state[SELECT_M_INDEX],
             on_change=select_m_func,
-            key=f"{SELECT_M}_w",
+            key=SELECT_M,
         )
     # Button: Set project directory
     st.button(

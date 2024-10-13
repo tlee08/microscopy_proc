@@ -11,14 +11,14 @@ from microscopy_proc.utils.io_utils import write_json
 from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import CONFIGS, L_SLC, L_ZYX, PROJ_DIR, load_configs, page_decorator
+from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, load_configs, page_decorator
 
+CONFIGS = "configs"
 VALUE = "value"
 IS_NONE = "is_none"
 DEFAULT = "default"
-
-CONFIGS_RESET = "configs_reset"
-CONFIGS_SAVE = "configs_save"
+CONFIGS_RESET = f"{CONFIGS}_reset"
+CONFIGS_SAVE = f"{CONFIGS}_save"
 
 
 class NO_DEFAULT:

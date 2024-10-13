@@ -11,7 +11,6 @@ from microscopy_proc.utils.proj_org_utils import (
 
 PROJ_DIR = "proj_dir"
 PROJ_DIR_STATUS = "proj_dir_status"
-CONFIGS = "configs"
 
 L_ZYX = ("z", "y", "x")
 L_SLC = ("start", "stop", "step")

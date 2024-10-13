@@ -31,7 +31,7 @@ class CpuCellcFuncs:
         logging.debug(f"TYPE: {arr.dtype} {type(arr)}")
         res = cls.xdimage.white_tophat(arr, sigma)
         logging.debug("ReLu")
-        res = cls.xp.maximum(res, 0)
+        res = cls.xp.maximum(res, 0)  # type: ignore
         # Returning
         return res.astype(cls.xp.uint16)
 
@@ -137,7 +137,7 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def manual_thresh(cls, arr: np.ndarray, val: int):
+    def manual_thresh(cls, arr: np.ndarray, val: int) -> np.ndarray:
         """
         Perform manual thresholding on a tensor.
         """
@@ -155,7 +155,7 @@ class CpuCellcFuncs:
         """
         arr = cls.xp.asarray(arr).astype(cls.xp.uint8)
         logging.debug("Labelling contiguous objects uniquely")
-        res, _ = cls.xdimage.label(arr)
+        res, _ = cls.xdimage.label(arr)  # type: ignore
         logging.debug("Returning")
         return res.astype(cls.xp.uint32)
 
@@ -208,7 +208,7 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def volume_filter(cls, arr: np.ndarray, smin=None, smax=None):
+    def volume_filter(cls, arr: np.ndarray, smin=None, smax=None) -> np.ndarray:
         """
         Assumes `arr` is array of objects labelled with their volumes.
         """
@@ -229,7 +229,7 @@ class CpuCellcFuncs:
         arr: np.ndarray,
         sigma: int = 10,
         mask_arr: None | np.ndarray = None,
-    ):
+    ) -> np.ndarray:
         """
         Getting local maxima (no connectivity) in a 3D tensor.
         If there is a connected region of maxima, then only the centre point is kept.
@@ -255,7 +255,7 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def mask(cls, arr: np.ndarray, mask_arr: np.ndarray):
+    def mask(cls, arr: np.ndarray, mask_arr: np.ndarray) -> np.ndarray:
         arr = cls.xp.asarray(arr)
         mask_arr = cls.xp.asarray(mask_arr).astype(cls.xp.uint8)
         logging.debug("Masking for only maxima within mask")
@@ -267,7 +267,7 @@ class CpuCellcFuncs:
     # @task
     def wshed_segm(
         cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
-    ):
+    ) -> np.ndarray:
         """
         NOTE: NOT GPU accelerated
 
@@ -286,7 +286,7 @@ class CpuCellcFuncs:
     # @task
     def wshed_segm_volumes(
         cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
-    ):
+    ) -> np.ndarray:
         """
         NOTE: NOT GPU accelerated
         """
@@ -301,7 +301,7 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def get_coords(cls, arr: np.ndarray):
+    def get_coords(cls, arr: np.ndarray) -> pd.DataFrame:
         """
         Get coordinates of regions in 3D tensor.
 
@@ -335,7 +335,7 @@ class CpuCellcFuncs:
         maxima_arr: np.ndarray,
         mask_arr: np.ndarray,
         depth: int = DEPTH,
-    ):
+    ) -> pd.DataFrame:
         """
         Get the cells from the maxima labels and the watershed segmentation
         (with corresponding labels).

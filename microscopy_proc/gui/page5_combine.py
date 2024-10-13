@@ -1,59 +1,70 @@
 import os
-from enum import Enum
 
 import streamlit as st
+from natsort import natsorted
 
 from microscopy_proc.gui.page1_init import INPUT_M as PDIR_INPUT_M
+from microscopy_proc.pipelines.batch_combine import combine_ls_pipeline
+from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import page_decorator
+from .gui_funcs import ProjDirStatus, page_decorator
 
 COMBINE = "combine"
-COMBINE_STATUS = "combine_status"
-USE_PDIR = "combine_use_pdir"
-INPUT = "combine_input"
-CHECKBOXES = "combine_checkboxes"
-RUN = "combine_run"
-DISABLED = "combine_disabled"
+USE_PDIR = f"{COMBINE}_use_pdir"
+INPUT_ROOT = f"{COMBINE}_input_root"
+INPUT_ROOT_STATUS = f"{COMBINE}_input_root_status"
+INPUT_OUT = f"{COMBINE}_input_out"
+INPUT_OUT_STATUS = f"{COMBINE}_input_out_status"
+CHECKBOXES = f"{COMBINE}_checkboxes"
+RUN = f"{COMBINE}_run"
+DISABLED = f"{COMBINE}_disabled"
 
 
-class CombineStatus(Enum):
-    NOT_SET = "not_set"
-    NOT_EXIST = "not_exists"
-    VALID = "valid"
+def update_disabled():
+    # Disabled is True if either input_root or input_out is not valid
+    st.session_state[DISABLED] = (
+        st.session_state[INPUT_ROOT_STATUS] != ProjDirStatus.VALID
+        or st.session_state[INPUT_OUT_STATUS] != ProjDirStatus.VALID
+    )
 
 
 def use_pdir_func():
     # Updating session_state
-    st.session_state[INPUT] = st.session_state.get(PDIR_INPUT_M, None)
-    # Updating widgets
-    st.session_state[f"{INPUT}_w"] = st.session_state[INPUT]
+    st.session_state[INPUT_ROOT] = st.session_state.get(PDIR_INPUT_M, None)
 
 
-def input_func():
-    # Updating session_state: INPUT
-    st.session_state[INPUT] = st.session_state[f"{INPUT}_w"]
-    # Updating session state: COMBINE_STATUS
-    if not st.session_state[INPUT]:
-        st.session_state[COMBINE_STATUS] = CombineStatus.NOT_SET
-    elif not os.path.isdir(st.session_state[INPUT]):
-        st.session_state[COMBINE_STATUS] = CombineStatus.NOT_EXIST
+def input_root_func():
+    # Updating session state: INPUT_ROOT_STATUS
+    if not st.session_state[INPUT_ROOT]:
+        st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.NOT_SET
+    elif not os.path.isdir(st.session_state[INPUT_ROOT]):
+        st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.NOT_EXIST
     else:
-        st.session_state[COMBINE_STATUS] = CombineStatus.VALID
+        st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.VALID
     # Updating session state: DISABLED
-    st.session_state[DISABLED] = st.session_state[COMBINE_STATUS] != CombineStatus.VALID
+    update_disabled()
 
 
-def combine_run_func():
-    # Placeholder for function
-    pass
+def input_out_func():
+    # Updating session state: INPUT_OUT_STATUS
+    if not st.session_state[INPUT_OUT]:
+        st.session_state[INPUT_OUT_STATUS] = ProjDirStatus.NOT_SET
+    elif not os.path.isdir(st.session_state[INPUT_OUT]):
+        st.session_state[INPUT_OUT_STATUS] = ProjDirStatus.NOT_EXIST
+    else:
+        st.session_state[INPUT_OUT_STATUS] = ProjDirStatus.VALID
+    # Updating session state: DISABLED
+    update_disabled()
 
 
 @page_decorator(check_proj_dir=False)
 def page5_combine():
     # Initialising session state variables
-    if INPUT not in st.session_state:
-        st.session_state[COMBINE_STATUS] = CombineStatus.NOT_SET
-        st.session_state[INPUT] = None
+    if INPUT_ROOT not in st.session_state:
+        st.session_state[INPUT_ROOT] = None
+        st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.NOT_SET
+        st.session_state[INPUT_OUT] = None
+        st.session_state[INPUT_OUT_STATUS] = ProjDirStatus.NOT_SET
         st.session_state[CHECKBOXES] = []
         st.session_state[DISABLED] = True
 
@@ -71,35 +82,49 @@ def page5_combine():
     # Input: Root Projects Directory
     st.text_input(
         label="Root Directory",
-        value=st.session_state[INPUT],
-        on_change=input_func,
-        key=f"{INPUT}_w",
+        value=st.session_state[INPUT_ROOT],
+        on_change=input_root_func,
+        key=INPUT_ROOT,
+    )
+    # Input: Output Directory
+    st.text_input(
+        label="Output Directory",
+        value=st.session_state[INPUT_OUT],
+        on_change=input_out_func,
+        key=INPUT_OUT,
     )
     # Making checkboxes for projects inside root directory
     st.write("### Select Projects")
-    if st.session_state[COMBINE_STATUS] == CombineStatus.NOT_SET:
+    if st.session_state[INPUT_ROOT_STATUS] == ProjDirStatus.NOT_SET:
         st.warning("Root directory not set")
-    elif st.session_state[COMBINE_STATUS] == CombineStatus.NOT_EXIST:
+    elif st.session_state[INPUT_ROOT_STATUS] == ProjDirStatus.NOT_EXIST:
         st.warning("Root directory does not exist")
-    elif st.session_state[COMBINE_STATUS] == CombineStatus.VALID:
+    elif st.session_state[INPUT_ROOT_STATUS] == ProjDirStatus.VALID:
         with st.container(height=250):
-            st.session_state[CHECKBOXES] = {
-                i: st.checkbox(
-                    label=i,
-                    key=f"{COMBINE}_{i}_w",
-                )
-                for i in os.listdir(st.session_state[INPUT])
-            }
+            # Making checkboxes (only including ones with valid project dirs)
+            st.session_state[CHECKBOXES] = []
+            for i in natsorted(os.listdir(st.session_state[INPUT_ROOT])):
+                # Checking current option has cells_agg and mask df files
+                pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
+                pfm_i = get_proj_fp_model(pdir_i)
+                if os.path.isfile(pfm_i.cells_agg_df) and os.path.isfile(pfm_i.mask_df):
+                    # Adding checkbox
+                    st.session_state[CHECKBOXES].append(
+                        st.checkbox(
+                            label=i,
+                            key=f"{COMBINE}_{i}",
+                        )
+                    )
     # Button: Combine projects
     st.button(
         label="Combine",
-        on_click=combine_run_func,
         disabled=st.session_state[DISABLED],
         key=RUN,
     )
     if st.session_state[RUN]:
-        proj_ls = [k for k, v in st.session_state[CHECKBOXES].items() if v]
+        proj_dir_ls = [k for k, v in st.session_state[CHECKBOXES].items() if v]
         st.write("Combining:")
-        for i in proj_ls:
+        for i in proj_dir_ls:
             st.write(f"- {i}")
-        # Placeholder for function
+        # Running combine func
+        combine_ls_pipeline(proj_dir_ls, st.session_state[INPUT_OUT])
