@@ -3,14 +3,19 @@ import os
 import streamlit as st
 from natsort import natsorted
 
-from microscopy_proc.gui.gui_funcs import PROJ_DIR, PROJ_DIR_STATUS, load_configs
+from microscopy_proc.gui.gui_funcs import (
+    PROJ_DIR,
+    PROJ_DIR_STATUS,
+    ProjDirStatus,
+    init_var,
+    load_configs,
+    page_decorator,
+)
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     make_proj_dirs,
     update_configs,
 )
-
-from .gui_funcs import ProjDirStatus, page_decorator
 
 INIT = "init"
 INPUT_S = f"{INIT}_input_s"
@@ -25,12 +30,16 @@ CREATE = f"{INIT}_create"
 
 
 def input_s_func():
+    # Updating own input variable
+    st.session_state[INPUT_S] = st.session_state[f"{INPUT_S}_w"]
     # Updating input and disabled variables
     st.session_state[INPUT] = st.session_state[INPUT_S]
     st.session_state[DISABLED] = st.session_state[INPUT] is None
 
 
 def input_m_func():
+    # Updating own input variable
+    st.session_state[INPUT_M] = st.session_state[f"{INPUT_M}_w"]
     # Determining options based on input string
     options = []
     if st.session_state[INPUT_M] is not None:
@@ -132,15 +141,13 @@ def page1_init():
       configuration files.
     """
     # Initialising session state variables
-    if INIT not in st.session_state:
-        st.session_state[INIT] = True
-        st.session_state[INPUT_S] = "/"
-        st.session_state[INPUT_M] = "/"
-        st.session_state[SELECT_M] = None
-        st.session_state[SELECT_M_OPTIONS] = []
-        st.session_state[SELECT_M_INDEX] = None
-        st.session_state[INPUT] = None
-        st.session_state[DISABLED] = True
+    init_var(INPUT_S, None)
+    init_var(INPUT_M, None)
+    init_var(SELECT_M, None)
+    init_var(SELECT_M_OPTIONS, [])
+    init_var(SELECT_M_INDEX, None)
+    init_var(INPUT, None)
+    init_var(DISABLED, True)
 
     # Title
     st.write("## Init Project")
@@ -152,7 +159,7 @@ def page1_init():
             label="Project Directory",
             value=st.session_state[INPUT_S],
             on_change=input_s_func,
-            key=INPUT_S,
+            key=f"{INPUT_S}_w",
         )
     with tabs[1]:
         # Input: Root Projects Directory
@@ -160,7 +167,7 @@ def page1_init():
             label="Root Directory",
             value=st.session_state[INPUT_M],
             on_change=input_m_func,
-            key=INPUT_M,
+            key=f"{INPUT_M}_w",
         )
         # selectbox: folders (i.e. projects) inside root directory
         st.selectbox(

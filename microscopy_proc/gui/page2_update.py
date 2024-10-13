@@ -410,8 +410,6 @@ def page2_configs():
         ValidationError: If the configuration parameters do not pass validation.
     """
     # Initialising session state variables
-    if UPDATE not in st.session_state:
-        st.session_state[UPDATE] = True
 
     # Recalling session state variables
     configs: ConfigParamsModel = st.session_state[CONFIGS]

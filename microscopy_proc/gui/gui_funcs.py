@@ -30,6 +30,10 @@ class ProjDirStatus(Enum):
 #####################################################################
 
 
+def init_var(name, default):
+    st.session_state[name] = st.session_state.get(name, default)
+
+
 def load_configs():
     """
     Loading in configs to session state from project directory.

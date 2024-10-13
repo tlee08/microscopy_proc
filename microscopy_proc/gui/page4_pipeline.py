@@ -27,7 +27,7 @@ from microscopy_proc.pipelines.pipeline_funcs import (
 )
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import PROJ_DIR, page_decorator
+from .gui_funcs import PROJ_DIR, init_var, page_decorator
 
 PIPELINE = "pipeline"
 CHECKBOXES = f"{PIPELINE}_checkboxes"
@@ -54,9 +54,9 @@ def page4_pipeline():
     - pipeline_run_btn: Boolean indicating whether the "Run pipeline" button has been pressed.
     """
     # Initialising session state variables (if necessary)
-    if PIPELINE not in st.session_state:
-        st.session_state[PIPELINE] = True
-        st.session_state[CHECKBOXES] = {
+    init_var(
+        CHECKBOXES,
+        {
             ref_prepare_pipeline: False,
             img_rough_pipeline: False,
             img_fine_pipeline: False,
@@ -80,8 +80,9 @@ def page4_pipeline():
             cell_mapping_pipeline: False,
             group_cells_pipeline: False,
             cells2csv_pipeline: False,
-        }
-        st.session_state[OVERWRITE] = False
+        },
+    )
+    init_var(OVERWRITE, False)
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]

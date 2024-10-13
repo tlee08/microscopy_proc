@@ -2,10 +2,14 @@ import os
 
 import streamlit as st
 
+from microscopy_proc.gui.gui_funcs import (
+    PROJ_DIR,
+    ProjDirStatus,
+    init_var,
+    page_decorator,
+)
 from microscopy_proc.pipelines.pipeline_funcs import tiff2zarr_pipeline
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
-
-from .gui_funcs import PROJ_DIR, ProjDirStatus, page_decorator
 
 IMPORT = "import"
 OVERWRITE = f"{IMPORT}_overwrite"
@@ -16,6 +20,8 @@ RUN = f"{IMPORT}_run"
 
 
 def input_src_func():
+    # Updating own input variable
+    st.session_state[INPUT_SRC] = st.session_state[f"{INPUT_SRC}_w"]
     # Updating session state: INPUT_SRC_STATUS
     if not st.session_state[INPUT_SRC]:
         st.session_state[INPUT_SRC_STATUS] = ProjDirStatus.NOT_SET
@@ -33,12 +39,10 @@ def input_src_func():
 def page3_import():
     """ """
     # Initialising session state variables
-    if IMPORT not in st.session_state:
-        st.session_state[IMPORT] = True
-        st.session_state[OVERWRITE] = False
-        st.session_state[INPUT_SRC] = None
-        st.session_state[INPUT_SRC_STATUS] = ProjDirStatus.NOT_SET
-        st.session_state[DISABLED] = True
+    init_var(OVERWRITE, False)
+    init_var(INPUT_SRC, None)
+    init_var(INPUT_SRC_STATUS, ProjDirStatus.NOT_SET)
+    init_var(DISABLED, True)
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
@@ -57,7 +61,7 @@ def page3_import():
         label="Image source filepath",
         value=st.session_state[INPUT_SRC],
         on_change=input_src_func,
-        key=INPUT_SRC,
+        key=f"{INPUT_SRC}_w",
     )
     # Button: Combine projects
     st.button(

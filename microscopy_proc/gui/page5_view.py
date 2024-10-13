@@ -7,7 +7,7 @@ import streamlit as st
 from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, page_decorator
+from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, init_var, page_decorator
 
 # NOTE: could plt.colourmaps() work?
 VIEW = "viewer"
@@ -35,9 +35,10 @@ class Colormaps(Enum):
 
 @page_decorator()
 def page5_view():
-    if VIEW not in st.session_state:
-        st.session_state[VIEW] = True
-        st.session_state[IMGS] = {
+    # Initialising session state variables
+    init_var(
+        IMGS,
+        {
             "Atlas": {
                 "ref": {
                     VRANGE_D: (0, 10000),
@@ -192,7 +193,8 @@ def page5_view():
                     SEL: False,
                 },
             },
-        }
+        },
+    )
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
