@@ -174,13 +174,17 @@ def page6_combine():
     )
     if st.session_state[RUN]:
         proj_dir_ls = [
-            os.path.join(st.session_state[INPUT_ROOT], k)
+            k
             for k, v in st.session_state[CHECKBOXES].items()
             if v
         ]
         st.write("Combining:")
         for i in proj_dir_ls:
             st.write(f"- {i}")
+        proj_dir_ls = [
+            os.path.join(st.session_state[INPUT_ROOT], i)
+            for i in proj_dir_ls
+        ]
         # Running combine func
         combine_ls_pipeline(
             proj_dir_ls=proj_dir_ls,
