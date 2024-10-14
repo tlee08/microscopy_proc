@@ -51,6 +51,19 @@ def input_root_func():
         st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.NOT_EXIST
     else:
         st.session_state[INPUT_ROOT_STATUS] = ProjDirStatus.VALID
+    # Updating session state: CHECKBOXES
+    st.session_state[CHECKBOXES] = {}
+    # Getting list of valid directories in root directory
+    for i in natsorted(os.listdir(st.session_state[INPUT_ROOT])):
+        # Checking directory has configs_params, cells_agg, and mask df files
+        pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
+        pfm_i = get_proj_fp_model(pdir_i)
+        if (
+            os.path.isfile(pfm_i.config_params)
+            and os.path.isfile(pfm_i.cells_agg_df)
+            and os.path.isfile(pfm_i.mask_df)
+        ):
+            st.session_state[i] = False
     # Updating session state: DISABLED
     update_disabled()
 
@@ -139,23 +152,14 @@ def page6_combine():
             on_change=checkbox_all_func,
             key=f"{CHECKBOX_ALL}_w",
         )
+        # Making checkboxes
         with st.container(height=250):
-            # Making checkboxes (only including ones with valid project dirs)
-            st.session_state[CHECKBOXES] = {}
-            for i in natsorted(os.listdir(st.session_state[INPUT_ROOT])):
-                # Checking current option has configs_params, cells_agg, and mask df files
-                pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
-                pfm_i = get_proj_fp_model(pdir_i)
-                if (
-                    os.path.isfile(pfm_i.config_params)
-                    and os.path.isfile(pfm_i.cells_agg_df)
-                    and os.path.isfile(pfm_i.mask_df)
-                ):
-                    # Adding checkbox
-                    st.session_state[CHECKBOXES][i] = st.checkbox(
-                        label=i,
-                        key=f"{COMBINE}_{i}",
-                    )
+            for i in st.session_state[CHECKBOXES]:
+                st.session_state[CHECKBOXES][i] = st.checkbox(
+                    label=i,
+                    value=st.session_state["CHECKBOXES"][i],
+                    key=f"{COMBINE}_{i}",
+                )
     # Error messages for input_out
     if st.session_state[INPUT_OUT_STATUS] == ProjDirStatus.NOT_SET:
         st.warning("Output directory not set.")

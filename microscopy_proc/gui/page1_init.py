@@ -40,16 +40,17 @@ def input_s_func():
 def input_m_func():
     # Updating own input variable
     st.session_state[INPUT_M] = st.session_state[f"{INPUT_M}_w"]
-    # Determining options based on input string
-    options = []
+    # Setting selectbox options
+    st.session_state[SELECT_M_OPTIONS] = []
+    # If input string is not None
     if st.session_state[INPUT_M] is not None:
-        # If input string is not None
+        # If input string is a directory
         if os.path.isdir(st.session_state[INPUT_M]):
-            # If input string is a directory
-            # Getting all directories in the input string
-            options = natsorted(os.listdir(st.session_state[INPUT_M]))
-    # Setting pdir_select_options
-    st.session_state[SELECT_M_OPTIONS] = options
+            # Getting list of directories in the root string
+            st.session_state[SELECT_M_OPTIONS] = natsorted(
+                [i for i in os.listdir(st.session_state[INPUT_M]) if os.path.isdir(i)]
+            )
+    # Setting selectbox index
     st.session_state[SELECT_M_INDEX] = None
     # Resetting input and disabled variables
     st.session_state[INPUT] = None
@@ -172,6 +173,7 @@ def page1_init():
             key=f"{INPUT_M}_w",
         )
         # selectbox: folders (i.e. projects) inside root directory
+        st.write("Only folders inside the root directory are shown.")
         st.selectbox(
             label="Projects",
             options=st.session_state[SELECT_M_OPTIONS],
