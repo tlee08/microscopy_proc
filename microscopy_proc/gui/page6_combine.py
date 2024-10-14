@@ -63,7 +63,7 @@ def input_root_func():
             and os.path.isfile(pfm_i.cells_agg_df)
             and os.path.isfile(pfm_i.mask_df)
         ):
-            st.session_state[i] = False
+            st.session_state[CHECKBOXES][i] = False
     # Updating session state: DISABLED
     update_disabled()
 
@@ -157,7 +157,7 @@ def page6_combine():
             for i in st.session_state[CHECKBOXES]:
                 st.session_state[CHECKBOXES][i] = st.checkbox(
                     label=i,
-                    value=st.session_state["CHECKBOXES"][i],
+                    value=st.session_state[CHECKBOXES][i],
                     key=f"{COMBINE}_{i}",
                 )
     # Error messages for input_out
