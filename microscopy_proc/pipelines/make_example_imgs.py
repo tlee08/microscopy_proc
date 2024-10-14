@@ -1,8 +1,9 @@
 import os
 
+import dask.array as da
+import tifffile
 from natsort import natsorted
 
-from microscopy_proc.funcs.viewer_funcs import CMAP, IMGS, VRANGE, view_arrs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
@@ -10,6 +11,7 @@ from microscopy_proc.utils.proj_org_utils import (
 if __name__ == "__main__":
     # Filenames
     root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
+    out_dir = "/"
 
     overwrite = False
 
@@ -38,66 +40,20 @@ if __name__ == "__main__":
             # slice(None, None, None),
         )
 
-        imgs_to_run_dict = {
-            "Atlas": [
-                # "ref",
-                # "annot",
-            ],
-            "Raw": [
-                "raw",
-            ],
-            "Registration": [
-                # "downsmpl1",
-                # "downsmpl2",
-                # "trimmed",
-                # "regresult",
-            ],
-            "Mask": [
-                # "premask_blur",
-                # "mask",
-                # "outline",
-                # "mask_reg",
-            ],
-            "Cell Counting (overlapped)": [
-                # "overlap",
-                # "bgrm",
-                # "dog",
-                # "adaptv",
-                # "threshd",
-                # "threshd_volumes",
-                # "threshd_filt",
-                # "maxima",
-                # "wshed_volumes",
-                # "wshed_filt",
-            ],
-            "Cell Counting (trimmed)": [
-                # "threshd_final",
-                "maxima_final",
-                "wshed_final",
-            ],
-            "Post Processing Checks": [
-                # "points_check",
-                # "heatmap_check",
-                # "points_trfm_check",
-                # "heatmap_trfm_check",
-            ],
-        }
-
-        fp_ls = []
-        name = []
-        contrast_limits = []
-        colormap = []
-        for group_k, group_v in imgs_to_run_dict.items():
-            for img_i in group_v:
-                fp_ls.append(getattr(pfm, img_i))
-                name.append(img_i)
-                contrast_limits.append(IMGS[group_k][img_i][VRANGE])
-                colormap.append(IMGS[group_k][img_i][CMAP])
-
-        view_arrs(
-            fp_ls=tuple(fp_ls),
-            trimmer=trimmer,
-            name=tuple(name),
-            contrast_limits=tuple(contrast_limits),
-            colormap=tuple(colormap),
-        )
+        # Exporting
+        os.makedirs(os.path.join(out_dir, i), exist_ok=True)
+        # trimmed
+        arr = tifffile.imread(pfm.trimmed)
+        tifffile.imwrite(os.path.join(out_dir, i, "trimmed"), arr)
+        # regresult
+        arr = tifffile.imread(pfm.regresult)
+        tifffile.imwrite(os.path.join(out_dir, i, "regresult"), arr)
+        # raw
+        arr = da.from_zarr(pfm.raw)[*trimmer].compute()
+        tifffile.imwrite(os.path.join(out_dir, i, "raw"), arr)
+        # maxima_final
+        arr = da.from_zarr(pfm.maxima_final)[*trimmer].compute()
+        tifffile.imwrite(os.path.join(out_dir, i, "maxima_final"), arr)
+        # wshed_final
+        arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
+        tifffile.imwrite(os.path.join(out_dir, i, "wshed_final"), arr)
