@@ -27,11 +27,10 @@ def update_disabled():
     # - input_root or
     # - input_out is not valid or
     # - no checkboxes are selected
-    proj_dir_ls = [k for k, v in st.session_state[CHECKBOXES].items() if v]
     st.session_state[DISABLED] = (
         st.session_state[INPUT_ROOT_STATUS] != ProjDirStatus.VALID
         or st.session_state[INPUT_OUT_STATUS] != ProjDirStatus.VALID
-        or len(proj_dir_ls) == 0
+        or len(st.session_state[CHECKBOXES]) == 0
     )
 
 
@@ -144,10 +143,14 @@ def page6_combine():
             # Making checkboxes (only including ones with valid project dirs)
             st.session_state[CHECKBOXES] = {}
             for i in natsorted(os.listdir(st.session_state[INPUT_ROOT])):
-                # Checking current option has cells_agg and mask df files
+                # Checking current option has configs_params, cells_agg, and mask df files
                 pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
                 pfm_i = get_proj_fp_model(pdir_i)
-                if os.path.isfile(pfm_i.cells_agg_df) and os.path.isfile(pfm_i.mask_df):
+                if (
+                    os.path.isfile(pfm_i.config_params)
+                    and os.path.isfile(pfm_i.cells_agg_df)
+                    and os.path.isfile(pfm_i.mask_df)
+                ):
                     # Adding checkbox
                     st.session_state[CHECKBOXES][i] = st.checkbox(
                         label=i,
@@ -170,7 +173,11 @@ def page6_combine():
         key=RUN,
     )
     if st.session_state[RUN]:
-        proj_dir_ls = [k for k, v in st.session_state[CHECKBOXES].items() if v]
+        proj_dir_ls = [
+            os.path.join(st.session_state[INPUT_ROOT], k)
+            for k, v in st.session_state[CHECKBOXES].items()
+            if v
+        ]
         st.write("Combining:")
         for i in proj_dir_ls:
             st.write(f"- {i}")
