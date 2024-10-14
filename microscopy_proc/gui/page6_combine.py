@@ -55,7 +55,7 @@ def input_root_func():
     st.session_state[CHECKBOXES] = {}
     # Getting list of valid directories in root directory
     for i in natsorted(os.listdir(st.session_state[INPUT_ROOT])):
-        # Checking directory has configs_params, cells_agg, and mask df files
+        # Checking project has configs_params, cells_agg, and mask df files
         pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
         pfm_i = get_proj_fp_model(pdir_i)
         if (

@@ -28,7 +28,7 @@ def combine_ls_pipeline(
     # If overwrite is False and out_fp_parquet exists, then skip
     out_fp_parquet = os.path.join(out_dir, f"{COMBINED_FP}.parquet")
     out_fp_csv = os.path.join(out_dir, f"{COMBINED_FP}.csv")
-    if not overwrite and os.path.isfile(out_fp_parquet):
+    if not overwrite and os.path.exists(out_fp_parquet):
         logging.info(f"Skipping as {out_fp_parquet} already exists.")
         return
 
@@ -51,8 +51,8 @@ def combine_ls_pipeline(
         annot_v = configs.annot_v
         map_v = configs.map_v
         # Asserting that all projects have cells_agg and mask_df files
-        assert os.path.isfile(pfm.cells_agg_df), f"Missing cells_agg_df for {name}"
-        assert os.path.isfile(pfm.mask_df), f"Missing mask_df for {name}"
+        assert os.path.exists(pfm.cells_agg_df), f"Missing cells_agg_df for {name}"
+        assert os.path.exists(pfm.mask_df), f"Missing mask_df for {name}"
         # Asserting that all projects are using the same origin for reference atlas
         # to verify the same regions are being used
         assert atlas_dir0 == atlas_dir, (
