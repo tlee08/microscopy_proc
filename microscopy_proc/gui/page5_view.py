@@ -112,10 +112,10 @@ def page5_view():
                 "No overlap or raw array files found.\n\n"
                 + "No trimming is available (if image too big this may crash application)."
             )
-    # Making slicer/trimmer sliders
+    # Initialising trimmer tuple
     trimmer = tuple(slice(None) for _ in L_ZYX)
     if arr is not None:
-        # Making slicer sliders if array exists
+        # Making trimmer sliders if array exists
         for i, v in enumerate(L_ZYX):
             st.slider(
                 label=f"{v} trimmer",
@@ -128,10 +128,9 @@ def page5_view():
                 ),
                 key=f"{TRIMMER}_{v}",
             )
-        sliders = [st.session_state[f"{TRIMMER}_{v}"] for v in L_ZYX]
-        trimmer = tuple(slice(*i) for i in sliders)
+        trimmer = tuple(slice(*st.session_state[f"{TRIMMER}_{v}"]) for v in L_ZYX)
     else:
-        # Otherwise slicers are set to None
+        # Otherwise trimmers are set to None
         st.write("No Z trimming")
         st.write("No Y trimming")
         st.write("No X trimming")
