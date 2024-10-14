@@ -14,7 +14,6 @@ They need to be set up inside specially named folders, as shown below.
 
 An example of how this would look on a computer (in this case, a Mac) is shown below.
 
-
 ## Experiment Files
 
 Each experiment must have files that have same name (not including the suffix like `.csv` or `.mp4`). An example is "day1_experiment1" must have all files named "day1_experiment1.mp4", "day1_experiment1.csv", "day1_experiment1.json" etc. stored in the corresponding folder.

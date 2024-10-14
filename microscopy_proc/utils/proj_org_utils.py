@@ -57,6 +57,8 @@ class ProjFpModel(BaseModel):
         use_enum_values=True,
     )
 
+    # ROOT DIR
+    root_dir: str
     # CONFIGS
     config_params: str
     # ATLAS AND ELASTIX PARAMS FILES
@@ -108,6 +110,8 @@ class ProjFpModel(BaseModel):
     @classmethod
     def get_proj_fp_model(cls, proj_dir):
         return cls(
+            # ROOT DIR
+            root_dir=proj_dir,
             # CONFIGS
             config_params=os.path.join(proj_dir, "config_params.json"),
             # MY ATLAS AND ELASTIX PARAMS FILES
@@ -169,9 +173,9 @@ def get_proj_fp_model(proj_dir: str):
     return ProjFpModel.get_proj_fp_model(proj_dir)
 
 
-def make_proj_dirs(proj_dir):
+def make_proj_dirs(pfm: ProjFpModel):
     for folder in ProjFolders:
-        os.makedirs(os.path.join(proj_dir, folder.value), exist_ok=True)
+        os.makedirs(os.path.join(pfm.root_dir, folder.value), exist_ok=True)
 
 
 def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
@@ -181,8 +185,12 @@ def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
     Then updates the config_params file with the kwargs.
     If there are no kwargs, will not update the file
     (other than making it if it did not exist).
+
+    Also makes all the project sub-directories as well.
     """
-    # Making registration params json
+    # Firstly makes all the project sub-directories
+    make_proj_dirs(pfm)
+    # Reading/making registration params json
     try:  # If file exists
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
     except FileNotFoundError as e:  # If file does not exist

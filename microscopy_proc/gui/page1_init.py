@@ -13,7 +13,6 @@ from microscopy_proc.gui.gui_funcs import (
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    make_proj_dirs,
     update_configs,
 )
 
@@ -110,7 +109,6 @@ def create_func():
     Makes project folders and configs file.
     """
     proj_dir = st.session_state[PROJ_DIR]
-    make_proj_dirs(proj_dir)
     pfm = get_proj_fp_model(proj_dir)
     update_configs(pfm)
     # Rerunning set func to update session state

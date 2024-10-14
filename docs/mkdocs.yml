@@ -79,9 +79,11 @@ nav:
       - installation/uninstalling.md
   - Tutorials:
       - tutorials/tutorial.md
-      - tutorials/configs.md
+      - tutorials/pipeline.md
   - Examples:
       - examples/single_pipeline.md
       - examples/batch_pipeline.md
   - API Reference:
       - reference/pipeline_funcs.md
+      - reference/config_params_model.md
+      - reference/proj_fp_model.md

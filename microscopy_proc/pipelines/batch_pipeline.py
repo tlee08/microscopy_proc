@@ -30,7 +30,6 @@ from microscopy_proc.pipelines.pipeline_funcs import (
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    make_proj_dirs,
     update_configs,
 )
 
@@ -67,8 +66,6 @@ if __name__ == "__main__":
             proj_dir = os.path.join(root_dir, i)
             # Getting file paths
             pfm = get_proj_fp_model(proj_dir)
-            # Making project folders
-            make_proj_dirs(proj_dir)
 
             # Making params json
             update_configs(

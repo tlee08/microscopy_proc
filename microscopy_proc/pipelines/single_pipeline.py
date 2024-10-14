@@ -1,8 +1,3 @@
-import dask.array as da
-import dask.dataframe as dd
-import tifffile
-
-from microscopy_proc.funcs.visual_check_funcs import coords2points
 from microscopy_proc.pipelines.pipeline_funcs import (
     cell_mapping_pipeline,
     cellc1_pipeline,
@@ -18,6 +13,8 @@ from microscopy_proc.pipelines.pipeline_funcs import (
     cellc11_pipeline,
     cellc_coords_only_pipeline,
     cells2csv_pipeline,
+    coords2points_raw_pipeline,
+    coords2points_trfm_pipeline,
     group_cells_pipeline,
     img_fine_pipeline,
     img_overlap_pipeline,
@@ -31,7 +28,6 @@ from microscopy_proc.pipelines.pipeline_funcs import (
 )
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    make_proj_dirs,
     update_configs,
 )
 
@@ -55,8 +51,6 @@ if __name__ == "__main__":
 
     # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     pfm = get_proj_fp_model(proj_dir)
-    # Making project folders
-    make_proj_dirs(proj_dir)
 
     # Making params json
     update_configs(
@@ -129,13 +123,5 @@ if __name__ == "__main__":
     cells2csv_pipeline(pfm, overwrite=overwrite)
 
     # Running visual checks
-    coords2points(
-        dd.read_parquet(pfm.cells_raw_df).compute(),
-        da.from_zarr(pfm.raw).shape,
-        pfm.points_check,
-    )
-    coords2points(
-        dd.read_parquet(pfm.cells_trfm_df),
-        tifffile.imread(pfm.ref).shape,
-        pfm.points_trfm_check,
-    )
+    coords2points_raw_pipeline(pfm)
+    coords2points_trfm_pipeline(pfm)
