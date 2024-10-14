@@ -90,7 +90,7 @@ def combine_ls_pipeline(
     for proj_dir in proj_dir_ls:
         # Logging which file is being processed
         name = os.path.basename(proj_dir)
-        print(f"Running: {name}")
+        logging.info(f"Running: {name}")
         # Filenames
         pfm = get_proj_fp_model(proj_dir)
         # CELL_AGG_DF

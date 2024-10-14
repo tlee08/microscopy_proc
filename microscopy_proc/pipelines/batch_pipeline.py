@@ -58,7 +58,6 @@ if __name__ == "__main__":
         ]:
             continue
         # Logging which file is being processed
-        print(f"Running: {i}")
         logging.info(f"Running: {i}")
         try:
             # Filenames
@@ -135,8 +134,6 @@ if __name__ == "__main__":
             group_cells_pipeline(pfm, overwrite=overwrite)
             # Exporting cells_agg parquet as csv
             cells2csv_pipeline(pfm, overwrite=overwrite)
-
-            print()
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             continue
