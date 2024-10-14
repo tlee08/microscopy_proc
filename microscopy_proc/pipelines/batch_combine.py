@@ -149,13 +149,13 @@ def combine_root_pipeline(root_dir: str, out_dir: str):
             proj_dir_ls.append(proj_dir)
         except FileNotFoundError:
             pass
-    # Running batch_combine_pipeline
+    # Running combine pipeline
     combine_ls_pipeline(proj_dir_ls, out_dir)
 
 
 if __name__ == "__main__":
     # Filenames
-    batch_proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
+    root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
     out_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/"
     # Running
-    combine_root_pipeline(batch_proj_dir, out_dir)
+    combine_root_pipeline(root_dir, out_dir)

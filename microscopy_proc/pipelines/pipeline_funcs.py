@@ -146,21 +146,21 @@ def tiff2zarr_pipeline(
         if os.path.isdir(in_fp):
             # If in_fp is a directory, make zarr from the tiff file stack in directory
             tiffs2zarr(
-                natsorted(
+                in_fp_ls=natsorted(
                     [
-                        os.path.join(in_fp, f)
-                        for f in os.listdir(in_fp)
-                        if re.search(r".tif$", f)
+                        os.path.join(in_fp, i)
+                        for i in os.listdir(in_fp)
+                        if re.search(r".tif$", i)
                     ]
                 ),
-                pfm.raw,
+                out_fp=pfm.raw,
                 chunks=configs.chunksize,
             )
         elif os.path.isfile(in_fp):
             # If in_fp is a file, make zarr from the btiff file
             btiff2zarr(
-                in_fp,
-                pfm.raw,
+                in_fp=in_fp,
+                out_fp=pfm.raw,
                 chunks=configs.chunksize,
             )
         else:
@@ -228,6 +228,7 @@ def img_rough_pipeline(
         downsmpl1_arr = downsmpl_rough(
             raw_arr, configs.z_rough, configs.y_rough, configs.x_rough
         )
+        # Computing (from dask array)
         downsmpl1_arr = downsmpl1_arr.compute()
         # Saving
         tifffile.imwrite(pfm.downsmpl1, downsmpl1_arr)
