@@ -80,7 +80,7 @@ def page5_view():
                 "wshed_filt": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
             },
             "Cell Counting (trimmed)": {
-                "threshd_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GRAY.value},
+                "threshd_final": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
                 "maxima_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
                 "wshed_final": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
             },

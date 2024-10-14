@@ -1,4 +1,5 @@
 import functools
+import logging
 import os
 from multiprocessing import Process
 
@@ -15,24 +16,24 @@ from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 # @flow
 def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
     with cluster_proc_contxt(LocalCluster()):
-        # # OPTIONAL colourmaps
-        # cmap_ls = ["gray", "green", "yellow"]
-        # Reading arrays
-        arr_ls = []
-        for i in fp_ls:
-            if ".zarr" in i:
-                arr_ls.append(da.from_zarr(i)[*trimmer].compute())
-            elif ".tif" in i:
-                arr_ls.append(tifffile.imread(i)[*trimmer])
         # Asserting all kwargs_ls list lengths are equal to fp_ls length
         for k, v in kwargs.items():
             assert len(v) == len(fp_ls)
+        # Reading arrays
+        arr_ls = []
+        for i, fp in enumerate(fp_ls):
+            logging.info(f"Loading image # {i} / {len(arr_ls)}")
+            if ".zarr" in fp:
+                arr_ls.append(da.from_zarr(fp)[*trimmer].compute())
+            elif ".tif" in fp:
+                arr_ls.append(tifffile.imread(fp)[*trimmer])
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
         # Making napari viewer
         viewer = napari.Viewer()
         # Adding image to napari viewer
         for i, arr in enumerate(arr_ls):
+            logging.info(f"Napari viewer - adding image # {i} / {len(arr_ls)}")
             viewer.add_image(
                 data=arr,
                 blending="additive",
@@ -47,6 +48,7 @@ def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
 
 @functools.wraps(view_arrs)
 def view_arrs_mp(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
+    logging.info("Starting napari viewer")
     napari_proc = Process(target=view_arrs, args=(fp_ls, trimmer), kwargs=kwargs)
     napari_proc.start()
     # napari_proc.join()
