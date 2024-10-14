@@ -195,9 +195,9 @@ if __name__ == "__main__":
             colormap.append(VIEWER_IMGS[group_k][img_i][CMAP_D])
 
     view_arrs(
-        fp_ls=fp_ls,
+        fp_ls=tuple(fp_ls),
         trimmer=trimmer,
-        name=name,
-        contrast_limits=contrast_limits,
-        colormap=colormap,
+        name=tuple(name),
+        contrast_limits=tuple(contrast_limits),
+        colormap=tuple(colormap),
     )
