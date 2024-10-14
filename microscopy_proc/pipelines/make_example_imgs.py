@@ -2,7 +2,7 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.viewer_funcs import CMAP_D, VIEWER_IMGS, VRANGE_D, view_arrs
+from microscopy_proc.funcs.viewer_funcs import CMAP, IMGS, VRANGE, view_arrs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
@@ -92,8 +92,8 @@ if __name__ == "__main__":
             for img_i in group_v:
                 fp_ls.append(getattr(pfm, img_i))
                 name.append(img_i)
-                contrast_limits.append(VIEWER_IMGS[group_k][img_i][VRANGE_D])
-                colormap.append(VIEWER_IMGS[group_k][img_i][CMAP_D])
+                contrast_limits.append(IMGS[group_k][img_i][VRANGE])
+                colormap.append(IMGS[group_k][img_i][CMAP])
 
         view_arrs(
             fp_ls=tuple(fp_ls),

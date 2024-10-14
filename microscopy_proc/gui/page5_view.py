@@ -5,7 +5,10 @@ from enum import Enum
 import dask.array as da
 import streamlit as st
 
-from microscopy_proc.funcs.viewer_funcs import VIEWER_IMGS, view_arrs_mp
+from microscopy_proc.funcs.viewer_funcs import CMAP as CMAP_D
+from microscopy_proc.funcs.viewer_funcs import IMGS as IMGS_D
+from microscopy_proc.funcs.viewer_funcs import VRANGE as VRANGE_D
+from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
 from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
@@ -17,9 +20,7 @@ IMGS = f"{VIEW}_imgs"
 TRIMMER = f"{VIEW}_trimmer"
 NAME = f"{VIEW}_name"
 VRANGE = f"{VIEW}_vrange"
-VRANGE_D = f"{VIEW}_vrange_default"
 CMAP = f"{VIEW}_cmap"
-CMAP_D = f"{VIEW}_cmap_default"
 SEL = f"{VIEW}_sel"
 RUN = f"{VIEW}_visualiser_run"
 
@@ -43,7 +44,7 @@ def trimmer_func(v):
 @page_decorator()
 def page5_view():
     # Initialising session state variables
-    init_var(IMGS, deepcopy(VIEWER_IMGS))
+    init_var(IMGS, deepcopy(IMGS_D))
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]

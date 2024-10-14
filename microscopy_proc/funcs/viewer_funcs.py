@@ -13,9 +13,8 @@ from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
-VIEW = "viewer"
-VRANGE_D = f"{VIEW}_vrange_default"
-CMAP_D = f"{VIEW}_cmap_default"
+VRANGE = "vrange"
+CMAP = "cmap"
 
 
 class Colormaps(Enum):
@@ -29,48 +28,48 @@ class Colormaps(Enum):
     SET1 = "Set1"
 
 
-VIEWER_IMGS = {
+IMGS = {
     "Atlas": {
-        "ref": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GREEN.value},
-        "annot": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.SET1.value},
+        "ref": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
+        "annot": {VRANGE: (0, 10000), CMAP: Colormaps.SET1.value},
     },
     "Raw": {
-        "raw": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+        "raw": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
     },
     "Registration": {
-        "downsmpl1": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-        "downsmpl2": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-        "trimmed": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-        "regresult": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+        "downsmpl1": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+        "downsmpl2": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+        "trimmed": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+        "regresult": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
     },
     "Mask": {
-        "premask_blur": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.RED.value},
-        "mask": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-        "outline": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-        "mask_reg": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+        "premask_blur": {VRANGE: (0, 10000), CMAP: Colormaps.RED.value},
+        "mask": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+        "outline": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+        "mask_reg": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
     },
     "Cell Counting (overlapped)": {
-        "overlap": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-        "bgrm": {VRANGE_D: (0, 2000), CMAP_D: Colormaps.GREEN.value},
-        "dog": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
-        "adaptv": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
-        "threshd": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GRAY.value},
-        "threshd_volumes": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GREEN.value},
-        "threshd_filt": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-        "maxima": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-        "wshed_volumes": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
-        "wshed_filt": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+        "overlap": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+        "bgrm": {VRANGE: (0, 2000), CMAP: Colormaps.GREEN.value},
+        "dog": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
+        "adaptv": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
+        "threshd": {VRANGE: (0, 5), CMAP: Colormaps.GRAY.value},
+        "threshd_volumes": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
+        "threshd_filt": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "maxima": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "wshed_volumes": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
+        "wshed_filt": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
     },
     "Cell Counting (trimmed)": {
-        "threshd_final": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-        "maxima_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-        "wshed_final": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+        "threshd_final": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+        "maxima_final": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+        "wshed_final": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
     },
     "Post Processing Checks": {
-        "points_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-        "heatmap_check": {VRANGE_D: (0, 20), CMAP_D: Colormaps.RED.value},
-        "points_trfm_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-        "heatmap_trfm_check": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
+        "points_check": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "heatmap_check": {VRANGE: (0, 20), CMAP: Colormaps.RED.value},
+        "points_trfm_check": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "heatmap_trfm_check": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
     },
 }
 
@@ -191,8 +190,8 @@ if __name__ == "__main__":
         for img_i in group_v:
             fp_ls.append(getattr(pfm, img_i))
             name.append(img_i)
-            contrast_limits.append(VIEWER_IMGS[group_k][img_i][VRANGE_D])
-            colormap.append(VIEWER_IMGS[group_k][img_i][CMAP_D])
+            contrast_limits.append(IMGS[group_k][img_i][VRANGE])
+            colormap.append(IMGS[group_k][img_i][CMAP])
 
     view_arrs(
         fp_ls=tuple(fp_ls),
