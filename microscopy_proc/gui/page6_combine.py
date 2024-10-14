@@ -16,6 +16,7 @@ INPUT_ROOT = f"{COMBINE}_input_root"
 INPUT_ROOT_STATUS = f"{COMBINE}_input_root_status"
 INPUT_OUT = f"{COMBINE}_input_out"
 INPUT_OUT_STATUS = f"{COMBINE}_input_out_status"
+CHECKBOX_ALL = f"{COMBINE}_checkbox_all"
 CHECKBOXES = f"{COMBINE}_checkboxes"
 DISABLED = f"{COMBINE}_disabled"
 RUN = f"{COMBINE}_run"
@@ -69,6 +70,16 @@ def input_out_func():
     update_disabled()
 
 
+def checkbox_all_func():
+    # Updating own input variable
+    st.session_state[CHECKBOX_ALL] = st.session_state[f"{CHECKBOX_ALL}_w"]
+    # Updating all checkboxes
+    for i in st.session_state[CHECKBOXES]:
+        st.session_state[f"{COMBINE}_{i}"] = st.session_state[CHECKBOX_ALL]
+    # Updating session state: DISABLED
+    update_disabled()
+
+
 @page_decorator(check_proj_dir=False)
 def page6_combine():
     # Initialising session state variables
@@ -77,6 +88,7 @@ def page6_combine():
     init_var(INPUT_ROOT_STATUS, ProjDirStatus.NOT_SET)
     init_var(INPUT_OUT, None)
     init_var(INPUT_OUT_STATUS, ProjDirStatus.NOT_SET)
+    init_var(CHECKBOX_ALL, False)
     init_var(CHECKBOXES, {})
     init_var(DISABLED, True)
     init_var(PDIR_INPUT_M, None)  # from page1_init
@@ -122,6 +134,12 @@ def page6_combine():
         st.write("### Select Projects")
         st.write("Only projects with cells_agg and mask df files are shown.")
         st.write("Must select at least one project to run combine pipeline.")
+        st.checkbox(
+            label="Select All",
+            value=st.session_state[CHECKBOX_ALL],
+            on_change=checkbox_all_func,
+            key=f"{CHECKBOX_ALL}_w",
+        )
         with st.container(height=250):
             # Making checkboxes (only including ones with valid project dirs)
             st.session_state[CHECKBOXES] = {}
