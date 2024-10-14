@@ -1,10 +1,11 @@
 import os
+from copy import deepcopy
 from enum import Enum
 
 import dask.array as da
 import streamlit as st
 
-from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
+from microscopy_proc.funcs.viewer_funcs import VIEWER_IMGS, view_arrs_mp
 from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
@@ -42,56 +43,7 @@ def trimmer_func(v):
 @page_decorator()
 def page5_view():
     # Initialising session state variables
-    init_var(
-        IMGS,
-        {
-            "Atlas": {
-                "ref": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GREEN.value},
-                "annot": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.SET1.value},
-            },
-            "Raw": {
-                "raw": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-            },
-            "Registration": {
-                "downsmpl1": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-                "downsmpl2": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-                "trimmed": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-                "regresult": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
-            },
-            "Mask": {
-                "premask_blur": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.RED.value},
-                "mask": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-                "outline": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-                "mask_reg": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-            },
-            "Cell Counting (overlapped)": {
-                "overlap": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-                "bgrm": {VRANGE_D: (0, 2000), CMAP_D: Colormaps.GREEN.value},
-                "dog": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
-                "adaptv": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
-                "threshd": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GRAY.value},
-                "threshd_volumes": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GREEN.value,
-                },
-                "threshd_filt": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-                "maxima": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-                "wshed_volumes": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
-                "wshed_filt": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
-            },
-            "Cell Counting (trimmed)": {
-                "threshd_final": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
-                "maxima_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
-                "wshed_final": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
-            },
-            "Post Processing Checks": {
-                "points_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-                "heatmap_check": {VRANGE_D: (0, 20), CMAP_D: Colormaps.RED.value},
-                "points_trfm_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
-                "heatmap_trfm_check": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
-            },
-        },
-    )
+    init_var(IMGS, deepcopy(VIEWER_IMGS))
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
@@ -190,6 +142,7 @@ def page5_view():
         for group_k, group_v in visualiser_imgs.items():
             for img_k, img_v in group_v.items():
                 if img_v[SEL]:
+                    # Writing description of current image
                     st.write(
                         f"- Showing {group_k} - {img_k}\n"
                         + f"    - intensity range: {img_v[VRANGE][0]} - {img_v[VRANGE][1]}\n"

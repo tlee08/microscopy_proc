@@ -1,6 +1,7 @@
 import functools
 import logging
 import os
+from enum import Enum
 from multiprocessing import Process
 
 import dask.array as da
@@ -12,8 +13,68 @@ from microscopy_proc.utils.dask_utils import cluster_proc_contxt
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
+VIEW = "viewer"
+VRANGE_D = f"{VIEW}_vrange_default"
+CMAP_D = f"{VIEW}_cmap_default"
 
-# @flow
+
+class Colormaps(Enum):
+    GRAY = "gray"
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    YELLOW = "yellow"
+    VIRIDIS = "viridis"
+    MAGMA = "magma"
+    SET1 = "Set1"
+
+
+VIEWER_IMGS = {
+    "Atlas": {
+        "ref": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GREEN.value},
+        "annot": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.SET1.value},
+    },
+    "Raw": {
+        "raw": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+    },
+    "Registration": {
+        "downsmpl1": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+        "downsmpl2": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+        "trimmed": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+        "regresult": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+    },
+    "Mask": {
+        "premask_blur": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.RED.value},
+        "mask": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+        "outline": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+        "mask_reg": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+    },
+    "Cell Counting (overlapped)": {
+        "overlap": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+        "bgrm": {VRANGE_D: (0, 2000), CMAP_D: Colormaps.GREEN.value},
+        "dog": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
+        "adaptv": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
+        "threshd": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GRAY.value},
+        "threshd_volumes": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GREEN.value},
+        "threshd_filt": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+        "maxima": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+        "wshed_volumes": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+        "wshed_filt": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+    },
+    "Cell Counting (trimmed)": {
+        "threshd_final": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+        "maxima_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+        "wshed_final": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+    },
+    "Post Processing Checks": {
+        "points_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+        "heatmap_check": {VRANGE_D: (0, 20), CMAP_D: Colormaps.RED.value},
+        "points_trfm_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+        "heatmap_trfm_check": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
+    },
+}
+
+
 def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
     with cluster_proc_contxt(LocalCluster()):
         # Asserting all kwargs_ls list lengths are equal to fp_ls length
@@ -77,46 +138,66 @@ if __name__ == "__main__":
         # slice(None, None, None),
     )
 
-    imgs_ls = (
-        # # ATLAS
-        # ("ref", (0, 10000)),
-        # ("annot", (0, 10000)),
-        # # RAW
-        # ("raw", (0, 7000)),
-        # # REG
-        # ("downsmpl_1", (0, 10000)),
-        # ("downsmpl_2", (0, 10000)),
-        ("trimmed", (0, 4000)),
-        ("regresult", (0, 500)),
-        # # MASK
-        # ("mask", (0, 5)),
-        # ("outline", (0, 5)),
-        # ("mask_reg", (0, 5)),
-        # # CELLC
-        # ("overlap", (0, 10000)),
-        # ("bgrm", (0, 2000)),
-        # ("dog", (0, 100)),
-        # ("adaptv", (0, 100)),
-        # ("threshd", (0, 5)),
-        # ("threshd_volumes", (0, 10000)),
-        # ("threshd_filt", (0, 5)),
-        ("maxima", (0, 5)),
-        # ("wshed_volumes", (0, 1000)),
-        ("wshed_filt", (0, 1000)),
-        # # CELLC FINAL
-        # ("threshd_final", (0, 5)),
-        # ("maxima_final", (0, 5)),
-        # ("wshed_final", (0, 1000)),
-        # # POST
-        # ("points_check", (0, 5)),
-        # ("heatmap_check", (0, 20)),
-        # ("points_trfm_check", (0, 5)),
-        # ("heatmap_trfm_check", (0, 100)),
-    )
+    imgs_to_run_dict = {
+        "Atlas": [
+            "ref",
+            "annot",
+        ],
+        "Raw": [
+            "raw",
+        ],
+        "Registration": [
+            "downsmpl1",
+            "downsmpl2",
+            "trimmed",
+            "regresult",
+        ],
+        "Mask": [
+            "premask_blur",
+            "mask",
+            "outline",
+            "mask_reg",
+        ],
+        "Cell Counting (overlapped)": [
+            "overlap",
+            "bgrm",
+            "dog",
+            "adaptv",
+            "threshd",
+            "threshd_volumes",
+            "threshd_filt",
+            "maxima",
+            "wshed_volumes",
+            "wshed_filt",
+        ],
+        "Cell Counting (trimmed)": [
+            "threshd_final",
+            "maxima_final",
+            "wshed_final",
+        ],
+        "Post Processing Checks": [
+            "points_check",
+            "heatmap_check",
+            "points_trfm_check",
+            "heatmap_trfm_check",
+        ],
+    }
+
+    fp_ls = []
+    name = []
+    contrast_limits = []
+    colormap = []
+    for group_k, group_v in imgs_to_run_dict.items():
+        for img_i in group_v:
+            fp_ls.append(getattr(pfm, img_i))
+            name.append(img_i)
+            contrast_limits.append(VIEWER_IMGS[group_k][img_i][VRANGE_D])
+            colormap.append(VIEWER_IMGS[group_k][img_i][CMAP_D])
 
     view_arrs(
-        fp_ls=tuple(getattr(pfm, i) for i, j in imgs_ls),
+        fp_ls=fp_ls,
         trimmer=trimmer,
-        name=tuple(i for i, j in imgs_ls),
-        contrast_limits=tuple(j for i, j in imgs_ls),
+        name=name,
+        contrast_limits=contrast_limits,
+        colormap=colormap,
     )
