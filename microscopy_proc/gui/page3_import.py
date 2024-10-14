@@ -25,7 +25,7 @@ def input_src_func():
     # Updating session state: INPUT_SRC_STATUS
     if not st.session_state[INPUT_SRC]:
         st.session_state[INPUT_SRC_STATUS] = ProjDirStatus.NOT_SET
-    elif not os.path.isdir(st.session_state[INPUT_SRC]):
+    elif not os.path.exists(st.session_state[INPUT_SRC]):
         st.session_state[INPUT_SRC_STATUS] = ProjDirStatus.NOT_EXIST
     else:
         st.session_state[INPUT_SRC_STATUS] = ProjDirStatus.VALID
