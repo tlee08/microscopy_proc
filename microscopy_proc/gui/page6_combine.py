@@ -58,6 +58,11 @@ def input_root_func():
         # Checking directory has configs_params, cells_agg, and mask df files
         pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
         pfm_i = get_proj_fp_model(pdir_i)
+        print(pdir_i)
+        print(pfm_i.config_params)
+        print(pfm_i.cells_agg_df)
+        print(pfm_i.mask_df)
+        print()
         if (
             os.path.isfile(pfm_i.config_params)
             and os.path.isfile(pfm_i.cells_agg_df)
