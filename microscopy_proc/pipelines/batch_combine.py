@@ -19,7 +19,6 @@ class CombinedColumns(Enum):
     MEASURE = "measure"
 
 
-# TODO make combine in a function
 def combine_ls_pipeline(
     proj_dir_ls: list,
     out_dir: str,
