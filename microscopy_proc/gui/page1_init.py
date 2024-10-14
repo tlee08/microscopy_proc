@@ -57,6 +57,8 @@ def input_m_func():
 
 
 def select_m_func():
+    # Updating own input variable
+    st.session_state[SELECT_M] = st.session_state[f"{SELECT_M}_w"]
     # Updatating selectbox index
     st.session_state[SELECT_M_INDEX] = st.session_state[SELECT_M_OPTIONS].index(
         st.session_state[SELECT_M]
@@ -175,7 +177,7 @@ def page1_init():
             options=st.session_state[SELECT_M_OPTIONS],
             index=st.session_state[SELECT_M_INDEX],
             on_change=select_m_func,
-            key=SELECT_M,
+            key=f"{SELECT_M}_w",
         )
     # Button: Set project directory
     st.button(
