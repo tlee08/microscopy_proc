@@ -11,7 +11,7 @@ from microscopy_proc.utils.proj_org_utils import (
 if __name__ == "__main__":
     # Filenames
     root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    out_dir = "/"
+    out_dir = "/home/linux1/Desktop/imgs_for_nick"
 
     overwrite = False
 
