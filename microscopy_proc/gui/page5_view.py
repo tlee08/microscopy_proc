@@ -34,6 +34,11 @@ class Colormaps(Enum):
     SET1 = "Set1"
 
 
+def trimmer_func(v):
+    # Updating own input variable
+    st.session_state[f"{TRIMMER}_{v}"] = st.session_state[f"{TRIMMER}_{v}_w"]
+
+
 @page_decorator()
 def page5_view():
     # Initialising session state variables
@@ -87,12 +92,6 @@ def page5_view():
             },
         },
     )
-    # Adding calculated values to IMG dict
-    for group_k, group_v in st.session_state[IMGS].items():
-        for img_k, img_v in group_v.items():
-            img_v[SEL] = img_v.get(SEL, False)
-            img_v[VRANGE] = img_v.get(VRANGE, img_v[VRANGE_D])
-            img_v[CMAP] = img_v.get(CMAP, img_v[CMAP_D])
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
@@ -117,16 +116,18 @@ def page5_view():
     if arr is not None:
         # Making trimmer sliders if array exists
         for i, v in enumerate(L_ZYX):
+            # Initialising trimmer value
+            init_var(f"{TRIMMER}_{v}", (0, arr.shape[i]))
+            # Making slider
             st.slider(
                 label=f"{v} trimmer",
                 min_value=0,
                 max_value=arr.shape[i],
                 step=10,
-                value=(
-                    0,
-                    st.session_state.get(f"{TRIMMER}_{v}", arr.shape[i]),
-                ),
-                key=f"{TRIMMER}_{v}",
+                value=st.session_state[f"{TRIMMER}_{v}"],
+                on_change=trimmer_func,
+                args=(v,),
+                key=f"{TRIMMER}_{v}_w",
             )
         trimmer = tuple(slice(*st.session_state[f"{TRIMMER}_{v}"]) for v in L_ZYX)
     else:
@@ -139,6 +140,10 @@ def page5_view():
     for group_k, group_v in visualiser_imgs.items():
         with st.expander(f"{group_k}"):
             for img_k, img_v in group_v.items():
+                # Initialising IMGS dict values for each image
+                img_v[SEL] = img_v.get(SEL, False)
+                img_v[VRANGE] = img_v.get(VRANGE, img_v[VRANGE_D])
+                img_v[CMAP] = img_v.get(CMAP, img_v[CMAP_D])
                 with st.container(border=True):
                     st.write(img_k)
                     # Checking if image file exists
