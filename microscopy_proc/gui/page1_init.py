@@ -176,15 +176,18 @@ def page1_init():
             on_change=input_m_func,
             key=f"{INPUT_M}_w",
         )
-        # selectbox: folders (i.e. projects) inside root directory
-        st.write("Only folders inside the root directory are shown.")
-        st.selectbox(
-            label="Projects",
-            options=st.session_state[SELECT_M_OPTIONS],
-            index=st.session_state[SELECT_M_INDEX],
-            on_change=select_m_func,
-            key=f"{SELECT_M}_w",
-        )
+        if len(st.session_state[SELECT_M_OPTIONS]) == 0:
+            st.warning("Root directory is either does not exist or has no folders.")
+        else:
+            # selectbox: folders (i.e. projects) inside root directory
+            st.write("Only folders inside the root directory are listed.")
+            st.selectbox(
+                label="Projects",
+                options=st.session_state[SELECT_M_OPTIONS],
+                index=st.session_state[SELECT_M_INDEX],
+                on_change=select_m_func,
+                key=f"{SELECT_M}_w",
+            )
     # Button: Set project directory
     st.button(
         label="Set project directory",
