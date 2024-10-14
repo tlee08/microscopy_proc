@@ -1,5 +1,6 @@
 import functools
 from enum import Enum
+from typing import Any
 
 import streamlit as st
 
@@ -30,7 +31,10 @@ class ProjDirStatus(Enum):
 #####################################################################
 
 
-def init_var(name, default):
+def init_var(name: str, default: Any):
+    """
+    Initialising session state variable with default value if not already set.
+    """
     st.session_state[name] = st.session_state.get(name, default)
 
 

@@ -20,9 +20,9 @@ from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 UPDATE = "update"
-VALUE = "value"
-IS_NONE = "is_none"
-DEFAULT = "default"
+VALUE = f"{UPDATE}_value"
+IS_NONE = f"{UPDATE}_is_none"
+DEFAULT = f"{UPDATE}_default"
 CONFIGS_RESET = f"{UPDATE}_reset"
 CONFIGS_SAVE = f"{UPDATE}_save"
 
@@ -68,21 +68,21 @@ class ConfigsUpdater:
         if default != NO_DEFAULT:
             container.button(
                 label=f"Set as default (`{default}`)",
-                key=f"{UPDATE}_{label}_{DEFAULT}",
+                key=f"{DEFAULT}_{label}",
             )
             # If button clicked, setting curr to default
             # and update widgets accordingly
-            if st.session_state[f"{UPDATE}_{label}_{DEFAULT}"]:
+            if st.session_state[f"{DEFAULT}_{label}"]:
                 curr = default
-                st.session_state[f"{UPDATE}_{label}_{VALUE}"] = curr
-                st.session_state[f"{UPDATE}_{label}_{IS_NONE}"] = curr is None
+                st.session_state[f"{VALUE}_{label}"] = curr
+                st.session_state[f"{IS_NONE}_{label}"] = curr is None
         # If nullable, making nullable checkbox
         is_none = False
         if nullable:
             is_none = container.toggle(
                 label="Set to None",
                 value=curr is None,
-                key=f"{UPDATE}_{label}_{IS_NONE}",
+                key=f"{IS_NONE}_{label}",
             )
         # Returning container, current value, and whether that value is None
         return container, curr, is_none
@@ -108,7 +108,7 @@ class ConfigsUpdater:
             options=enum2list(my_enum),
             index=enum2list(my_enum).index(curr) if curr else None,
             disabled=is_none,
-            key=f"{UPDATE}_{label}_{VALUE}",
+            key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -133,7 +133,7 @@ class ConfigsUpdater:
             value=curr,
             step=1,
             disabled=is_none,
-            key=f"{UPDATE}_{label}_{VALUE}",
+            key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -158,7 +158,7 @@ class ConfigsUpdater:
             value=curr,
             step=0.05,
             disabled=is_none,
-            key=f"{UPDATE}_{label}_{VALUE}",
+            key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )  # type: ignore
         # Returning input
@@ -182,7 +182,7 @@ class ConfigsUpdater:
             label=label,
             value=curr,
             disabled=is_none,
-            key=f"{UPDATE}_{label}_{VALUE}",
+            key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )
         return None if is_none else output
@@ -196,7 +196,7 @@ class ConfigsUpdater:
         nullable: bool | tuple[bool, ...] = False,
         default: Any | tuple[Any, ...] = NO_DEFAULT,
         container=None,
-        n_labels: Optional[tuple[str, ...]] = None,
+        sublabels: Optional[tuple[str, ...]] = None,
         **kwargs,
     ) -> tuple[Any, ...]:
         # Making container
@@ -210,8 +210,8 @@ class ConfigsUpdater:
         func_ls = func if isinstance(func, tuple) else const2ls(func, n)
         nullable_ls = nullable if isinstance(nullable, tuple) else const2ls(nullable, n)
         default_ls = default if isinstance(default, tuple) else const2ls(default, n)
-        n_labels_ls = n_labels if isinstance(n_labels, tuple) else range(n)
-        n_labels_ls = [f"{label}_{n_label}" for n_label in n_labels_ls]
+        sublabels_ls = sublabels if isinstance(sublabels, tuple) else range(n)
+        sublabels_ls = [f"{label}_{sublabel}" for sublabel in sublabels_ls]
         # Making kwargs into kwargs_ls dict of lists
         kwargs_ls = {
             k: v if isinstance(v, tuple) else const2ls(v, n) for k, v in kwargs.items()
@@ -220,7 +220,7 @@ class ConfigsUpdater:
         assert len(func_ls) == n
         assert len(nullable_ls) == n
         assert len(default_ls) == n
-        assert len(n_labels_ls) == n
+        assert len(sublabels_ls) == n
         # Asserting all kwargs_ls list lengths are equal to n
         for k, v in kwargs_ls.items():
             assert len(v) == n
@@ -229,7 +229,7 @@ class ConfigsUpdater:
         # Making inputs
         output_ls = tuple(
             func_ls[i](
-                label=n_labels_ls[i],
+                label=sublabels_ls[i],
                 nullable=nullable_ls[i],
                 default=default_ls[i],
                 container=columns_ls[i],
@@ -254,7 +254,7 @@ class ConfigsUpdater:
             raise NotImplementedError(f"Type {my_type} not implemented")
 
     @staticmethod
-    def check_type_n_nullable(my_type):
+    def get_type_and_nullable(my_type):
         """
         Returns tuple of:
         - The non-nullable type
@@ -289,7 +289,7 @@ class ConfigsUpdater:
         field_info = pydantic_instance.model_fields[field_name]
         default = field_info.default
         # Getting type and nullable
-        nullable, my_type = cls.check_type_n_nullable(field_info.annotation)
+        nullable, my_type = cls.get_type_and_nullable(field_info.annotation)
         args = get_args(field_info.annotation)
 
         # If a tuple, then building tuple inputs
@@ -299,7 +299,7 @@ class ConfigsUpdater:
             funcs_ls = []
             nullable_ls = []
             for i, arg in enumerate(args):
-                nullable, my_type = cls.check_type_n_nullable(arg)
+                nullable, my_type = cls.get_type_and_nullable(arg)
                 funcs_ls.append(cls.type2updater(my_type))
                 nullable_ls.append(nullable)
             output = cls.tuple_inputs(
@@ -324,17 +324,17 @@ class ConfigsUpdater:
         setattr(pydantic_instance, field_name, output)
 
     @classmethod
-    def field2updater_nice(
+    def field2updater_mapped(
         cls,
         pydantic_instance: BaseModel,
         field_name: str,
         **kwargs,
     ):
-        n_labels = SUBLABEL_MAP.get(field_name, None)
+        sublabels = SUBLABEL_MAP.get(field_name, None)
         cls.field2updater(
             pydantic_instance=pydantic_instance,
             field_name=field_name,
-            n_labels=n_labels,
+            sublabels=sublabels,
             **kwargs,
         )
 
@@ -357,16 +357,12 @@ def configs_reset_func():
             # If field is a tuple, then setting each value in tuple separately
             # Expects an entry in SUBLABEL_MAP
             for i, sublabel in enumerate(SUBLABEL_MAP[label]):
-                label_value = f"{UPDATE}_{label}_{sublabel}_{VALUE}"
-                label_is_none = f"{UPDATE}_{label}_{sublabel}_is_none"
-                st.session_state[label_value] = value[i]
-                st.session_state[label_is_none] = value[i] is None
+                st.session_state[f"{VALUE}_{label}_{sublabel}"] = value[i]
+                st.session_state[f"{IS_NONE}_{label}_{sublabel}"] = value[i] is None
         else:
             # Otherwise, setting the value directly
-            label_value = f"{UPDATE}_{label}_{VALUE}"
-            label_is_none = f"{UPDATE}_{label}_is_none"
-            st.session_state[label_value] = value
-            st.session_state[label_is_none] = value is None
+            st.session_state[f"{VALUE}_{label}"] = value
+            st.session_state[f"{IS_NONE}_{label}"] = value is None
 
 
 def configs_save_func():
@@ -415,43 +411,43 @@ def page2_configs():
 
     st.write("# Edit Configs")
     with st.expander("Reference"):
-        ConfigsUpdater.field2updater_nice(configs, "atlas_dir")
-        ConfigsUpdater.field2updater_nice(configs, "ref_v")
-        ConfigsUpdater.field2updater_nice(configs, "annot_v")
-        ConfigsUpdater.field2updater_nice(configs, "map_v")
+        ConfigsUpdater.field2updater_mapped(configs, "atlas_dir")
+        ConfigsUpdater.field2updater_mapped(configs, "ref_v")
+        ConfigsUpdater.field2updater_mapped(configs, "annot_v")
+        ConfigsUpdater.field2updater_mapped(configs, "map_v")
     with st.expander("Raw"):
-        ConfigsUpdater.field2updater_nice(configs, "chunksize")
+        ConfigsUpdater.field2updater_mapped(configs, "chunksize")
     with st.expander("Registration"):
         # TODO: numerical is unintuitive for selecting axes in ref_orienf_ls
-        ConfigsUpdater.field2updater_nice(configs, "ref_orient_ls")
-        ConfigsUpdater.field2updater_nice(configs, "ref_z_trim")
-        ConfigsUpdater.field2updater_nice(configs, "ref_y_trim")
-        ConfigsUpdater.field2updater_nice(configs, "ref_x_trim")
-        ConfigsUpdater.field2updater_nice(configs, "z_rough")
-        ConfigsUpdater.field2updater_nice(configs, "y_rough")
-        ConfigsUpdater.field2updater_nice(configs, "x_rough")
-        ConfigsUpdater.field2updater_nice(configs, "z_fine")
-        ConfigsUpdater.field2updater_nice(configs, "y_fine")
-        ConfigsUpdater.field2updater_nice(configs, "x_fine")
-        ConfigsUpdater.field2updater_nice(configs, "z_trim")
-        ConfigsUpdater.field2updater_nice(configs, "y_trim")
-        ConfigsUpdater.field2updater_nice(configs, "x_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "ref_orient_ls")
+        ConfigsUpdater.field2updater_mapped(configs, "ref_z_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "ref_y_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "ref_x_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "z_rough")
+        ConfigsUpdater.field2updater_mapped(configs, "y_rough")
+        ConfigsUpdater.field2updater_mapped(configs, "x_rough")
+        ConfigsUpdater.field2updater_mapped(configs, "z_fine")
+        ConfigsUpdater.field2updater_mapped(configs, "y_fine")
+        ConfigsUpdater.field2updater_mapped(configs, "x_fine")
+        ConfigsUpdater.field2updater_mapped(configs, "z_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "y_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "x_trim")
     with st.expander("Mask"):
-        ConfigsUpdater.field2updater_nice(configs, "mask_gaus_blur")
-        ConfigsUpdater.field2updater_nice(configs, "mask_thresh")
+        ConfigsUpdater.field2updater_mapped(configs, "mask_gaus_blur")
+        ConfigsUpdater.field2updater_mapped(configs, "mask_thresh")
     with st.expander("Overlap"):
-        ConfigsUpdater.field2updater_nice(configs, "depth")
+        ConfigsUpdater.field2updater_mapped(configs, "depth")
     with st.expander("Cell Counting"):
-        ConfigsUpdater.field2updater_nice(configs, "tophat_sigma")
-        ConfigsUpdater.field2updater_nice(configs, "dog_sigma1")
-        ConfigsUpdater.field2updater_nice(configs, "dog_sigma2")
-        ConfigsUpdater.field2updater_nice(configs, "gauss_sigma")
-        ConfigsUpdater.field2updater_nice(configs, "thresh_p")
-        ConfigsUpdater.field2updater_nice(configs, "min_threshd")
-        ConfigsUpdater.field2updater_nice(configs, "max_threshd")
-        ConfigsUpdater.field2updater_nice(configs, "maxima_sigma")
-        ConfigsUpdater.field2updater_nice(configs, "min_wshed")
-        ConfigsUpdater.field2updater_nice(configs, "max_wshed")
+        ConfigsUpdater.field2updater_mapped(configs, "tophat_sigma")
+        ConfigsUpdater.field2updater_mapped(configs, "dog_sigma1")
+        ConfigsUpdater.field2updater_mapped(configs, "dog_sigma2")
+        ConfigsUpdater.field2updater_mapped(configs, "gauss_sigma")
+        ConfigsUpdater.field2updater_mapped(configs, "thresh_p")
+        ConfigsUpdater.field2updater_mapped(configs, "min_threshd")
+        ConfigsUpdater.field2updater_mapped(configs, "max_threshd")
+        ConfigsUpdater.field2updater_mapped(configs, "maxima_sigma")
+        ConfigsUpdater.field2updater_mapped(configs, "min_wshed")
+        ConfigsUpdater.field2updater_mapped(configs, "max_wshed")
 
     # Checking configs and updating in session_state
     # NOTE: an error can occur with the validation here

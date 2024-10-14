@@ -5,6 +5,7 @@ import dask.array as da
 import streamlit as st
 
 from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
+from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import L_SLC, L_ZYX, PROJ_DIR, init_var, page_decorator
@@ -40,161 +41,58 @@ def page5_view():
         IMGS,
         {
             "Atlas": {
-                "ref": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "annot": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.SET1.value,
-                    SEL: False,
-                },
+                "ref": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GREEN.value},
+                "annot": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.SET1.value},
             },
             "Raw": {
-                "raw": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
+                "raw": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
             },
             "Registration": {
-                "downsmpl1": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
-                "downsmpl2": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
-                "trimmed": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
-                "regresult": {
-                    VRANGE_D: (0, 1000),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
+                "downsmpl1": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+                "downsmpl2": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+                "trimmed": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+                "regresult": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
             },
             "Mask": {
-                "premask_blur": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "mask": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "outline": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "mask_reg": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
+                "premask_blur": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.RED.value},
+                "mask": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+                "outline": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+                "mask_reg": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
             },
             "Cell Counting (overlapped)": {
-                "overlap": {
-                    VRANGE_D: (0, 10000),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
-                "bgrm": {
-                    VRANGE_D: (0, 2000),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "dog": {
-                    VRANGE_D: (0, 100),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "adaptv": {
-                    VRANGE_D: (0, 100),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "threshd": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
+                "overlap": {VRANGE_D: (0, 10000), CMAP_D: Colormaps.GRAY.value},
+                "bgrm": {VRANGE_D: (0, 2000), CMAP_D: Colormaps.GREEN.value},
+                "dog": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
+                "adaptv": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
+                "threshd": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GRAY.value},
                 "threshd_volumes": {
                     VRANGE_D: (0, 10000),
                     CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
                 },
-                "threshd_filt": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "maxima": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "wshed_volumes": {
-                    VRANGE_D: (0, 1000),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "wshed_filt": {
-                    VRANGE_D: (0, 1000),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
+                "threshd_filt": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+                "maxima": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+                "wshed_volumes": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
+                "wshed_filt": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
             },
             "Cell Counting (trimmed)": {
-                "threshd_final": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.GRAY.value,
-                    SEL: False,
-                },
-                "maxima_final": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "wshed_final": {
-                    VRANGE_D: (0, 1000),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
+                "threshd_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GRAY.value},
+                "maxima_final": {VRANGE_D: (0, 5), CMAP_D: Colormaps.RED.value},
+                "wshed_final": {VRANGE_D: (0, 1000), CMAP_D: Colormaps.GREEN.value},
             },
             "Post Processing Checks": {
-                "points_check": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "heatmap_check": {
-                    VRANGE_D: (0, 20),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
-                "points_trfm_check": {
-                    VRANGE_D: (0, 5),
-                    CMAP_D: Colormaps.GREEN.value,
-                    SEL: False,
-                },
-                "heatmap_trfm_check": {
-                    VRANGE_D: (0, 100),
-                    CMAP_D: Colormaps.RED.value,
-                    SEL: False,
-                },
+                "points_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+                "heatmap_check": {VRANGE_D: (0, 20), CMAP_D: Colormaps.RED.value},
+                "points_trfm_check": {VRANGE_D: (0, 5), CMAP_D: Colormaps.GREEN.value},
+                "heatmap_trfm_check": {VRANGE_D: (0, 100), CMAP_D: Colormaps.RED.value},
             },
         },
     )
+    # Adding calculated values to IMG dict
+    for group_k, group_v in st.session_state[IMGS].items():
+        for img_k, img_v in group_v.items():
+            img_v[SEL] = img_v.get(SEL, False)
+            img_v[VRANGE] = img_v.get(VRANGE, img_v[VRANGE_D])
+            img_v[CMAP] = img_v.get(CMAP, img_v[CMAP_D])
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
@@ -215,10 +113,10 @@ def page5_view():
                 + "No trimming is available (if image too big this may crash application)."
             )
     # Making slicer/trimmer sliders
-    trimmer = tuple(slice(None) for _ in "ZYX")
+    trimmer = tuple(slice(None) for _ in L_ZYX)
     if arr is not None:
         # Making slicer sliders if array exists
-        for i, v in enumerate("ZYX"):
+        for i, v in enumerate(L_ZYX):
             st.slider(
                 label=f"{v} trimmer",
                 min_value=0,
@@ -226,11 +124,11 @@ def page5_view():
                 step=10,
                 value=(
                     0,
-                    st.session_state.get(f"{VIEW}_{v}_{TRIMMER}", arr.shape[i]),
+                    st.session_state.get(f"{TRIMMER}_{v}", arr.shape[i]),
                 ),
-                key=f"{VIEW}_{v}_{TRIMMER}",
+                key=f"{TRIMMER}_{v}",
             )
-        sliders = [st.session_state[f"{VIEW}_{v}_{TRIMMER}"] for v in L_ZYX]
+        sliders = [st.session_state[f"{TRIMMER}_{v}"] for v in L_ZYX]
         trimmer = tuple(slice(*i) for i in sliders)
     else:
         # Otherwise slicers are set to None
@@ -250,22 +148,22 @@ def page5_view():
                         img_v[SEL] = columns[0].checkbox(
                             label="view image",
                             value=img_v[SEL],
-                            key=f"{VIEW}_{img_k}_{SEL}",
+                            key=f"{SEL}_{img_k}",
                         )
                         img_v[VRANGE] = columns[1].slider(
                             label="intensity range",
                             min_value=img_v[VRANGE_D][0],
                             max_value=img_v[VRANGE_D][1],
-                            value=img_v.get(VRANGE, img_v[VRANGE_D]),
+                            value=img_v[VRANGE],
                             disabled=not img_v[SEL],
-                            key=f"{VIEW}_{img_k}_{VRANGE}",
+                            key=f"{VRANGE}_{img_k}",
                         )
                         img_v[CMAP] = columns[2].selectbox(
                             label="colourmap",
-                            options=CMAP,
-                            index=CMAP.index(img_v.get(CMAP, img_v[CMAP_D])),
+                            options=enum2list(Colormaps),
+                            index=enum2list(Colormaps).index(img_v[CMAP]),
                             disabled=not img_v[SEL],
-                            key=f"{VIEW}{img_k}_{CMAP}",
+                            key=f"{CMAP}_{img_k}",
                         )
                     else:
                         # If image file does not exist, then display warning
