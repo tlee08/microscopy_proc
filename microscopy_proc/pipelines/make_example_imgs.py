@@ -1,6 +1,6 @@
 import os
 
-import dask.array as da
+import numpy as np
 import tifffile
 from natsort import natsorted
 
@@ -23,7 +23,8 @@ if __name__ == "__main__":
         # Only given files
         if i not in [
             "B3_2.5x_1x_zoom_08082024",
-            "G1_reimage_agg_2.5x_1xzoom_05072024" "G17_2.5x_1x_zoom_07082024",
+            "G1_reimage_agg_2.5x_1xzoom_05072024",
+            "G17_2.5x_1x_zoom_07082024",
             "P8_2.5x_1x_zoom_07082024",
             "R14_agg_2.5x_1xzoom_02072024",
         ]:
@@ -40,20 +41,33 @@ if __name__ == "__main__":
             # slice(None, None, None),
         )
 
-        # Exporting
-        os.makedirs(os.path.join(out_dir, i), exist_ok=True)
-        # trimmed
-        arr = tifffile.imread(pfm.trimmed)
-        tifffile.imwrite(os.path.join(out_dir, i, "trimmed"), arr)
-        # regresult
-        arr = tifffile.imread(pfm.regresult)
-        tifffile.imwrite(os.path.join(out_dir, i, "regresult"), arr)
-        # raw
-        arr = da.from_zarr(pfm.raw)[*trimmer].compute()
-        tifffile.imwrite(os.path.join(out_dir, i, "raw"), arr)
-        # maxima_final
-        arr = da.from_zarr(pfm.maxima_final)[*trimmer].compute()
-        tifffile.imwrite(os.path.join(out_dir, i, "maxima_final"), arr)
-        # wshed_final
-        arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
-        tifffile.imwrite(os.path.join(out_dir, i, "wshed_final"), arr)
+        # # Exporting
+        # os.makedirs(os.path.join(out_dir, i), exist_ok=True)
+        # # trimmed
+        # arr = tifffile.imread(pfm.trimmed)
+        # tifffile.imwrite(os.path.join(out_dir, i, "trimmed"), arr)
+        # # regresult
+        # arr = tifffile.imread(pfm.regresult)
+        # tifffile.imwrite(os.path.join(out_dir, i, "regresult"), arr)
+        # # raw
+        # arr = da.from_zarr(pfm.raw)[*trimmer].compute()
+        # tifffile.imwrite(os.path.join(out_dir, i, "raw"), arr)
+        # # maxima_final
+        # arr = da.from_zarr(pfm.maxima_final)[*trimmer].compute()
+        # tifffile.imwrite(os.path.join(out_dir, i, "maxima_final"), arr)
+        # # wshed_final
+        # arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
+        # tifffile.imwrite(os.path.join(out_dir, i, "wshed_final"), arr)
+
+        # COMBINING ARRAYS (ZYXC)
+        # Combining reg
+        arr1 = tifffile.imread(pfm.trimmed)
+        arr2 = tifffile.imread(pfm.regresult)
+        arr = np.stack([arr1, arr2], axis=-1, dtype=np.uint16)
+        tifffile.imwrite(os.path.join(out_dir, i, "combined_reg.tif"), arr)
+        # Combining cellc
+        arr1 = tifffile.imread(pfm.raw)
+        arr2 = tifffile.imread(pfm.maxima_final)
+        arr3 = tifffile.imread(pfm.wshed_final)
+        arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
+        tifffile.imwrite(os.path.join(out_dir, i, "combined_cellc.tif"), arr)
