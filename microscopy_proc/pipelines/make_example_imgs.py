@@ -4,6 +4,7 @@ import numpy as np
 import tifffile
 from natsort import natsorted
 
+from microscopy_proc.constants import ProjSubdirs
 from microscopy_proc.pipelines.pipeline_funcs import (
     coords2heatmap_trfm_pipeline,
     coords2points_trfm_pipeline,
