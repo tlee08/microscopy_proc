@@ -4,7 +4,6 @@ import numpy as np
 import tifffile
 from natsort import natsorted
 
-from microscopy_proc.constants import ProjSubdirs
 from microscopy_proc.pipelines.pipeline_funcs import (
     coords2heatmap_trfm_pipeline,
     coords2points_trfm_pipeline,
@@ -27,6 +26,14 @@ if __name__ == "__main__":
     exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(root_dir, i))]
 
     for i in exp_ls:
+        try:
+            os.rename(
+                os.path.join(pfm.root_dir, "visual_check"),
+                os.path.join(pfm.root_dir, ProjSubdirs.VISUALISATION.value),
+            )
+        except:
+            pass
+
         # Only given files
         if i not in [
             "B3_2.5x_1x_zoom_08082024",
@@ -47,14 +54,6 @@ if __name__ == "__main__":
             # slice(None, None, None),
             # slice(None, None, None),
         )
-
-        try:
-            os.rename(
-                os.path.join(pfm.root_dir, "visual_check"),
-                os.path.join(pfm.root_dir, ProjSubdirs.VISUALISATION.value),
-            )
-        except:
-            pass
 
         coords2points_trfm_pipeline(pfm)
         coords2heatmap_trfm_pipeline(pfm)
