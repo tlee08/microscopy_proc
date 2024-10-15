@@ -64,13 +64,15 @@ if __name__ == "__main__":
 
         # # COMBINING ARRAYS (ZYXC)
         # Combining reg
-        # combine_arrs(
-        #     (
-        #         os.path.join(out_dir, i, "trimmed.tif"),
-        #         os.path.join(out_dir, i, "regresult.tif"),
-        #     ),
-        #     os.path.join(out_dir, i, "combined_reg.tif"),
-        # )
+        combine_arrs(
+            (
+                os.path.join(out_dir, i, "trimmed.tif"),
+                # 2nd means the combining works in ImageJ
+                os.path.join(out_dir, i, "trimmed.tif"),
+                os.path.join(out_dir, i, "regresult.tif"),
+            ),
+            os.path.join(out_dir, i, "combined_reg.tif"),
+        )
         # # Combining cellc
         # combine_arrs(
         #     (
@@ -81,11 +83,11 @@ if __name__ == "__main__":
         #     os.path.join(out_dir, i, "combined_cellc.tif"),
         # )
         # Combining transformed points
-        combine_arrs(
-            (
-                os.path.join(out_dir, i, "ref.tif"),
-                os.path.join(out_dir, i, "annot.tif"),
-                os.path.join(out_dir, i, "heatmap_trfm.tif"),
-            ),
-            os.path.join(out_dir, i, "combined_points.tif"),
-        )
+        # combine_arrs(
+        #     (
+        #         os.path.join(out_dir, i, "ref.tif"),
+        #         os.path.join(out_dir, i, "annot.tif"),
+        #         os.path.join(out_dir, i, "heatmap_trfm.tif"),
+        #     ),
+        #     os.path.join(out_dir, i, "combined_points.tif"),
+        # )
