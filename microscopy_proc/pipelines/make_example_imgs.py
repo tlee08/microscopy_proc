@@ -4,6 +4,7 @@ import numpy as np
 import tifffile
 from natsort import natsorted
 
+from microscopy_proc.constants import ProjSubdirs
 from microscopy_proc.pipelines.pipeline_funcs import (
     coords2heatmap_trfm_pipeline,
     coords2points_trfm_pipeline,
@@ -46,6 +47,14 @@ if __name__ == "__main__":
             # slice(None, None, None),
             # slice(None, None, None),
         )
+
+        try:
+            os.rename(
+                os.path.join(pfm.root_dir, "visual_check"),
+                os.path.join(pfm.root_dir, ProjSubdirs.VISUALISATION.value),
+            )
+        except:
+            pass
 
         coords2points_trfm_pipeline(pfm)
         coords2heatmap_trfm_pipeline(pfm)

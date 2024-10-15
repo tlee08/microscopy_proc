@@ -3,7 +3,7 @@ import os
 
 from pydantic import BaseModel, ConfigDict
 
-from microscopy_proc.constants import ProjFolders, RefFolders
+from microscopy_proc.constants import ProjSubdirs, RefFolders
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 
@@ -109,59 +109,63 @@ class ProjFpModel(BaseModel):
 
     @classmethod
     def get_proj_fp_model(cls, proj_dir):
+        reg_dir = ProjSubdirs.REGISTRATION.value
+        mask_dir = ProjSubdirs.MASK.value
+        cellc_dir = ProjSubdirs.CELLCOUNT.value
+        analysis_dir = ProjSubdirs.ANALYSIS.value
+        visual_dir = ProjSubdirs.VISUALISATION.value
+
         return cls(
             # ROOT DIR
             root_dir=proj_dir,
             # CONFIGS
             config_params=os.path.join(proj_dir, "config_params.json"),
             # MY ATLAS AND ELASTIX PARAMS FILES
-            ref=os.path.join(proj_dir, "registration", "0a_reference.tif"),
-            annot=os.path.join(proj_dir, "registration", "0b_annotation.tif"),
-            map=os.path.join(proj_dir, "registration", "0c_mapping.json"),
-            affine=os.path.join(proj_dir, "registration", "0d_align_affine.txt"),
-            bspline=os.path.join(proj_dir, "registration", "0e_align_bspline.txt"),
+            ref=os.path.join(proj_dir, reg_dir, "0a_reference.tif"),
+            annot=os.path.join(proj_dir, reg_dir, "0b_annotation.tif"),
+            map=os.path.join(proj_dir, reg_dir, "0c_mapping.json"),
+            affine=os.path.join(proj_dir, reg_dir, "0d_align_affine.txt"),
+            bspline=os.path.join(proj_dir, reg_dir, "0e_align_bspline.txt"),
             # RAW IMG FILE
             raw=os.path.join(proj_dir, "raw.zarr"),
             # REGISTRATION PROCESSING FILES
-            downsmpl1=os.path.join(proj_dir, "registration", "1_downsmpl1.tif"),
-            downsmpl2=os.path.join(proj_dir, "registration", "2_downsmpl2.tif"),
-            trimmed=os.path.join(proj_dir, "registration", "3_trimmed.tif"),
-            regresult=os.path.join(proj_dir, "registration", "4_regresult.tif"),
+            downsmpl1=os.path.join(proj_dir, reg_dir, "1_downsmpl1.tif"),
+            downsmpl2=os.path.join(proj_dir, reg_dir, "2_downsmpl2.tif"),
+            trimmed=os.path.join(proj_dir, reg_dir, "3_trimmed.tif"),
+            regresult=os.path.join(proj_dir, reg_dir, "4_regresult.tif"),
             # WHOLE MASK
-            premask_blur=os.path.join(proj_dir, "mask", "1_premask_blur.tif"),
-            mask=os.path.join(proj_dir, "mask", "2_mask_trimmed.tif"),
-            outline=os.path.join(proj_dir, "mask", "3_outline_reg.tif"),
-            mask_reg=os.path.join(proj_dir, "mask", "4_mask_reg.tif"),
-            mask_df=os.path.join(proj_dir, "mask", "5_mask.parquet"),
+            premask_blur=os.path.join(proj_dir, mask_dir, "1_premask_blur.tif"),
+            mask=os.path.join(proj_dir, mask_dir, "2_mask_trimmed.tif"),
+            outline=os.path.join(proj_dir, mask_dir, "3_outline_reg.tif"),
+            mask_reg=os.path.join(proj_dir, mask_dir, "4_mask_reg.tif"),
+            mask_df=os.path.join(proj_dir, mask_dir, "5_mask.parquet"),
             # CELL COUNTING ARRAY FILES
-            overlap=os.path.join(proj_dir, "cellcount", "0_overlap.zarr"),
-            bgrm=os.path.join(proj_dir, "cellcount", "1_bgrm.zarr"),
-            dog=os.path.join(proj_dir, "cellcount", "2_dog.zarr"),
-            adaptv=os.path.join(proj_dir, "cellcount", "3_adaptv.zarr"),
-            threshd=os.path.join(proj_dir, "cellcount", "4_threshd.zarr"),
-            threshd_volumes=os.path.join(
-                proj_dir, "cellcount", "5_threshd_volumes.zarr"
-            ),
-            threshd_filt=os.path.join(proj_dir, "cellcount", "6_threshd_filt.zarr"),
-            maxima=os.path.join(proj_dir, "cellcount", "7_maxima.zarr"),
-            wshed_volumes=os.path.join(proj_dir, "cellcount", "8_wshed_volumes.zarr"),
-            wshed_filt=os.path.join(proj_dir, "cellcount", "9_wshed_filt.zarr"),
+            overlap=os.path.join(proj_dir, cellc_dir, "0_overlap.zarr"),
+            bgrm=os.path.join(proj_dir, cellc_dir, "1_bgrm.zarr"),
+            dog=os.path.join(proj_dir, cellc_dir, "2_dog.zarr"),
+            adaptv=os.path.join(proj_dir, cellc_dir, "3_adaptv.zarr"),
+            threshd=os.path.join(proj_dir, cellc_dir, "4_threshd.zarr"),
+            threshd_volumes=os.path.join(proj_dir, cellc_dir, "5_threshd_volumes.zarr"),
+            threshd_filt=os.path.join(proj_dir, cellc_dir, "6_threshd_filt.zarr"),
+            maxima=os.path.join(proj_dir, cellc_dir, "7_maxima.zarr"),
+            wshed_volumes=os.path.join(proj_dir, cellc_dir, "8_wshed_volumes.zarr"),
+            wshed_filt=os.path.join(proj_dir, cellc_dir, "9_wshed_filt.zarr"),
             # CELL COUNTING TRIMMED ARRAY FILES
-            threshd_final=os.path.join(proj_dir, "cellcount", "10_threshd_f.zarr"),
-            maxima_final=os.path.join(proj_dir, "cellcount", "10_maxima_f.zarr"),
-            wshed_final=os.path.join(proj_dir, "cellcount", "10_wshed_f.zarr"),
+            threshd_final=os.path.join(proj_dir, cellc_dir, "10_threshd_f.zarr"),
+            maxima_final=os.path.join(proj_dir, cellc_dir, "10_maxima_f.zarr"),
+            wshed_final=os.path.join(proj_dir, cellc_dir, "10_wshed_f.zarr"),
             # CELL COUNTING DF FILES
-            maxima_df=os.path.join(proj_dir, "analysis", "11_maxima.parquet"),
-            cells_raw_df=os.path.join(proj_dir, "analysis", "11_cells_raw.parquet"),
-            cells_trfm_df=os.path.join(proj_dir, "analysis", "12_cells_trfm.parquet"),
-            cells_df=os.path.join(proj_dir, "analysis", "13_cells.parquet"),
-            cells_agg_df=os.path.join(proj_dir, "analysis", "14_cells_agg.parquet"),
-            cells_agg_csv=os.path.join(proj_dir, "analysis", "15_cells_agg.csv"),
+            maxima_df=os.path.join(proj_dir, analysis_dir, "11_maxima.parquet"),
+            cells_raw_df=os.path.join(proj_dir, analysis_dir, "11_cells_raw.parquet"),
+            cells_trfm_df=os.path.join(proj_dir, analysis_dir, "12_cells_trfm.parquet"),
+            cells_df=os.path.join(proj_dir, analysis_dir, "13_cells.parquet"),
+            cells_agg_df=os.path.join(proj_dir, analysis_dir, "14_cells_agg.parquet"),
+            cells_agg_csv=os.path.join(proj_dir, analysis_dir, "15_cells_agg.csv"),
             # VISUAL CHECK FROM CELL DF FILES
-            points_raw=os.path.join(proj_dir, "visual_check", "points_raw.zarr"),
-            heatmap_raw=os.path.join(proj_dir, "visual_check", "heatmap_raw.zarr"),
-            points_trfm=os.path.join(proj_dir, "visual_check", "points_trfm.tif"),
-            heatmap_trfm=os.path.join(proj_dir, "visual_check", "heatmap_trfm.tif"),
+            points_raw=os.path.join(proj_dir, visual_dir, "points_raw.zarr"),
+            heatmap_raw=os.path.join(proj_dir, visual_dir, "heatmap_raw.zarr"),
+            points_trfm=os.path.join(proj_dir, visual_dir, "points_trfm.tif"),
+            heatmap_trfm=os.path.join(proj_dir, visual_dir, "heatmap_trfm.tif"),
         )
 
 
@@ -170,7 +174,7 @@ def get_proj_fp_model(proj_dir: str):
 
 
 def make_proj_dirs(pfm: ProjFpModel):
-    for folder in ProjFolders:
+    for folder in ProjSubdirs:
         os.makedirs(os.path.join(pfm.root_dir, folder.value), exist_ok=True)
 
 

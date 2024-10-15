@@ -112,7 +112,7 @@ class MaskColumns(Enum):
     VOLUME_PROP = f"{MASK_VOLUME}_prop"
 
 
-class ProjFolders(Enum):
+class ProjSubdirs(Enum):
     REGISTRATION = "registration"
     MASK = "mask"
     CELLCOUNT = "cellcount"
