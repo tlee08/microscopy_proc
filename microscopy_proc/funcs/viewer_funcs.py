@@ -114,6 +114,35 @@ def view_arrs_mp(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
     # napari_proc.join()
 
 
+# TODO: implement elsewhere for examples
+def save_arr(fp_in: str, trimmer: tuple[slice, ...], fp_out: str, **kwargs):
+    """
+    NOTE: exports as tiff only.
+    """
+    with cluster_proc_contxt(LocalCluster()):
+        # Exporting arrays
+        if ".zarr" in fp_in:
+            arr = da.from_zarr(fp_in)[*trimmer].compute()
+        elif ".tif" in fp_in:
+            arr = tifffile.imread(fp_in)[*trimmer]
+        tifffile.imwrite(fp_out, arr)
+
+
+def save_arrs(
+    fp_in_ls: tuple[str, ...], trimmer: tuple[slice, ...], fp_out_ls: str, **kwargs
+):
+    """
+    NOTE: exports as tiff only.
+    """
+    with cluster_proc_contxt(LocalCluster()):
+        # Asserting fp_in_ls and fp_out_ls lengths are equal
+        assert len(fp_in_ls) == len(fp_out_ls)
+        # Exporting arrays
+        for i, _ in enumerate(fp_in_ls):
+            logging.info(f"Exporting image # {i} / {len(fp_in_ls)}")
+            save_arr(fp_in_ls[i], trimmer, fp_out_ls[i], **kwargs)
+
+
 if __name__ == "__main__":
     # Filenames
     # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"

@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+import tifffile
 from natsort import natsorted
 
 from microscopy_proc.pipelines.pipeline_funcs import (
@@ -45,6 +47,9 @@ if __name__ == "__main__":
             # slice(None, None, None),
         )
 
+        coords2points_trfm_pipeline(pfm)
+        coords2heatmap_trfm_pipeline(pfm)
+
         # # Exporting
         # os.makedirs(os.path.join(out_dir, i), exist_ok=True)
         # # trimmed
@@ -62,18 +67,15 @@ if __name__ == "__main__":
         # # wshed_final
         # arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
         # tifffile.imwrite(os.path.join(out_dir, i, "wshed_final.tif"), arr)
-        # # ref
-        # arr = tifffile.imread(pfm.ref)
-        # tifffile.imwrite(os.path.join(out_dir, i, "ref.tif"), arr)
-        # # annot
-        # arr = tifffile.imread(pfm.annot)
-        # tifffile.imwrite(os.path.join(out_dir, i, "annot.tif"), arr)
-        # # coords_trfm
-        # arr = tifffile.imread(pfm.points_trfm_check)
-        # tifffile.imwrite(os.path.join(out_dir, i, "points_trfm.tif"), arr)
-
-        coords2points_trfm_pipeline(pfm)
-        coords2heatmap_trfm_pipeline(pfm)
+        # ref
+        arr = tifffile.imread(pfm.ref)
+        tifffile.imwrite(os.path.join(out_dir, i, "ref.tif"), arr)
+        # annot
+        arr = tifffile.imread(pfm.annot)
+        tifffile.imwrite(os.path.join(out_dir, i, "annot.tif"), arr)
+        # coords_trfm
+        arr = tifffile.imread(pfm.points_trfm)
+        tifffile.imwrite(os.path.join(out_dir, i, "points_trfm.tif"), arr)
 
         # COMBINING ARRAYS (ZYXC)
         # Combining reg
@@ -107,3 +109,21 @@ if __name__ == "__main__":
         # )
         # arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
         # tifffile.imwrite(os.path.join(out_dir, i, "combined_cellc.tif"), arr)
+        # # Combining transformed points
+        arr1 = (
+            tifffile.imread(os.path.join(out_dir, i, "ref.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
+        arr2 = (
+            tifffile.imread(os.path.join(out_dir, i, "annot.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
+        arr3 = (
+            tifffile.imread(os.path.join(out_dir, i, "points_trfm.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
+        arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
+        tifffile.imwrite(os.path.join(out_dir, i, "combined_points.tif"), arr)

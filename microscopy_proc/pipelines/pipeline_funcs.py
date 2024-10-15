@@ -963,7 +963,7 @@ def coords2points_trfm_pipeline(
 ):
     with cluster_proc_contxt(LocalCluster()):
         coords2points_tiff(
-            coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
+            coords=pd.read_parquet(pfm.cells_trfm_df),
             shape=tifffile.imread(pfm.ref).shape,
             out_fp=pfm.points_trfm,
         )
@@ -979,7 +979,7 @@ def coords2heatmap_trfm_pipeline(
 ):
     with cluster_proc_contxt(LocalCluster()):
         coords2heatmap_tiff(
-            coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
+            coords=pd.read_parquet(pfm.cells_trfm_df),
             shape=tifffile.imread(pfm.ref).shape,
             out_fp=pfm.heatmap_trfm,
             r=3,
@@ -1024,6 +1024,10 @@ def all_pipeline(
     cell_mapping_pipeline(pfm, overwrite=overwrite)
     group_cells_pipeline(pfm, overwrite=overwrite)
     cells2csv_pipeline(pfm, overwrite=overwrite)
+    coords2points_raw_pipeline(pfm, overwrite=overwrite)
+    coords2heatmap_raw_pipeline(pfm, overwrite=overwrite)
+    coords2points_trfm_pipeline(pfm, overwrite=overwrite)
+    coords2heatmap_trfm_pipeline(pfm, overwrite=overwrite)
 
 
 ###################################################################################################
@@ -1056,4 +1060,8 @@ overwrite_fp_map = {
     cell_mapping_pipeline.__name__: ["cells_df"],
     group_cells_pipeline.__name__: ["cells_agg_df"],
     cells2csv_pipeline.__name__: ["cells_agg_csv"],
+    coords2points_raw_pipeline.__name__: ["points_raw"],
+    coords2heatmap_raw_pipeline.__name__: ["heatmap_raw"],
+    coords2points_trfm_pipeline.__name__: ["points_trfm"],
+    coords2heatmap_trfm_pipeline.__name__: ["heatmap_trfm"],
 }

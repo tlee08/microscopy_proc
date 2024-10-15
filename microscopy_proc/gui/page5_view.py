@@ -159,3 +159,6 @@ def page5_view():
             contrast_limits=tuple(i[VRANGE] for i in imgs_to_run_ls),
             colormap=tuple(i[CMAP] for i in imgs_to_run_ls),
         )
+
+
+# TODO: have an image saving function (from viewer_funcs) that can be called from here
