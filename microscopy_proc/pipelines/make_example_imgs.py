@@ -29,6 +29,10 @@ if __name__ == "__main__":
 
     for i in exp_ls:
         print(i)
+
+        proj_dir = os.path.join(root_dir, i)
+        pfm = get_proj_fp_model(proj_dir)
+
         try:
             os.rename(
                 os.path.join(pfm.root_dir, "visual_check"),
@@ -49,8 +53,6 @@ if __name__ == "__main__":
             "R14_agg_2.5x_1xzoom_02072024",
         ]:
             continue
-        proj_dir = os.path.join(root_dir, i)
-        pfm = get_proj_fp_model(proj_dir)
 
         trimmer = (
             slice(750, 760, None),
