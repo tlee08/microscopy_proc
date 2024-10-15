@@ -3,9 +3,11 @@ import logging
 import os
 from enum import Enum
 from multiprocessing import Process
+from typing import Optional
 
 import dask.array as da
 import napari
+import numpy as np
 import tifffile
 from dask.distributed import LocalCluster
 
@@ -115,32 +117,57 @@ def view_arrs_mp(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
 
 
 # TODO: implement elsewhere for examples
-def save_arr(fp_in: str, trimmer: tuple[slice, ...], fp_out: str, **kwargs):
-    """
-    NOTE: exports as tiff only.
-    """
-    with cluster_proc_contxt(LocalCluster()):
-        # Exporting arrays
-        if ".zarr" in fp_in:
-            arr = da.from_zarr(fp_in)[*trimmer].compute()
-        elif ".tif" in fp_in:
-            arr = tifffile.imread(fp_in)[*trimmer]
-        tifffile.imwrite(fp_out, arr)
-
-
-def save_arrs(
-    fp_in_ls: tuple[str, ...], trimmer: tuple[slice, ...], fp_out_ls: str, **kwargs
+def save_arr(
+    fp_in: str,
+    fp_out: str,
+    trimmer: Optional[tuple[slice, ...]] = None,
+    **kwargs,
 ):
     """
     NOTE: exports as tiff only.
     """
     with cluster_proc_contxt(LocalCluster()):
-        # Asserting fp_in_ls and fp_out_ls lengths are equal
-        assert len(fp_in_ls) == len(fp_out_ls)
-        # Exporting arrays
-        for i, _ in enumerate(fp_in_ls):
-            logging.info(f"Exporting image # {i} / {len(fp_in_ls)}")
-            save_arr(fp_in_ls[i], trimmer, fp_out_ls[i], **kwargs)
+        # Reading array
+        if ".zarr" in fp_in:
+            arr = da.from_zarr(fp_in)
+        elif ".tif" in fp_in:
+            arr = tifffile.imread(fp_in)
+        # Trimming
+        if trimmer:
+            arr = arr[*trimmer]
+        # Computing (if dask array)
+        if isinstance(arr, da.Array):
+            arr = arr.compute()
+        # Writing
+        tifffile.imwrite(fp_out, arr)
+
+
+def save_arrs(
+    fp_in_ls: tuple[str, ...],
+    fp_out_ls: str,
+    trimmer: Optional[tuple[slice, ...]] = None,
+    **kwargs,
+):
+    """
+    NOTE: exports as tiff only.
+    """
+    # Asserting fp_in_ls and fp_out_ls lengths are equal
+    assert len(fp_in_ls) == len(fp_out_ls)
+    # Exporting arrays
+    for i, _ in enumerate(fp_in_ls):
+        logging.info(f"Exporting image # {i} / {len(fp_in_ls)}")
+        save_arr(fp_in_ls[i], trimmer, fp_out_ls[i], **kwargs)
+
+
+def combine_arrs(fp_in_ls: tuple[str, ...], fp_out: str):
+    # Reading arrays
+    arrs_ls = []
+    for i in fp_in_ls:
+        arrs_ls.append(tifffile.imread(i).round(0).astype(np.uint16))
+    # Stacking arrays
+    arr = np.stack(arrs_ls, axis=-1, dtype=np.uint16)
+    # Writing to file
+    tifffile.imwrite(fp_out, arr)
 
 
 if __name__ == "__main__":
