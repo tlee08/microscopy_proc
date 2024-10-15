@@ -338,11 +338,9 @@ def make_mask_pipeline(
     # Filtering out of bounds coords
     s = ref_arr.shape
     outline_df = outline_df.query(
-        f"""
-        ({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) &
-        ({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) &
-        ({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})
-        """
+        f"({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) & "
+        f"({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) & "
+        f"({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})"
     )
 
     # Make outline img (1 for in, 2 for out)
@@ -720,10 +718,8 @@ def cellc11_pipeline(
         cells_df = cells_df.compute()
         # Filtering out by volume (same filter cellc9_pipeline volume_filter)
         cells_df = cells_df.query(
-            f"""
-            ({CellColumns.VOLUME.value} >= {configs.min_wshed}) &
-            ({CellColumns.VOLUME.value} <= {configs.max_wshed})
-            """
+            f"({CellColumns.VOLUME.value} >= {configs.min_wshed}) & "
+            f"({CellColumns.VOLUME.value} <= {configs.max_wshed})"
         )
         # Computing and saving as parquet
         cells_df.to_parquet(pfm.cells_raw_df)
@@ -851,11 +847,9 @@ def cell_mapping_pipeline(
             .round(0)
             .astype(np.int32)
             .query(
-                f"""
-                ({Coords.Z.value}_{TRFM} >= 0) & ({Coords.Z.value}_{TRFM} < {s[0]}) &
-                ({Coords.Y.value}_{TRFM} >= 0) & ({Coords.Y.value}_{TRFM} < {s[1]}) &
-                ({Coords.X.value}_{TRFM} >= 0) & ({Coords.X.value}_{TRFM} < {s[2]})
-                """
+                f"({Coords.Z.value}_{TRFM} >= 0) & ({Coords.Z.value}_{TRFM} < {s[0]}) & "
+                f"({Coords.Y.value}_{TRFM} >= 0) & ({Coords.Y.value}_{TRFM} < {s[1]}) & "
+                f"({Coords.X.value}_{TRFM} >= 0) & ({Coords.X.value}_{TRFM} < {s[2]})"
             )
         )
         # Getting the pixel values of each valid transformed coord (hence the specified index)

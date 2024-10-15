@@ -27,11 +27,9 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None
         .round(0)
         .astype(np.int16)
         .query(
-            f"""
-            ({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) &
-            ({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) &
-            ({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})
-            """
+            f"({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) & "
+            f"({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) & "
+            f"({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})"
         )
     )
     # Dask to numpy
@@ -69,11 +67,9 @@ def coords2sphere_workers(
         .round(0)
         .astype(np.int16)
         .query(
-            f"""
-            ({Coords.Z.value} > {-1*r}) & ({Coords.Z.value} < {s[0] + r}) &
-            ({Coords.Y.value} > {-1*r}) & ({Coords.Y.value} < {s[1] + r}) &
-            ({Coords.X.value} > {-1*r}) & ({Coords.X.value} < {s[2] + r})
-            """
+            f"({Coords.Z.value} > {-1*r}) & ({Coords.Z.value} < {s[0] + r}) & "
+            f"({Coords.Y.value} > {-1*r}) & ({Coords.Y.value} < {s[1] + r}) & "
+            f"({Coords.X.value} > {-1*r}) & ({Coords.X.value} < {s[2] + r})"
         )
     )
     # Dask to pandas

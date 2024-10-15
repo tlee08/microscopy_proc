@@ -21,11 +21,9 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
         .round(0)
         .astype(np.int16)
         .query(
-            f"""
-            ({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) &
-            ({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) &
-            ({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})
-            """
+            f"({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) & "
+            f"({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) & "
+            f"({Coords.X.value} >= 0) & ({Coords.X.value} < {s[2]})"
         )
         .values
     )  # type: ignore
