@@ -37,8 +37,8 @@ if __name__ == "__main__":
         except:
             try:
                 shutil.rmtree(os.path.join(pfm.root_dir, "visual_check"))
-            except:
-                pass
+            except Exception as e:
+                print(e)
 
         # Only given files
         if i not in [
