@@ -6,7 +6,6 @@ import shutil
 from typing import Callable
 
 import dask.array as da
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import tifffile
@@ -717,6 +716,8 @@ def cellc11_pipeline(
             wshed_filt_arr,
             configs.depth,
         )
+        # Converting from dask to pandas
+        cells_df = cells_df.compute()
         # Filtering out by volume (same filter cellc9_pipeline volume_filter)
         cells_df = cells_df.query(
             f"""
@@ -725,7 +726,7 @@ def cellc11_pipeline(
             """
         )
         # Computing and saving as parquet
-        cells_df.to_parquet(pfm.cells_raw_df, overwrite=True)
+        cells_df.to_parquet(pfm.cells_raw_df)
 
 
 @overwrite_check_decorator
@@ -747,8 +748,10 @@ def cellc_coords_only_pipeline(
             Gf.get_coords,
             maxima_final_arr,
         )
+        # Converting from dask to pandas
+        coords_df = coords_df.compute()
         # Computing and saving as parquet
-        coords_df.to_parquet(pfm.maxima_df, overwrite=True)
+        coords_df.to_parquet(pfm.maxima_df)
 
 
 ###################################################################################################
@@ -772,7 +775,7 @@ def transform_coords_pipeline(
     with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
         # Setting output key (in the form "<maxima/region>_trfm_df")
         # Getting cell coords
-        cells_df = dd.read_parquet(pfm.cells_raw_df).compute()
+        cells_df = pd.read_parquet(pfm.cells_raw_df)
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
         # Taking only Coords.Z.value, Coords.Y.value, Coords.X.value coord columns
@@ -820,7 +823,7 @@ def cell_mapping_pipeline(
     # Getting region for each detected cell (i.e. row) in cells_df
     with cluster_proc_contxt(LocalCluster()):
         # Reading cells_raw and cells_trfm dataframes
-        cells_df = dd.read_parquet(pfm.cells_raw_df).compute()
+        cells_df = pd.read_parquet(pfm.cells_raw_df)
         coords_trfm = pd.read_parquet(pfm.cells_trfm_df)
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
@@ -936,7 +939,7 @@ def coords2points_raw_pipeline(
 ):
     with cluster_proc_contxt(LocalCluster()):
         coords2points_dask(
-            coords=dd.read_parquet(pfm.cells_raw_df).compute(),
+            coords=pd.read_parquet(pfm.cells_raw_df),
             shape=da.from_zarr(pfm.raw).shape,
             out_fp=pfm.points_raw,
         )
@@ -949,7 +952,7 @@ def coords2heatmap_raw_pipeline(
 ):
     with cluster_proc_contxt(LocalCluster()):
         coords2heatmap_dask(
-            coords=dd.read_parquet(pfm.cells_raw_df).compute(),
+            coords=pd.read_parquet(pfm.cells_raw_df),
             shape=da.from_zarr(pfm.raw).shape,
             out_fp=pfm.heatmap_raw,
             r=5,

@@ -1,7 +1,6 @@
 import os
 import re
 
-import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 import tifffile
@@ -73,7 +72,7 @@ def registration(
 
 
 def transformation_coords(
-    coords: pd.DataFrame | dd.DataFrame,
+    coords: pd.DataFrame,
     moving_img_fp: str,
     output_img_fp: str,
 ) -> pd.DataFrame:
@@ -90,8 +89,6 @@ def transformation_coords(
         A pd.DataFrame of the transformed coordinated from the fixed image space to the moving image space.
     """
     # Getting the child pid of the process
-    # Loading coords into memory
-    coords = coords.compute() if hasattr(coords, "compute") else coords
     # coords = coords.compute() if isinstance(coords, Delayed) else coords
     # Getting the output image directory (i.e. where registration results are stored)
     reg_dir = os.path.dirname(output_img_fp)
