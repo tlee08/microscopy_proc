@@ -23,7 +23,8 @@ if __name__ == "__main__":
         # Only given files
         if i not in [
             "B3_2.5x_1x_zoom_08082024",
-            "G1_reimage_agg_2.5x_1xzoom_05072024" "G17_2.5x_1x_zoom_07082024",
+            "G1_reimage_agg_2.5x_1xzoom_05072024",
+            "G17_2.5x_1x_zoom_07082024",
             "P8_2.5x_1x_zoom_07082024",
             "R14_agg_2.5x_1xzoom_02072024",
         ]:
