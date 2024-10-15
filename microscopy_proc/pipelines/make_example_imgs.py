@@ -81,11 +81,11 @@ if __name__ == "__main__":
         #     os.path.join(out_dir, i, "combined_cellc.tif"),
         # )
         # Combining transformed points
-        # combine_arrs(
-        #     (
-        #         os.path.join(out_dir, i, "ref.tif"),
-        #         os.path.join(out_dir, i, "annot.tif"),
-        #         os.path.join(out_dir, i, "heatmap_trfm.tif"),
-        #     ),
-        #     os.path.join(out_dir, i, "combined_points.tif"),
-        # )
+        combine_arrs(
+            (
+                os.path.join(out_dir, i, "ref.tif"),
+                os.path.join(out_dir, i, "annot.tif"),
+                os.path.join(out_dir, i, "heatmap_trfm.tif"),
+            ),
+            os.path.join(out_dir, i, "combined_points.tif"),
+        )
