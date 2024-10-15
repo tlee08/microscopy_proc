@@ -160,11 +160,9 @@ class ProjFpModel(BaseModel):
             # VISUAL CHECK FROM CELL DF FILES
             points_check=os.path.join(proj_dir, "visual_check", "points.zarr"),
             heatmap_check=os.path.join(proj_dir, "visual_check", "heatmap.zarr"),
-            points_trfm_check=os.path.join(
-                proj_dir, "visual_check", "points_trfm.zarr"
-            ),
+            points_trfm_check=os.path.join(proj_dir, "visual_check", "points_trfm.tif"),
             heatmap_trfm_check=os.path.join(
-                proj_dir, "visual_check", "heatmap_trfm.zarr"
+                proj_dir, "visual_check", "heatmap_trfm.tif"
             ),
         )
 

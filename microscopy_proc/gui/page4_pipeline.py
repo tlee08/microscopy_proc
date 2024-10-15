@@ -15,6 +15,10 @@ from microscopy_proc.pipelines.pipeline_funcs import (
     cellc11_pipeline,
     cellc_coords_only_pipeline,
     cells2csv_pipeline,
+    coords2heatmaps_raw_pipeline,
+    coords2heatmaps_trfm_pipeline,
+    coords2points_raw_pipeline,
+    coords2points_trfm_pipeline,
     group_cells_pipeline,
     img_fine_pipeline,
     img_overlap_pipeline,
@@ -80,6 +84,10 @@ def page4_pipeline():
             cell_mapping_pipeline: False,
             group_cells_pipeline: False,
             cells2csv_pipeline: False,
+            coords2points_raw_pipeline: False,
+            coords2heatmaps_raw_pipeline: False,
+            coords2points_trfm_pipeline: False,
+            coords2heatmaps_trfm_pipeline: False,
         },
     )
     init_var(OVERWRITE, False)

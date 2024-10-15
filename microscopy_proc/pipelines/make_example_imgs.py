@@ -1,12 +1,16 @@
 import os
 
-import numpy as np
-import tifffile
 from natsort import natsorted
 
+from microscopy_proc.pipelines.pipeline_funcs import (
+    coords2heatmaps_trfm_pipeline,
+    coords2points_trfm_pipeline,
+)
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
+
+# TODO implement propper export function
 
 if __name__ == "__main__":
     # Filenames
@@ -45,66 +49,52 @@ if __name__ == "__main__":
         # os.makedirs(os.path.join(out_dir, i), exist_ok=True)
         # # trimmed
         # arr = tifffile.imread(pfm.trimmed)
-        # tifffile.imwrite(os.path.join(out_dir, i, "trimmed"), arr)
+        # tifffile.imwrite(os.path.join(out_dir, i, "trimmed.tif"), arr)
         # # regresult
         # arr = tifffile.imread(pfm.regresult)
-        # tifffile.imwrite(os.path.join(out_dir, i, "regresult"), arr)
+        # tifffile.imwrite(os.path.join(out_dir, i, "regresult.tif"), arr)
         # # raw
         # arr = da.from_zarr(pfm.raw)[*trimmer].compute()
-        # tifffile.imwrite(os.path.join(out_dir, i, "raw"), arr)
+        # tifffile.imwrite(os.path.join(out_dir, i, "raw.tif"), arr)
         # # maxima_final
         # arr = da.from_zarr(pfm.maxima_final)[*trimmer].compute()
-        # tifffile.imwrite(os.path.join(out_dir, i, "maxima_final"), arr)
+        # tifffile.imwrite(os.path.join(out_dir, i, "maxima_final.tif"), arr)
         # # wshed_final
         # arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
-        # tifffile.imwrite(os.path.join(out_dir, i, "wshed_final"), arr)
+        # tifffile.imwrite(os.path.join(out_dir, i, "wshed_final.tif"), arr)
 
-        os.rename(
-            os.path.join(out_dir, i, "trimmed"), os.path.join(out_dir, i, "trimmed.tif")
-        )
-        os.rename(
-            os.path.join(out_dir, i, "regresult"),
-            os.path.join(out_dir, i, "regresult.tif"),
-        )
-        os.rename(os.path.join(out_dir, i, "raw"), os.path.join(out_dir, i, "raw.tif"))
-        os.rename(
-            os.path.join(out_dir, i, "maxima_final"),
-            os.path.join(out_dir, i, "maxima_final.tif"),
-        )
-        os.rename(
-            os.path.join(out_dir, i, "wshed_final"),
-            os.path.join(out_dir, i, "wshed_final.tif"),
-        )
+        coords2points_trfm_pipeline(pfm)
+        coords2heatmaps_trfm_pipeline(pfm)
 
         # COMBINING ARRAYS (ZYXC)
         # Combining reg
-        arr1 = (
-            tifffile.imread(os.path.join(out_dir, i, "trimmed.tif"))
-            .round(0)
-            .astype(np.uint16)
-        )
-        arr2 = (
-            tifffile.imread(os.path.join(out_dir, i, "regresult.tif"))
-            .round(0)
-            .astype(np.uint16)
-        )
-        arr = np.stack([arr1, arr2], axis=-1, dtype=np.uint16)
-        tifffile.imwrite(os.path.join(out_dir, i, "combined_reg.tif"), arr)
-        # Combining cellc
-        arr1 = (
-            tifffile.imread(os.path.join(out_dir, i, "raw.tif"))
-            .round(0)
-            .astype(np.uint16)
-        )
-        arr2 = (
-            tifffile.imread(os.path.join(out_dir, i, "maxima_final.tif"))
-            .round(0)
-            .astype(np.uint16)
-        )
-        arr3 = (
-            tifffile.imread(os.path.join(out_dir, i, "wshed_final.tif"))
-            .round(0)
-            .astype(np.uint16)
-        )
-        arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
-        tifffile.imwrite(os.path.join(out_dir, i, "combined_cellc.tif"), arr)
+        # arr1 = (
+        #     tifffile.imread(os.path.join(out_dir, i, "trimmed.tif"))
+        #     .round(0)
+        #     .astype(np.uint16)
+        # )
+        # arr2 = (
+        #     tifffile.imread(os.path.join(out_dir, i, "regresult.tif"))
+        #     .round(0)
+        #     .astype(np.uint16)
+        # )
+        # arr = np.stack([arr1, arr2], axis=-1, dtype=np.uint16)
+        # tifffile.imwrite(os.path.join(out_dir, i, "combined_reg.tif"), arr)
+        # # Combining cellc
+        # arr1 = (
+        #     tifffile.imread(os.path.join(out_dir, i, "raw.tif"))
+        #     .round(0)
+        #     .astype(np.uint16)
+        # )
+        # arr2 = (
+        #     tifffile.imread(os.path.join(out_dir, i, "maxima_final.tif"))
+        #     .round(0)
+        #     .astype(np.uint16)
+        # )
+        # arr3 = (
+        #     tifffile.imread(os.path.join(out_dir, i, "wshed_final.tif"))
+        #     .round(0)
+        #     .astype(np.uint16)
+        # )
+        # arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
+        # tifffile.imwrite(os.path.join(out_dir, i, "combined_cellc.tif"), arr)

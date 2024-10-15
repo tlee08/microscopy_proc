@@ -41,7 +41,18 @@ from microscopy_proc.funcs.reg_funcs import (
     reorient,
 )
 from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
-from microscopy_proc.funcs.visual_check_funcs_dask import coords2heatmaps, coords2points
+from microscopy_proc.funcs.visual_check_funcs_dask import (
+    coords2heatmaps as coords2heatmaps_dask,
+)
+from microscopy_proc.funcs.visual_check_funcs_dask import (
+    coords2points as coords2points_dask,
+)
+from microscopy_proc.funcs.visual_check_funcs_tiff import (
+    coords2heatmaps as coords2heatmaps_tiff,
+)
+from microscopy_proc.funcs.visual_check_funcs_tiff import (
+    coords2points as coords2points_tiff,
+)
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block2coords,
@@ -924,7 +935,7 @@ def coords2points_raw_pipeline(
     overwrite: bool = False,
 ):
     with cluster_proc_contxt(LocalCluster()):
-        coords2points(
+        coords2points_dask(
             coords=dd.read_parquet(pfm.cells_raw_df).compute(),
             shape=da.from_zarr(pfm.raw).shape,
             out_fp=pfm.points_check,
@@ -937,7 +948,7 @@ def coords2heatmaps_raw_pipeline(
     overwrite: bool = False,
 ):
     with cluster_proc_contxt(LocalCluster()):
-        coords2heatmaps(
+        coords2heatmaps_dask(
             coords=dd.read_parquet(pfm.cells_raw_df).compute(),
             shape=da.from_zarr(pfm.raw).shape,
             out_fp=pfm.points_check,
@@ -951,11 +962,14 @@ def coords2points_trfm_pipeline(
     overwrite: bool = False,
 ):
     with cluster_proc_contxt(LocalCluster()):
-        coords2points(
+        coords2points_tiff(
             coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
             shape=tifffile.imread(pfm.ref).shape,
             out_fp=pfm.points_check,
         )
+
+
+# TODO: make `r` a config param
 
 
 @overwrite_check_decorator
@@ -964,7 +978,7 @@ def coords2heatmaps_trfm_pipeline(
     overwrite: bool = False,
 ):
     with cluster_proc_contxt(LocalCluster()):
-        coords2heatmaps(
+        coords2heatmaps_tiff(
             coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
             shape=tifffile.imread(pfm.ref).shape,
             out_fp=pfm.points_check,
