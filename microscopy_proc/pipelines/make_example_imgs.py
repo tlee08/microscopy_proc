@@ -61,13 +61,13 @@ if __name__ == "__main__":
 
         # COMBINING ARRAYS (ZYXC)
         # Combining reg
-        arr1 = tifffile.imread(pfm.trimmed)
-        arr2 = tifffile.imread(pfm.regresult)
+        arr1 = tifffile.imread(pfm.trimmed).round(0).astype(np.uint16)
+        arr2 = tifffile.imread(pfm.regresult).round(0).astype(np.uint16)
         arr = np.stack([arr1, arr2], axis=-1, dtype=np.uint16)
         tifffile.imwrite(os.path.join(out_dir, i, "combined_reg.tif"), arr)
         # Combining cellc
-        arr1 = tifffile.imread(pfm.raw)
-        arr2 = tifffile.imread(pfm.maxima_final)
-        arr3 = tifffile.imread(pfm.wshed_final)
+        arr1 = tifffile.imread(pfm.raw).round(0).astype(np.uint16)
+        arr2 = tifffile.imread(pfm.maxima_final).round(0).astype(np.uint16)
+        arr3 = tifffile.imread(pfm.wshed_final).round(0).astype(np.uint16)
         arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
         tifffile.imwrite(os.path.join(out_dir, i, "combined_cellc.tif"), arr)
