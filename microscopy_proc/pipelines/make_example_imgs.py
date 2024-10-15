@@ -5,6 +5,7 @@ import dask.dataframe as dd
 import pandas as pd
 from natsort import natsorted
 
+from microscopy_proc.utils.io_utils import sanitise_smb_df
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
@@ -37,6 +38,7 @@ if __name__ == "__main__":
 
         df: pd.DataFrame = dd.read_parquet(pfm.cells_raw_df).compute()
         shutil.rmtree(pfm.cells_raw_df, ignore_errors=True)
+        df = sanitise_smb_df(df)
         df.to_parquet(pfm.cells_raw_df)
 
         # trimmer = (
