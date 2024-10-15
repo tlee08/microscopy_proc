@@ -59,15 +59,52 @@ if __name__ == "__main__":
         # arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
         # tifffile.imwrite(os.path.join(out_dir, i, "wshed_final"), arr)
 
+        os.rename(
+            os.path.join(out_dir, i, "trimmed"), os.path.join(out_dir, i, "trimmed.tif")
+        )
+        os.rename(
+            os.path.join(out_dir, i, "regresult"),
+            os.path.join(out_dir, i, "regresult.tif"),
+        )
+        os.rename(os.path.join(out_dir, i, "raw"), os.path.join(out_dir, i, "raw.tif"))
+        os.rename(
+            os.path.join(out_dir, i, "maxima_final"),
+            os.path.join(out_dir, i, "maxima_final.tif"),
+        )
+        os.rename(
+            os.path.join(out_dir, i, "wshed_final"),
+            os.path.join(out_dir, i, "wshed_final.tif"),
+        )
+
         # COMBINING ARRAYS (ZYXC)
         # Combining reg
-        arr1 = tifffile.imread(pfm.trimmed).round(0).astype(np.uint16)
-        arr2 = tifffile.imread(pfm.regresult).round(0).astype(np.uint16)
+        arr1 = (
+            tifffile.imread(os.path.join(out_dir, i, "trimmed.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
+        arr2 = (
+            tifffile.imread(os.path.join(out_dir, i, "regresult.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
         arr = np.stack([arr1, arr2], axis=-1, dtype=np.uint16)
         tifffile.imwrite(os.path.join(out_dir, i, "combined_reg.tif"), arr)
         # Combining cellc
-        arr1 = tifffile.imread(pfm.raw).round(0).astype(np.uint16)
-        arr2 = tifffile.imread(pfm.maxima_final).round(0).astype(np.uint16)
-        arr3 = tifffile.imread(pfm.wshed_final).round(0).astype(np.uint16)
+        arr1 = (
+            tifffile.imread(os.path.join(out_dir, i, "raw.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
+        arr2 = (
+            tifffile.imread(os.path.join(out_dir, i, "maxima_final.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
+        arr3 = (
+            tifffile.imread(os.path.join(out_dir, i, "wshed_final.tif"))
+            .round(0)
+            .astype(np.uint16)
+        )
         arr = np.stack([arr1, arr2, arr3], axis=-1, dtype=np.uint16)
         tifffile.imwrite(os.path.join(out_dir, i, "combined_cellc.tif"), arr)
