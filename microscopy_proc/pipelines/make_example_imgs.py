@@ -2,7 +2,7 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.viewer_funcs import combine_arrs, save_arr
+from microscopy_proc.funcs.viewer_funcs import combine_arrs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
@@ -60,17 +60,17 @@ if __name__ == "__main__":
         # # annot
         # save_arr(pfm.annot, os.path.join(out_dir, i, "annot.tif"))
         # heatmap_trfm
-        save_arr(pfm.heatmap_trfm, os.path.join(out_dir, i, "heatmap_trfm.tif"))
+        # save_arr(pfm.heatmap_trfm, os.path.join(out_dir, i, "heatmap_trfm.tif"))
 
         # # COMBINING ARRAYS (ZYXC)
         # Combining reg
-        combine_arrs(
-            (
-                os.path.join(out_dir, i, "trimmed.tif"),
-                os.path.join(out_dir, i, "regresult.tif"),
-            ),
-            os.path.join(out_dir, i, "combined_reg.tif"),
-        )
+        # combine_arrs(
+        #     (
+        #         os.path.join(out_dir, i, "trimmed.tif"),
+        #         os.path.join(out_dir, i, "regresult.tif"),
+        #     ),
+        #     os.path.join(out_dir, i, "combined_reg.tif"),
+        # )
         # # Combining cellc
         # combine_arrs(
         #     (
