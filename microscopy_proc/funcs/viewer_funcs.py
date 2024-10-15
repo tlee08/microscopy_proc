@@ -160,12 +160,13 @@ def save_arrs(
 
 
 def combine_arrs(fp_in_ls: tuple[str, ...], fp_out: str):
+    dtype = np.int16
     # Reading arrays
     arrs_ls = []
     for i in fp_in_ls:
-        arrs_ls.append(tifffile.imread(i).round(0).astype(np.uint16))
+        arrs_ls.append(tifffile.imread(i).round(0).astype(dtype))
     # Stacking arrays
-    arr = np.stack(arrs_ls, axis=-1, dtype=np.uint16)
+    arr = np.stack(arrs_ls, axis=-1, dtype=dtype)
     # Writing to file
     tifffile.imwrite(fp_out, arr)
 

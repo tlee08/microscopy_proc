@@ -68,7 +68,7 @@ if __name__ == "__main__":
             (
                 os.path.join(out_dir, i, "trimmed.tif"),
                 # 2nd means the combining works in ImageJ
-                os.path.join(out_dir, i, "trimmed.tif"),
+                os.path.join(out_dir, i, "regresult.tif"),
                 os.path.join(out_dir, i, "regresult.tif"),
             ),
             os.path.join(out_dir, i, "combined_reg.tif"),
