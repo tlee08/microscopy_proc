@@ -25,14 +25,14 @@ if __name__ == "__main__":
 
     for i in exp_ls:
         # Only given files
-        if i not in [
-            "B3_2.5x_1x_zoom_08082024",
-            # "G1_reimage_agg_2.5x_1xzoom_05072024",
-            # "G17_2.5x_1x_zoom_07082024",
-            # "P8_2.5x_1x_zoom_07082024",
-            # "R14_agg_2.5x_1xzoom_02072024",
-        ]:
-            continue
+        # if i not in [
+        #     "B3_2.5x_1x_zoom_08082024",
+        #     "G1_reimage_agg_2.5x_1xzoom_05072024",
+        #     "G17_2.5x_1x_zoom_07082024",
+        #     "P8_2.5x_1x_zoom_07082024",
+        #     "R14_agg_2.5x_1xzoom_02072024",
+        # ]:
+        #     continue
         proj_dir = os.path.join(root_dir, i)
         pfm = get_proj_fp_model(proj_dir)
 
