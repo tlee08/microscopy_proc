@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import numpy as np
 import tifffile
@@ -27,13 +28,17 @@ if __name__ == "__main__":
     exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(root_dir, i))]
 
     for i in exp_ls:
+        print(i)
         try:
             os.rename(
                 os.path.join(pfm.root_dir, "visual_check"),
                 os.path.join(pfm.root_dir, ProjSubdirs.VISUALISATION.value),
             )
         except:
-            pass
+            try:
+                shutil.rmtree(os.path.join(pfm.root_dir, "visual_check"))
+            except:
+                pass
 
         # Only given files
         if i not in [
