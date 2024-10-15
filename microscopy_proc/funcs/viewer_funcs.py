@@ -164,6 +164,7 @@ def combine_arrs(fp_in_ls: tuple[str, ...], fp_out: str):
     # Reading arrays
     arrs_ls = []
     for i in fp_in_ls:
+        # TODO: figure out conversion better
         arrs_ls.append(tifffile.imread(i).round(0).clip(0, 2**16 - 1).astype(dtype))
     # Stacking arrays
     arr = np.stack(arrs_ls, axis=-1, dtype=dtype)
