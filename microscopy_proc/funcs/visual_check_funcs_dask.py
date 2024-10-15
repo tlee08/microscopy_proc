@@ -128,7 +128,7 @@ def coords2points(
 
 
 # @flow
-def coords2heatmaps(
+def coords2heatmap(
     coords: pd.DataFrame,
     shape: tuple[int, ...],
     out_fp: str,

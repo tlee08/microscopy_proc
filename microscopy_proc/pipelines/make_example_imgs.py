@@ -3,7 +3,7 @@ import os
 from natsort import natsorted
 
 from microscopy_proc.pipelines.pipeline_funcs import (
-    coords2heatmaps_trfm_pipeline,
+    coords2heatmap_trfm_pipeline,
     coords2points_trfm_pipeline,
 )
 from microscopy_proc.utils.proj_org_utils import (
@@ -62,9 +62,18 @@ if __name__ == "__main__":
         # # wshed_final
         # arr = da.from_zarr(pfm.wshed_final)[*trimmer].compute()
         # tifffile.imwrite(os.path.join(out_dir, i, "wshed_final.tif"), arr)
+        # # ref
+        # arr = tifffile.imread(pfm.ref)
+        # tifffile.imwrite(os.path.join(out_dir, i, "ref.tif"), arr)
+        # # annot
+        # arr = tifffile.imread(pfm.annot)
+        # tifffile.imwrite(os.path.join(out_dir, i, "annot.tif"), arr)
+        # # coords_trfm
+        # arr = tifffile.imread(pfm.points_trfm_check)
+        # tifffile.imwrite(os.path.join(out_dir, i, "points_trfm.tif"), arr)
 
         coords2points_trfm_pipeline(pfm)
-        coords2heatmaps_trfm_pipeline(pfm)
+        coords2heatmap_trfm_pipeline(pfm)
 
         # COMBINING ARRAYS (ZYXC)
         # Combining reg

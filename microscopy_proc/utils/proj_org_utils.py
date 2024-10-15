@@ -102,10 +102,10 @@ class ProjFpModel(BaseModel):
     cells_agg_df: str
     cells_agg_csv: str
     # VISUAL CHECK FROM CELL DF FILES
-    points_check: str
-    heatmap_check: str
-    points_trfm_check: str
-    heatmap_trfm_check: str
+    points_raw: str
+    heatmap_raw: str
+    points_trfm: str
+    heatmap_trfm: str
 
     @classmethod
     def get_proj_fp_model(cls, proj_dir):
@@ -158,12 +158,10 @@ class ProjFpModel(BaseModel):
             cells_agg_df=os.path.join(proj_dir, "analysis", "14_cells_agg.parquet"),
             cells_agg_csv=os.path.join(proj_dir, "analysis", "15_cells_agg.csv"),
             # VISUAL CHECK FROM CELL DF FILES
-            points_check=os.path.join(proj_dir, "visual_check", "points.zarr"),
-            heatmap_check=os.path.join(proj_dir, "visual_check", "heatmap.zarr"),
-            points_trfm_check=os.path.join(proj_dir, "visual_check", "points_trfm.tif"),
-            heatmap_trfm_check=os.path.join(
-                proj_dir, "visual_check", "heatmap_trfm.tif"
-            ),
+            points_raw=os.path.join(proj_dir, "visual_check", "points_raw.zarr"),
+            heatmap_raw=os.path.join(proj_dir, "visual_check", "heatmap_raw.zarr"),
+            points_trfm=os.path.join(proj_dir, "visual_check", "points_trfm.tif"),
+            heatmap_trfm=os.path.join(proj_dir, "visual_check", "heatmap_trfm.tif"),
         )
 
 

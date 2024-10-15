@@ -83,7 +83,7 @@ def coords2points(
     coords2points_end(arr, out_fp)
 
 
-def coords2heatmaps(
+def coords2heatmap(
     coords: pd.DataFrame,
     shape: tuple[int, ...],
     out_fp: str,

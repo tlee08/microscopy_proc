@@ -42,13 +42,13 @@ from microscopy_proc.funcs.reg_funcs import (
 )
 from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
 from microscopy_proc.funcs.visual_check_funcs_dask import (
-    coords2heatmaps as coords2heatmaps_dask,
+    coords2heatmap as coords2heatmap_dask,
 )
 from microscopy_proc.funcs.visual_check_funcs_dask import (
     coords2points as coords2points_dask,
 )
 from microscopy_proc.funcs.visual_check_funcs_tiff import (
-    coords2heatmaps as coords2heatmaps_tiff,
+    coords2heatmap as coords2heatmap_tiff,
 )
 from microscopy_proc.funcs.visual_check_funcs_tiff import (
     coords2points as coords2points_tiff,
@@ -938,20 +938,20 @@ def coords2points_raw_pipeline(
         coords2points_dask(
             coords=dd.read_parquet(pfm.cells_raw_df).compute(),
             shape=da.from_zarr(pfm.raw).shape,
-            out_fp=pfm.points_check,
+            out_fp=pfm.points_raw,
         )
 
 
 @overwrite_check_decorator
-def coords2heatmaps_raw_pipeline(
+def coords2heatmap_raw_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ):
     with cluster_proc_contxt(LocalCluster()):
-        coords2heatmaps_dask(
+        coords2heatmap_dask(
             coords=dd.read_parquet(pfm.cells_raw_df).compute(),
             shape=da.from_zarr(pfm.raw).shape,
-            out_fp=pfm.points_check,
+            out_fp=pfm.heatmap_raw,
             r=5,
         )
 
@@ -965,7 +965,7 @@ def coords2points_trfm_pipeline(
         coords2points_tiff(
             coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
             shape=tifffile.imread(pfm.ref).shape,
-            out_fp=pfm.points_check,
+            out_fp=pfm.points_trfm,
         )
 
 
@@ -973,15 +973,15 @@ def coords2points_trfm_pipeline(
 
 
 @overwrite_check_decorator
-def coords2heatmaps_trfm_pipeline(
+def coords2heatmap_trfm_pipeline(
     pfm: ProjFpModel,
     overwrite: bool = False,
 ):
     with cluster_proc_contxt(LocalCluster()):
-        coords2heatmaps_tiff(
+        coords2heatmap_tiff(
             coords=dd.read_parquet(pfm.cells_trfm_df).compute(),
             shape=tifffile.imread(pfm.ref).shape,
-            out_fp=pfm.points_check,
+            out_fp=pfm.heatmap_trfm,
             r=3,
         )
 
