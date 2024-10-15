@@ -156,7 +156,7 @@ def save_arrs(
     # Exporting arrays
     for i, _ in enumerate(fp_in_ls):
         logging.info(f"Exporting image # {i} / {len(fp_in_ls)}")
-        save_arr(fp_in_ls[i], trimmer, fp_out_ls[i], **kwargs)
+        save_arr(fp_in_ls[i], fp_out_ls[i], trimmer, **kwargs)
 
 
 def combine_arrs(fp_in_ls: tuple[str, ...], fp_out: str):
