@@ -142,23 +142,6 @@ def save_arr(
         tifffile.imwrite(fp_out, arr)
 
 
-def save_arrs(
-    fp_in_ls: tuple[str, ...],
-    fp_out_ls: str,
-    trimmer: Optional[tuple[slice, ...]] = None,
-    **kwargs,
-):
-    """
-    NOTE: exports as tiff only.
-    """
-    # Asserting fp_in_ls and fp_out_ls lengths are equal
-    assert len(fp_in_ls) == len(fp_out_ls)
-    # Exporting arrays
-    for i, _ in enumerate(fp_in_ls):
-        logging.info(f"Exporting image # {i} / {len(fp_in_ls)}")
-        save_arr(fp_in_ls[i], fp_out_ls[i], trimmer, **kwargs)
-
-
 def combine_arrs(fp_in_ls: tuple[str, ...], fp_out: str):
     dtype = np.uint16
     # Reading arrays
