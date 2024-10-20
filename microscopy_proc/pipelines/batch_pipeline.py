@@ -17,6 +17,9 @@ from microscopy_proc.pipelines.pipeline_funcs import (
     cellc10_pipeline,
     cellc11_pipeline,
     cells2csv_pipeline,
+    coords2heatmap_trfm_pipeline,
+    coords2points_raw_pipeline,
+    coords2points_trfm_pipeline,
     group_cells_pipeline,
     img_fine_pipeline,
     img_overlap_pipeline,
@@ -134,6 +137,10 @@ if __name__ == "__main__":
             group_cells_pipeline(pfm, overwrite=overwrite)
             # Exporting cells_agg parquet as csv
             cells2csv_pipeline(pfm, overwrite=overwrite)
+            # Making points and heatmap images
+            coords2points_raw_pipeline(pfm)
+            coords2points_trfm_pipeline(pfm)
+            coords2heatmap_trfm_pipeline(pfm)
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             continue

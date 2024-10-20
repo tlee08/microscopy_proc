@@ -13,6 +13,7 @@ from microscopy_proc.pipelines.pipeline_funcs import (
     cellc11_pipeline,
     cellc_coords_only_pipeline,
     cells2csv_pipeline,
+    coords2heatmap_trfm_pipeline,
     coords2points_raw_pipeline,
     coords2points_trfm_pipeline,
     group_cells_pipeline,
@@ -122,6 +123,7 @@ if __name__ == "__main__":
     # Exporting cells_agg parquet as csv
     cells2csv_pipeline(pfm, overwrite=overwrite)
 
-    # Running visual checks
+    # Making points and heatmap images
     coords2points_raw_pipeline(pfm)
     coords2points_trfm_pipeline(pfm)
+    coords2heatmap_trfm_pipeline(pfm)

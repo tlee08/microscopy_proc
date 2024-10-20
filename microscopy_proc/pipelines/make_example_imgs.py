@@ -3,6 +3,11 @@ import os
 from natsort import natsorted
 
 from microscopy_proc.funcs.viewer_funcs import combine_arrs, save_arr
+from microscopy_proc.pipelines.pipeline_funcs import (
+    coords2heatmap_trfm_pipeline,
+    coords2points_raw_pipeline,
+    coords2points_trfm_pipeline,
+)
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
 )
@@ -43,6 +48,11 @@ if __name__ == "__main__":
         #     "R14_agg_2.5x_1xzoom_02072024",
         # ]:
         #     continue
+
+        # Making points and heatmap images
+        coords2points_raw_pipeline(pfm)
+        coords2points_trfm_pipeline(pfm)
+        coords2heatmap_trfm_pipeline(pfm)
 
         # Exporting
         # trimmed
