@@ -7,6 +7,7 @@ import dask.array
 import dask.array as da
 import dask.dataframe as dd
 import numpy as np
+import pandas as pd
 from dask.distributed import Client, SpecCluster
 
 from microscopy_proc.constants import DEPTH, Coords
@@ -86,7 +87,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     )
 
 
-def coords2block(df: dd.DataFrame, block_info: dict) -> dd.DataFrame:
+def coords2block(df: dd.DataFrame | pd.DataFrame, block_info: dict) -> dd.DataFrame:
     """
     Converts the coords to a block, given the block info.
 

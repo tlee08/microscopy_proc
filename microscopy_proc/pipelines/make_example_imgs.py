@@ -13,9 +13,14 @@ if __name__ == "__main__":
     # Filenames
     root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
     # out_dir = "/home/linux1/Desktop/imgs_for_nick"
-    out_dir = os.path.join(root_dir, "example_imgs")
 
     overwrite = False
+
+    trimmer = (
+        slice(750, 760, None),
+        slice(None, None, None),
+        slice(None, None, None),
+    )
 
     # Get all experiments
     exp_ls = natsorted(os.listdir(root_dir))
@@ -27,6 +32,9 @@ if __name__ == "__main__":
         proj_dir = os.path.join(root_dir, i)
         pfm = get_proj_fp_model(proj_dir)
 
+        out_dir = os.path.join(proj_dir, "example_imgs")
+        os.makedirs(out_dir, exist_ok=True)
+
         # # Only given files
         # if i not in [
         #     "B3_2.5x_1x_zoom_08082024",
@@ -36,69 +44,60 @@ if __name__ == "__main__":
         # ]:
         #     continue
 
-        trimmer = (
-            slice(750, 760, None),
-            slice(None, None, None),
-            slice(None, None, None),
-        )
-
         # Exporting
-        os.makedirs(os.path.join(out_dir, i), exist_ok=True)
         # trimmed
-        save_arr(pfm.trimmed, os.path.join(out_dir, i, "trimmed.tif"))
+        save_arr(pfm.trimmed, os.path.join(out_dir, "trimmed.tif"))
         # regresult
-        save_arr(pfm.regresult, os.path.join(out_dir, i, "regresult.tif"))
+        save_arr(pfm.regresult, os.path.join(out_dir, "regresult.tif"))
         # raw
-        save_arr(pfm.raw, os.path.join(out_dir, i, "raw.tif"), trimmer)
+        save_arr(pfm.raw, os.path.join(out_dir, "raw.tif"), trimmer)
         # maxima_final
-        save_arr(
-            pfm.maxima_final, os.path.join(out_dir, i, "maxima_final.tif"), trimmer
-        )
+        save_arr(pfm.maxima_final, os.path.join(out_dir, "maxima_final.tif"), trimmer)
         # wshed_final
-        save_arr(pfm.wshed_final, os.path.join(out_dir, i, "wshed_final.tif"), trimmer)
+        save_arr(pfm.wshed_final, os.path.join(out_dir, "wshed_final.tif"), trimmer)
         # ref
-        save_arr(pfm.ref, os.path.join(out_dir, i, "ref.tif"))
+        save_arr(pfm.ref, os.path.join(out_dir, "ref.tif"))
         # annot
-        save_arr(pfm.annot, os.path.join(out_dir, i, "annot.tif"))
+        save_arr(pfm.annot, os.path.join(out_dir, "annot.tif"))
         # heatmap_trfm
-        save_arr(pfm.heatmap_trfm, os.path.join(out_dir, i, "heatmap_trfm.tif"))
+        save_arr(pfm.heatmap_trfm, os.path.join(out_dir, "heatmap_trfm.tif"))
 
         # COMBINING ARRAYS (ZYXC)
         # Combining reg
         combine_arrs(
             (
-                os.path.join(out_dir, i, "trimmed.tif"),
+                os.path.join(out_dir, "trimmed.tif"),
                 # 2nd means the combining works in ImageJ
-                os.path.join(out_dir, i, "regresult.tif"),
-                os.path.join(out_dir, i, "regresult.tif"),
+                os.path.join(out_dir, "regresult.tif"),
+                os.path.join(out_dir, "regresult.tif"),
             ),
-            os.path.join(out_dir, i, "combined_reg.tif"),
+            os.path.join(out_dir, "combined_reg.tif"),
         )
         # Combining cellc
         combine_arrs(
             (
-                os.path.join(out_dir, i, "raw.tif"),
-                os.path.join(out_dir, i, "maxima_final.tif"),
-                os.path.join(out_dir, i, "wshed_final.tif"),
+                os.path.join(out_dir, "raw.tif"),
+                os.path.join(out_dir, "maxima_final.tif"),
+                os.path.join(out_dir, "wshed_final.tif"),
             ),
-            os.path.join(out_dir, i, "combined_cellc.tif"),
+            os.path.join(out_dir, "combined_cellc.tif"),
         )
         # Combining transformed points
         combine_arrs(
             (
-                os.path.join(out_dir, i, "ref.tif"),
-                os.path.join(out_dir, i, "annot.tif"),
-                os.path.join(out_dir, i, "heatmap_trfm.tif"),
+                os.path.join(out_dir, "ref.tif"),
+                os.path.join(out_dir, "annot.tif"),
+                os.path.join(out_dir, "heatmap_trfm.tif"),
             ),
-            os.path.join(out_dir, i, "combined_points.tif"),
+            os.path.join(out_dir, "combined_points.tif"),
         )
 
         # Removing individual files
-        os.remove(os.path.join(out_dir, i, "trimmed.tif"))
-        os.remove(os.path.join(out_dir, i, "regresult.tif"))
-        os.remove(os.path.join(out_dir, i, "raw.tif"))
-        os.remove(os.path.join(out_dir, i, "maxima_final.tif"))
-        os.remove(os.path.join(out_dir, i, "wshed_final.tif"))
-        os.remove(os.path.join(out_dir, i, "ref.tif"))
-        os.remove(os.path.join(out_dir, i, "annot.tif"))
-        os.remove(os.path.join(out_dir, i, "heatmap_trfm.tif"))
+        os.remove(os.path.join(out_dir, "trimmed.tif"))
+        os.remove(os.path.join(out_dir, "regresult.tif"))
+        os.remove(os.path.join(out_dir, "raw.tif"))
+        os.remove(os.path.join(out_dir, "maxima_final.tif"))
+        os.remove(os.path.join(out_dir, "wshed_final.tif"))
+        os.remove(os.path.join(out_dir, "ref.tif"))
+        os.remove(os.path.join(out_dir, "annot.tif"))
+        os.remove(os.path.join(out_dir, "heatmap_trfm.tif"))
