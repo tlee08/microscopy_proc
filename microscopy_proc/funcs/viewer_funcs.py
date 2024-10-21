@@ -54,8 +54,8 @@ IMGS = {
     "Cell Counting (overlapped)": {
         "overlap": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
         "bgrm": {VRANGE: (0, 2000), CMAP: Colormaps.GREEN.value},
-        "dog": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
-        "adaptv": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
+        "dog": {VRANGE: (0, 500), CMAP: Colormaps.RED.value},
+        "adaptv": {VRANGE: (0, 500), CMAP: Colormaps.RED.value},
         "threshd": {VRANGE: (0, 5), CMAP: Colormaps.GRAY.value},
         "threshd_volumes": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
         "threshd_filt": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
@@ -176,9 +176,6 @@ if __name__ == "__main__":
     pfm = get_proj_fp_model(proj_dir)
 
     trimmer = (
-        # slice(400, 500, None),  #  slice(None, None, 3),
-        # slice(1000, 3000, None),  #  slice(None, None, 12),
-        # slice(1000, 3000, None),  #  slice(None, None, 12),
         slice(600, 650, None),
         slice(1400, 3100, None),
         slice(500, 3100, None),
