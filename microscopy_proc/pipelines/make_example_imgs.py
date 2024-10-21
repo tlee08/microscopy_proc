@@ -2,7 +2,7 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.viewer_funcs import combine_arrs, save_arr
+from microscopy_proc.funcs.viewer_funcs import combine_arrs
 from microscopy_proc.pipelines.pipeline_funcs import (
     coords2heatmap_trfm_pipeline,
     coords2points_raw_pipeline,
@@ -54,60 +54,21 @@ if __name__ == "__main__":
         coords2points_trfm_pipeline(pfm)
         coords2heatmap_trfm_pipeline(pfm)
 
-        # Exporting
-        # trimmed
-        save_arr(pfm.trimmed, os.path.join(out_dir, "trimmed.tif"))
-        # regresult
-        save_arr(pfm.regresult, os.path.join(out_dir, "regresult.tif"))
-        # raw
-        save_arr(pfm.raw, os.path.join(out_dir, "raw.tif"), trimmer)
-        # maxima_final
-        save_arr(pfm.maxima_final, os.path.join(out_dir, "maxima_final.tif"), trimmer)
-        # wshed_final
-        save_arr(pfm.wshed_final, os.path.join(out_dir, "wshed_final.tif"), trimmer)
-        # ref
-        save_arr(pfm.ref, os.path.join(out_dir, "ref.tif"))
-        # annot
-        save_arr(pfm.annot, os.path.join(out_dir, "annot.tif"))
-        # heatmap_trfm
-        save_arr(pfm.heatmap_trfm, os.path.join(out_dir, "heatmap_trfm.tif"))
-
         # COMBINING ARRAYS (ZYXC)
         # Combining reg
         combine_arrs(
-            (
-                os.path.join(out_dir, "trimmed.tif"),
-                # 2nd means the combining works in ImageJ
-                os.path.join(out_dir, "regresult.tif"),
-                os.path.join(out_dir, "regresult.tif"),
-            ),
-            os.path.join(out_dir, "combined_reg.tif"),
+            fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
+            # 2nd regresult means the combining works in ImageJ
+            fp_out=os.path.join(out_dir, "combined_reg.tif"),
         )
         # Combining cellc
         combine_arrs(
-            (
-                os.path.join(out_dir, "raw.tif"),
-                os.path.join(out_dir, "maxima_final.tif"),
-                os.path.join(out_dir, "wshed_final.tif"),
-            ),
-            os.path.join(out_dir, "combined_cellc.tif"),
+            fp_in_ls=(pfm.raw, pfm.maxima_final, pfm.wshed_final),
+            fp_out=os.path.join(out_dir, "combined_cellc.tif"),
+            trimmer=trimmer,
         )
         # Combining transformed points
         combine_arrs(
-            (
-                os.path.join(out_dir, "ref.tif"),
-                os.path.join(out_dir, "annot.tif"),
-                os.path.join(out_dir, "heatmap_trfm.tif"),
-            ),
-            os.path.join(out_dir, "combined_points.tif"),
+            fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
+            fp_out=os.path.join(out_dir, "combined_points.tif"),
         )
-
-        # Removing individual files
-        os.remove(os.path.join(out_dir, "trimmed.tif"))
-        os.remove(os.path.join(out_dir, "regresult.tif"))
-        os.remove(os.path.join(out_dir, "raw.tif"))
-        os.remove(os.path.join(out_dir, "maxima_final.tif"))
-        os.remove(os.path.join(out_dir, "wshed_final.tif"))
-        os.remove(os.path.join(out_dir, "ref.tif"))
-        os.remove(os.path.join(out_dir, "annot.tif"))
-        os.remove(os.path.join(out_dir, "heatmap_trfm.tif"))

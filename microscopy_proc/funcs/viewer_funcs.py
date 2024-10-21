@@ -1,6 +1,7 @@
 import functools
 import logging
 import os
+import re
 from enum import Enum
 from multiprocessing import Process
 from typing import Optional
@@ -76,6 +77,18 @@ IMGS = {
 }
 
 
+def read_img(fp, trimmer: Optional[tuple[slice, ...]] = None):
+    """
+    Reading, trimming (if possible), and returning the array in memory.
+    """
+    if re.search(r"\.zarr$", fp):
+        return da.from_zarr(fp)[*trimmer].compute()
+    elif re.search(r"\.tif$", fp):
+        return tifffile.imread(fp)[*trimmer]
+    else:
+        raise NotImplementedError("Only .zarr and .tif files are supported.")
+
+
 def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
     with cluster_proc_contxt(LocalCluster()):
         # Asserting all kwargs_ls list lengths are equal to fp_ls length
@@ -85,10 +98,7 @@ def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         arr_ls = []
         for i, fp in enumerate(fp_ls):
             logging.info(f"Loading image # {i} / {len(arr_ls)}")
-            if ".zarr" in fp:
-                arr_ls.append(da.from_zarr(fp)[*trimmer].compute())
-            elif ".tif" in fp:
-                arr_ls.append(tifffile.imread(fp)[*trimmer])
+            arr_ls.append(read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
         # Making napari viewer
@@ -96,13 +106,11 @@ def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         # Adding image to napari viewer
         for i, arr in enumerate(arr_ls):
             logging.info(f"Napari viewer - adding image # {i} / {len(arr_ls)}")
+            # NOTE: best kwargs to use are name, contrast_limits, and colormap
             viewer.add_image(
                 data=arr,
                 blending="additive",
                 **kwargs_ls[i],
-                # name=ar.__name__,
-                # contrast_limits=(0, vmax),
-                # colormap=cmap,
             )
     # Running viewer
     napari.run()
@@ -111,12 +119,13 @@ def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
 @functools.wraps(view_arrs)
 def view_arrs_mp(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
     logging.info("Starting napari viewer")
+    # Making napari viewer multiprocess
     napari_proc = Process(target=view_arrs, args=(fp_ls, trimmer), kwargs=kwargs)
     napari_proc.start()
     # napari_proc.join()
 
 
-# TODO: implement elsewhere for examples
+# TODO: implement elsewhere for usage examples
 def save_arr(
     fp_in: str,
     fp_out: str,
@@ -127,30 +136,30 @@ def save_arr(
     NOTE: exports as tiff only.
     """
     with cluster_proc_contxt(LocalCluster()):
-        # Reading array
-        if ".zarr" in fp_in:
-            arr = da.from_zarr(fp_in)
-        elif ".tif" in fp_in:
-            arr = tifffile.imread(fp_in)
-        # Trimming
-        if trimmer:
-            arr = arr[*trimmer]
-        # Computing (if dask array)
-        if isinstance(arr, da.Array):
-            arr = arr.compute()
+        # Reading
+        arr = read_img(fp_in, trimmer)
         # Writing
         tifffile.imwrite(fp_out, arr)
 
 
-def combine_arrs(fp_in_ls: tuple[str, ...], fp_out: str):
+def combine_arrs(
+    fp_in_ls: tuple[str, ...],
+    fp_out: str,
+    trimmer: Optional[tuple[slice, ...]] = None,
+    **kwargs,
+):
     dtype = np.uint16
     # Reading arrays
-    arrs_ls = []
+    arr_ls = []
     for i in fp_in_ls:
-        # TODO: figure out conversion better
-        arrs_ls.append(tifffile.imread(i).round(0).clip(0, 2**16 - 1).astype(dtype))
+        # Read image
+        arr = read_img(i, trimmer)
+        # Convert to dtype (rounded and within clip bounds)
+        arr = arr.round(0).clip(0, 2**16 - 1).astype(dtype)
+        # Adding image to list
+        arr_ls.append(arr)
     # Stacking arrays
-    arr = np.stack(arrs_ls, axis=-1, dtype=dtype)
+    arr = np.stack(arr_ls, axis=-1, dtype=dtype)
     # Writing to file
     tifffile.imwrite(fp_out, arr)
 
