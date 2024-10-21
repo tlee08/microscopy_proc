@@ -55,20 +55,25 @@ if __name__ == "__main__":
         coords2heatmap_trfm_pipeline(pfm)
 
         # COMBINING ARRAYS (ZYXC)
-        # Combining reg
+        # # Combining reg
+        # combine_arrs(
+        #     fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
+        #     # 2nd regresult means the combining works in ImageJ
+        #     fp_out=os.path.join(out_dir, "combined_reg.tif"),
+        # )
+        # # Combining cellc
         combine_arrs(
-            fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
-            # 2nd regresult means the combining works in ImageJ
-            fp_out=os.path.join(out_dir, "combined_reg.tif"),
-        )
-        # Combining cellc
-        combine_arrs(
-            fp_in_ls=(pfm.raw, pfm.maxima_final, pfm.wshed_final),
-            fp_out=os.path.join(out_dir, "combined_cellc.tif"),
+            fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
+            fp_out=os.path.join(out_dir, "combined_cellc_regions.tif"),
             trimmer=trimmer,
         )
-        # Combining transformed points
-        combine_arrs(
-            fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
-            fp_out=os.path.join(out_dir, "combined_points.tif"),
-        )
+        # combine_arrs(
+        #     fp_in_ls=(pfm.raw, pfm.maxima_final, pfm.wshed_final),
+        #     fp_out=os.path.join(out_dir, "combined_cellc.tif"),
+        #     trimmer=trimmer,
+        # )
+        # # Combining transformed points
+        # combine_arrs(
+        #     fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
+        #     fp_out=os.path.join(out_dir, "combined_points.tif"),
+        # )
