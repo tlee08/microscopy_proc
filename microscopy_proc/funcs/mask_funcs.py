@@ -5,6 +5,16 @@ from microscopy_proc.constants import MASK_VOLUME, AnnotColumns, Coords
 
 
 def make_outline(arr: np.ndarray) -> pd.DataFrame:
+    """
+    Returning a dataframe with the outline coordinates of a 3D binary array.
+
+    The dataframe index is an ascending integer (of the outline coordinates)
+    and the columns are:
+    - z: z-coordinate
+    - y: y-coordinate
+    - x: x-coordinate
+    - is_in: 1 if CURRENT voxel is inside mask, 0 if NEXT voxel is outside mask.
+    """
     # Shifting along last axis with 0 padding
     l_shift = np.concatenate([arr[..., 1:], np.zeros((*arr.shape[:-1], 1))], axis=-1)
     r_shift = np.concatenate([np.zeros((*arr.shape[:-1], 1)), arr[..., :-1]], axis=-1)

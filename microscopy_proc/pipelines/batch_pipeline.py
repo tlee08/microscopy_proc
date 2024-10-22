@@ -72,35 +72,35 @@ if __name__ == "__main__":
             # Making params json
             update_configs(
                 pfm,
-                # REFERENCE
-                # RAW
-                # REGISTRATION
-                ref_orient_ls=(-2, 3, 1),
-                ref_z_trim=(None, None, None),
-                ref_y_trim=(None, None, None),
-                ref_x_trim=(None, None, None),
-                z_rough=3,
-                y_rough=6,
-                x_rough=6,
-                z_fine=1,
-                y_fine=0.6,
-                x_fine=0.6,
-                z_trim=(None, None, None),
-                y_trim=(None, None, None),
-                x_trim=(None, None, None),
-                # MASK
-                # OVERLAP
-                # CELL COUNTING
-                tophat_sigma=10,
-                dog_sigma1=1,
-                dog_sigma2=4,
-                gauss_sigma=101,
-                thresh_p=60,
-                min_threshd=100,
-                max_threshd=9000,
-                maxima_sigma=10,
-                min_wshed=1,
-                max_wshed=700,
+                # # REFERENCE
+                # # RAW
+                # # REGISTRATION
+                # ref_orient_ls=(-2, 3, 1),
+                # ref_z_trim=(None, None, None),
+                # ref_y_trim=(None, None, None),
+                # ref_x_trim=(None, None, None),
+                # z_rough=3,
+                # y_rough=6,
+                # x_rough=6,
+                # z_fine=1,
+                # y_fine=0.6,
+                # x_fine=0.6,
+                # z_trim=(None, None, None),
+                # y_trim=(None, None, None),
+                # x_trim=(None, None, None),
+                # # MASK
+                # # OVERLAP
+                # # CELL COUNTING
+                # tophat_sigma=10,
+                # dog_sigma1=1,
+                # dog_sigma2=4,
+                # gauss_sigma=101,
+                # thresh_p=60,
+                # min_threshd=100,
+                # max_threshd=9000,
+                # maxima_sigma=10,
+                # min_wshed=1,
+                # max_wshed=700,
             )
 
             # Making zarr from tiff file(s)
@@ -112,11 +112,11 @@ if __name__ == "__main__":
             img_fine_pipeline(pfm, overwrite=overwrite)
             img_trim_pipeline(pfm, overwrite=overwrite)
             # Running Elastix registration
-            registration_pipeline(pfm)
+            registration_pipeline(pfm, overwrite=overwrite)
             # Running mask pipeline
-            make_mask_pipeline(pfm)
+            make_mask_pipeline(pfm, overwrite=overwrite)
             # Making overlap chunks in preparation for cell counting
-            img_overlap_pipeline(pfm)
+            img_overlap_pipeline(pfm, overwrite=overwrite)
             # Counting cells
             cellc1_pipeline(pfm, overwrite=overwrite)
             cellc2_pipeline(pfm, overwrite=overwrite)
@@ -138,9 +138,9 @@ if __name__ == "__main__":
             # Exporting cells_agg parquet as csv
             cells2csv_pipeline(pfm, overwrite=overwrite)
             # Making points and heatmap images
-            coords2points_raw_pipeline(pfm)
-            coords2points_trfm_pipeline(pfm)
-            coords2heatmap_trfm_pipeline(pfm)
+            coords2points_raw_pipeline(pfm, overwrite=overwrite)
+            coords2points_trfm_pipeline(pfm, overwrite=overwrite)
+            coords2heatmap_trfm_pipeline(pfm, overwrite=overwrite)
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             continue

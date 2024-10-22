@@ -280,11 +280,6 @@ def img_trim_pipeline(
     tifffile.imwrite(pfm.trimmed, trimmed_arr)
 
 
-###################################################################################################
-# Overwrite check decorator
-###################################################################################################
-
-
 # @flow
 @overwrite_check_decorator
 def registration_pipeline(
@@ -301,6 +296,11 @@ def registration_pipeline(
     )
 
 
+###################################################################################################
+# MASK PIPELINE FUNCS
+###################################################################################################
+
+
 # @flow
 @overwrite_check_decorator
 def make_mask_pipeline(
@@ -314,9 +314,11 @@ def make_mask_pipeline(
     """
     # Getting configs
     configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
-    # Reading ref and trimmed imgs
-    ref_arr = tifffile.imread(pfm.ref)
+    # Reading annot (proj oriented and trimmed) and trimmed imgs
+    annot_arr = tifffile.imread(pfm.annot)
     trimmed_arr = tifffile.imread(pfm.trimmed)
+    # Storing annot_arr shape
+    s = annot_arr.shape
     # Making mask
     blur_arr = Gf.gauss_blur_filt(trimmed_arr, configs.mask_gaus_blur)
     tifffile.imwrite(pfm.premask_blur, blur_arr)
@@ -336,7 +338,6 @@ def make_mask_pipeline(
         .astype(np.int32)
     )
     # Filtering out of bounds coords
-    s = ref_arr.shape
     outline_df = outline_df.query(
         f"({Coords.Z.value} >= 0) & ({Coords.Z.value} < {s[0]}) & "
         f"({Coords.Y.value} >= 0) & ({Coords.Y.value} < {s[1]}) & "
@@ -345,22 +346,14 @@ def make_mask_pipeline(
 
     # Make outline img (1 for in, 2 for out)
     # TODO: convert to return np.array and save out-of-function
-    coords2points(
-        outline_df[outline_df.is_in == 1],
-        ref_arr.shape,
-        pfm.outline,
-    )
+    coords2points_tiff(outline_df[outline_df.is_in == 1], s, pfm.outline)
     in_arr = tifffile.imread(pfm.outline)
-    coords2points(
-        outline_df[outline_df.is_in == 0],
-        ref_arr.shape,
-        pfm.outline,
-    )
+    coords2points_tiff(outline_df[outline_df.is_in == 0], s, pfm.outline)
     out_arr = tifffile.imread(pfm.outline)
     tifffile.imwrite(pfm.outline, in_arr + out_arr * 2)
 
     # Fill in outline to recreate mask (not perfect)
-    mask_reg_arr = fill_outline(outline_df, ref_arr.shape)
+    mask_reg_arr = fill_outline(outline_df, s)
     # Opening (removes FP) and closing (fills FN)
     mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(np.uint8)
     mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(np.uint8)
@@ -368,18 +361,27 @@ def make_mask_pipeline(
     tifffile.imwrite(pfm.mask_reg, mask_reg_arr)
 
     # Counting mask voxels in each region
-    annot_arr = tifffile.imread(pfm.annot)
-    annot_df = annot_dict2df(read_json(pfm.map))
+    # Getting original annot fp by making ref_fp_model
+    rfm = RefFpModel.get_ref_fp_model(
+        configs.atlas_dir,
+        configs.ref_v,
+        configs.annot_v,
+        configs.map_v,
+    )
+    # Reading original annot
+    annot_orig_arr = tifffile.imread(rfm.annot)
     # Getting the annotation name for every cell (zyx coord)
     mask_df = pd.merge(
-        left=mask2region_counts(np.full(annot_arr.shape, 1), annot_arr),
+        left=mask2region_counts(np.full(annot_orig_arr.shape, 1), annot_orig_arr),
         right=mask2region_counts(mask_reg_arr, annot_arr),
         how="left",
         left_index=True,
         right_index=True,
         suffixes=("_annot", "_mask"),
     ).fillna(0)
-    # Combining (summing) the cells_agg_df values for parent regions using the annot_df
+    # Reading annotation mappings json
+    annot_df = annot_dict2df(read_json(pfm.map))
+    # Combining (summing) the mask_df volumes for parent regions using the annot_df
     mask_df = combine_nested_regions(mask_df, annot_df)
     # Calculating proportion of mask volume in each region
     mask_df[MaskColumns.VOLUME_PROP.value] = (
