@@ -69,10 +69,10 @@ IMGS = {
         "wshed_final": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
     },
     "Post Processing Checks": {
-        "points_check": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
-        "heatmap_check": {VRANGE: (0, 20), CMAP: Colormaps.RED.value},
-        "points_trfm_check": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
-        "heatmap_trfm_check": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
+        "points_raw": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "heatmap_raw": {VRANGE: (0, 20), CMAP: Colormaps.RED.value},
+        "points_trfm": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "heatmap_trfm": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
     },
 }
 
