@@ -141,9 +141,11 @@ def combine_root_pipeline(root_dir: str, out_dir: str):
     # so we can catch any projects that are missing these files
     proj_dir_ls = []
     for i in natsorted(os.listdir(root_dir)):
+        # Making current proj_dir's ProjFpModel
         proj_dir = os.path.join(root_dir, i)
         pfm = get_proj_fp_model(proj_dir)
         try:
+            # If proj has config_params file, then add to list of projs to combine
             update_configs(pfm)
             proj_dir_ls.append(proj_dir)
         except FileNotFoundError:
