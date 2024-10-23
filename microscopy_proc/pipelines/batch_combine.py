@@ -144,12 +144,12 @@ def combine_root_pipeline(root_dir: str, out_dir: str):
         # Making current proj_dir's ProjFpModel
         proj_dir = os.path.join(root_dir, i)
         pfm = get_proj_fp_model(proj_dir)
-        try:
-            # If proj has config_params file, then add to list of projs to combine
-            update_configs(pfm)
-            proj_dir_ls.append(proj_dir)
-        except FileNotFoundError:
-            pass
+        # try:
+        # If proj has config_params file, then add to list of projs to combine
+        update_configs(pfm)
+        proj_dir_ls.append(proj_dir)
+        # except FileNotFoundError:
+        #     pass
     # Running combine pipeline
     combine_ls_pipeline(proj_dir_ls, out_dir)
 
