@@ -135,7 +135,11 @@ def combine_ls_pipeline(
     total_df.to_csv(out_fp_csv)
 
 
-def combine_root_pipeline(root_dir: str, out_dir: str):
+def combine_root_pipeline(
+    root_dir: str,
+    out_dir: str,
+    overwrite: bool = False,
+):
     # Get all experiments in root_dir (any dir with a configs file)
     # NOTE: not using the cells_agg and mask file to check for valid projects
     # so we can catch any projects that are missing these files
@@ -144,14 +148,14 @@ def combine_root_pipeline(root_dir: str, out_dir: str):
         # Making current proj_dir's ProjFpModel
         proj_dir = os.path.join(root_dir, i)
         pfm = get_proj_fp_model(proj_dir)
-        # try:
-        # If proj has config_params file, then add to list of projs to combine
-        update_configs(pfm)
-        proj_dir_ls.append(proj_dir)
-        # except FileNotFoundError:
-        #     pass
+        try:
+            # If proj has config_params file, then add to list of projs to combine
+            update_configs(pfm)
+            proj_dir_ls.append(proj_dir)
+        except FileNotFoundError:
+            pass
     # Running combine pipeline
-    combine_ls_pipeline(proj_dir_ls, out_dir)
+    combine_ls_pipeline(proj_dir_ls, out_dir, overwrite)
 
 
 if __name__ == "__main__":
@@ -159,4 +163,4 @@ if __name__ == "__main__":
     root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
     out_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/"
     # Running
-    combine_root_pipeline(root_dir, out_dir)
+    combine_root_pipeline(root_dir, out_dir, overwrite=True)
