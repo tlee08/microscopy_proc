@@ -6,11 +6,11 @@ import streamlit as st
 from pydantic import BaseModel
 from streamlit.delta_generator import DeltaGenerator
 
+from microscopy_proc.constants import Coords
 from microscopy_proc.gui.gui_funcs import (
     CONFIGS,
-    L_SLC,
-    L_ZYX,
     PROJ_DIR,
+    SliceNames,
     load_configs,
     page_decorator,
 )
@@ -31,15 +31,15 @@ class NO_DEFAULT:
     pass
 
 
-SUBLABEL_MAP = {
-    "chunksize": L_ZYX,
-    "ref_orient_ls": L_ZYX,
-    "ref_z_trim": L_SLC,
-    "ref_y_trim": L_SLC,
-    "ref_x_trim": L_SLC,
-    "z_trim": L_SLC,
-    "y_trim": L_SLC,
-    "x_trim": L_SLC,
+SUBLABEL_NAMES_MAP = {
+    "chunksize": tuple(enum2list(Coords)),
+    "ref_orient_ls": tuple(enum2list(Coords)),
+    "ref_z_trim": tuple(enum2list(SliceNames)),
+    "ref_y_trim": tuple(enum2list(SliceNames)),
+    "ref_x_trim": tuple(enum2list(SliceNames)),
+    "z_trim": tuple(enum2list(SliceNames)),
+    "y_trim": tuple(enum2list(SliceNames)),
+    "x_trim": tuple(enum2list(SliceNames)),
 }
 
 
@@ -330,7 +330,7 @@ class ConfigsUpdater:
         field_name: str,
         **kwargs,
     ):
-        sublabels = SUBLABEL_MAP.get(field_name, None)
+        sublabels = SUBLABEL_NAMES_MAP.get(field_name, None)
         cls.field2updater(
             pydantic_instance=pydantic_instance,
             field_name=field_name,
@@ -356,7 +356,7 @@ def configs_reset_func():
         if isinstance(value, tuple):
             # If field is a tuple, then setting each value in tuple separately
             # Expects an entry in SUBLABEL_MAP
-            for i, sublabel in enumerate(SUBLABEL_MAP[label]):
+            for i, sublabel in enumerate(SUBLABEL_NAMES_MAP[label]):
                 st.session_state[f"{VALUE}_{label}_{sublabel}"] = value[i]
                 st.session_state[f"{IS_NONE}_{label}_{sublabel}"] = value[i] is None
         else:

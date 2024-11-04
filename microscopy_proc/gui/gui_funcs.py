@@ -15,8 +15,11 @@ PROJ_DIR_STATUS = "proj_dir_status"
 
 CONFIGS = "configs"
 
-L_ZYX = ("z", "y", "x")
-L_SLC = ("start", "stop", "step")
+
+class SliceNames(Enum):
+    START = "start"
+    STOP = "stop"
+    STEP = "step"
 
 
 class ProjDirStatus(Enum):

@@ -37,9 +37,13 @@ class MapVersions(Enum):
 
 
 class Coords(Enum):
-    X = "x"
-    Y = "y"
+    """
+    NOTE: this is the de facto order of the 3d dimensions (for tiff and zarr)
+    """
+
     Z = "z"
+    Y = "y"
+    X = "x"
 
 
 TRFM = "trfm"
