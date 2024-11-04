@@ -56,17 +56,12 @@ def page5_view():
     st.write("## Visualiser")
     # Checking the max dimensions for trimmer sliders
     arr = None
-    try:
-        arr = da.from_zarr(pfm.overlap)
-    except Exception:
+    for i in [pfm.overlap, pfm.raw]:
         try:
-            arr = da.from_zarr(pfm.raw)
-            st.warning("No overlap file found, using raw file instead")
+            arr = da.from_zarr(pfm.overlap)
+            break
         except Exception:
-            st.error(
-                "No overlap or raw array files found.\n\n"
-                + "No trimming is available (if image too big this may crash the application)."
-            )
+            st.warning(f"No {i} file found")
     # Making trimmer sliders if array exists
     if arr is not None:
         for i, coord in enumerate(Coords):
@@ -83,7 +78,13 @@ def page5_view():
             )
 
     else:
-        # Otherwise trimmers are set to None
+        # Otherwise arr is None
+        # Warning
+        st.error(
+            "No overlap or raw array files found.\n\n"
+            + "No trimming is available (if image too big this may crash the application)."
+        )
+        # trimmers are set to None
         st.write("No Z trimming")
         st.write("No Y trimming")
         st.write("No X trimming")
@@ -179,4 +180,7 @@ def page5_view():
         st.write(f"Trim dimensions are {byte_size_gb} GB")
     else:
         # Otherwise outputting warning that trim dimensions are unknown
-        st.warning("Trim dimensions are unknown")
+        st.warning(
+            "Trim dimensions are unknown, "
+            + "because overlap and raw arr do not exist in the project"
+        )
