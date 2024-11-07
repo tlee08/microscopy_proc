@@ -221,16 +221,12 @@ def df_map_ids(cells_df: pd.DataFrame, annot_df: pd.DataFrame) -> pd.DataFrame:
 
 def df_include_special_ids(cells_df: pd.DataFrame) -> pd.DataFrame:
     cells_df = cells_df.copy()
+    id_col = AnnotColumns.ID.value
+    name_col = AnnotColumns.NAME.value
     # Setting points with ID == -1 as "invalid" label
-    cells_df.loc[cells_df[AnnotColumns.ID.value] == -1, AnnotColumns.NAME.value] = (
-        "invalid"
-    )
+    cells_df.loc[cells_df[id_col] == -1, name_col] = "invalid"
     # Setting points with ID == 0 as "universe" label
-    cells_df.loc[cells_df[AnnotColumns.ID.value] == 0, AnnotColumns.NAME.value] = (
-        "universe"
-    )
+    cells_df.loc[cells_df[id_col] == 0, name_col] = "universe"
     # Setting points with no region map name (but have a positive ID value) as "no label" label
-    cells_df.loc[cells_df[AnnotColumns.NAME.value].isna(), AnnotColumns.NAME.value] = (
-        "no label"
-    )
+    cells_df.loc[cells_df[name_col].isna(), name_col] = "no label"
     return cells_df

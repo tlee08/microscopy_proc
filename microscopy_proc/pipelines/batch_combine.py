@@ -6,7 +6,11 @@ import pandas as pd
 from natsort import natsorted
 
 from microscopy_proc.constants import ANNOT_COLUMNS_FINAL, CellColumns, MaskColumns
-from microscopy_proc.funcs.map_funcs import annot_df_get_parents, annot_dict2df
+from microscopy_proc.funcs.map_funcs import (
+    annot_df_get_parents,
+    annot_dict2df,
+    df_include_special_ids,
+)
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, update_configs
@@ -78,7 +82,7 @@ def combine_ls_pipeline(
     # Adding parent columns to annot_df
     total_df = annot_df_get_parents(total_df)
     # Adding special rows (e.g. "universal")
-    # TODO: ABCD
+    total_df = df_include_special_ids(total_df)
     # Keeping only the required columns
     total_df = total_df[ANNOT_COLUMNS_FINAL]
     # Making columns a multindex with levels ("annotations", annot columns)
