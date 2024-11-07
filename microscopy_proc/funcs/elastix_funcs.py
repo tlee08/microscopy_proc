@@ -67,7 +67,6 @@ def registration(
         # Removing IterationInfo files
         if re.search(r"^IterationInfo.(\d+).R(\d+).txt$", i):
             silentremove(os.path.join(output_img_dir, i))
-    # Returning the moved image (output_img) array
     return sitk.GetArrayFromImage(res_img)
 
 
@@ -125,7 +124,6 @@ def transformation_coords(
     )
     # Removing temporary and unecessary transformix files
     silentremove(out_dir)
-    # Returning transformed coords
     return coords_transformed
 
 

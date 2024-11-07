@@ -49,7 +49,6 @@ def annot_dict2df(data_dict: dict) -> pd.DataFrame:
         annot_df[k] = annot_df[k].astype(v)
     # Set region ID as index
     annot_df = annot_df.set_index(AnnotColumns.ID.value)
-    # Returning the df
     return annot_df
 
 
@@ -77,7 +76,6 @@ def annot_df_get_parents(annot_df: pd.DataFrame) -> pd.DataFrame:
         # right_on=AnnotExtraColumns.PARENT_ID.value,
         how="left",
     )
-    # Returning annot_df
     return annot_df
 
 
@@ -107,7 +105,6 @@ def annot_df_get_children(annot_df: pd.DataFrame) -> pd.DataFrame:
         i_parent = annot_df.loc[i, AnnotColumns.PARENT_STRUCTURE_ID.value]
         if not pd.isna(i_parent):
             annot_df.at[i_parent, AnnotExtraColumns.CHILDREN.value].append(i)
-    # Returning annot_df
     return annot_df
 
 
@@ -172,7 +169,6 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     ]
     # Removing unnecessary columns (AnnotExtraColumns.CHILDREN.value column)
     cells_agg_df = cells_agg_df.drop(columns=[AnnotExtraColumns.CHILDREN.value])
-    # Returning
     return cells_agg_df
 
 
@@ -206,7 +202,6 @@ def annot_df2dict(annot_df: pd.DataFrame) -> list:
         recursive_gen(i)
         for i in annot_df[annot_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index
     ]
-    # Returning
     return tree
 
 
@@ -219,6 +214,13 @@ def df_map_ids(cells_df: pd.DataFrame, annot_df: pd.DataFrame) -> pd.DataFrame:
         how="left",
         on=AnnotColumns.ID.value,
     )
+    # Including special ids
+    cells_df = df_include_special_ids(cells_df)
+    return cells_df
+
+
+def df_include_special_ids(cells_df: pd.DataFrame) -> pd.DataFrame:
+    cells_df = cells_df.copy()
     # Setting points with ID == -1 as "invalid" label
     cells_df.loc[cells_df[AnnotColumns.ID.value] == -1, AnnotColumns.NAME.value] = (
         "invalid"
@@ -231,5 +233,4 @@ def df_map_ids(cells_df: pd.DataFrame, annot_df: pd.DataFrame) -> pd.DataFrame:
     cells_df.loc[cells_df[AnnotColumns.NAME.value].isna(), AnnotColumns.NAME.value] = (
         "no label"
     )
-    # Returning
     return cells_df

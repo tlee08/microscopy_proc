@@ -84,7 +84,6 @@ class ConfigsUpdater:
                 value=curr is None,
                 key=f"{IS_NONE}_{label}",
             )
-        # Returning container, current value, and whether that value is None
         return container, curr, is_none
 
     @classmethod
@@ -111,7 +110,6 @@ class ConfigsUpdater:
             key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )  # type: ignore
-        # Returning input
         return None if is_none else output
 
     @classmethod
@@ -136,7 +134,6 @@ class ConfigsUpdater:
             key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )  # type: ignore
-        # Returning input
         return None if is_none else output
 
     @classmethod
@@ -161,7 +158,6 @@ class ConfigsUpdater:
             key=f"{VALUE}_{label}",
             label_visibility="collapsed",
         )  # type: ignore
-        # Returning input
         return None if is_none else output
 
     @classmethod
@@ -237,7 +233,6 @@ class ConfigsUpdater:
             )
             for i in range(n)
         )
-        # Returning input
         return output_ls
 
     @classmethod

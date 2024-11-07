@@ -102,7 +102,6 @@ def coords2block(df: dd.DataFrame | pd.DataFrame, block_info: dict) -> dd.DataFr
     df[Coords.Z.value] = df[Coords.Z.value] - z[0]
     df[Coords.Y.value] = df[Coords.Y.value] - y[0]
     df[Coords.X.value] = df[Coords.X.value] - x[0]
-    # Returning df
     return df
 
 

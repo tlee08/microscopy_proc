@@ -77,6 +77,8 @@ def combine_ls_pipeline(
     total_df = annot_dict2df(read_json(pfm0.map))
     # Adding parent columns to annot_df
     total_df = annot_df_get_parents(total_df)
+    # Adding special rows (e.g. "universal")
+    # TODO: ABCD
     # Keeping only the required columns
     total_df = total_df[ANNOT_COLUMNS_FINAL]
     # Making columns a multindex with levels ("annotations", annot columns)

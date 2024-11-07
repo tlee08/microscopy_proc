@@ -32,7 +32,6 @@ class CpuCellcFuncs:
         res = cls.xdimage.white_tophat(arr, sigma)
         logging.debug("ReLu")
         res = cls.xp.maximum(res, 0)  # type: ignore
-        # Returning
         return res.astype(cls.xp.uint16)
 
     @classmethod
@@ -47,7 +46,6 @@ class CpuCellcFuncs:
         res = gaus1 - gaus2
         logging.debug("ReLu")
         res = cls.xp.maximum(res, 0)
-        # Returning
         return res.astype(cls.xp.uint16)
 
     @classmethod
@@ -56,7 +54,6 @@ class CpuCellcFuncs:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         logging.debug("Calculate Gaussian blur")
         res = cls.xdimage.gaussian_filter(arr, sigma=sigma)
-        # Returning
         return res.astype(cls.xp.uint16)
 
     @classmethod
@@ -69,7 +66,6 @@ class CpuCellcFuncs:
         res = arr - gaus
         logging.debug("ReLu")
         res = cls.xp.maximum(res, 0)
-        # Returning
         return res.astype(cls.xp.uint16)
 
     @classmethod
@@ -85,7 +81,6 @@ class CpuCellcFuncs:
             res = cls.xp.maximum(res, min_)
         if max_:
             res = cls.xp.minimum(res, max_)
-        # Returning
         return res
 
     @classmethod
@@ -116,7 +111,6 @@ class CpuCellcFuncs:
         optimal_threshold = cls.xp.argmax(between_class_variance)
         logging.debug("Apply threshold")
         res = arr > optimal_threshold
-        # Returning
         return res.astype(cls.xp.uint8)
 
     @classmethod
@@ -132,7 +126,6 @@ class CpuCellcFuncs:
         sd = arr0.std()
         logging.debug("Apply the threshold")
         res = arr > mu + offset_sd * sd
-        # Returning
         return res.astype(cls.xp.uint8)
 
     @classmethod
@@ -144,7 +137,6 @@ class CpuCellcFuncs:
         arr = cls.xp.asarray(arr)
         logging.debug("Applying the threshold")
         res = arr >= val
-        # Returning
         return res.astype(cls.xp.uint8)
 
     @classmethod
@@ -219,7 +211,6 @@ class CpuCellcFuncs:
         filt_objs = (arr < smin) | (arr > smax)
         logging.debug("Filter out objects (by setting them to 0)")
         arr[filt_objs] = 0
-        # Returning
         return arr
 
     @classmethod
@@ -250,7 +241,6 @@ class CpuCellcFuncs:
             )
             mask_arr = (cls.xp.asarray(mask_arr) > 0).astype(cls.xp.uint8)
             res = res * mask_arr
-        # Returning
         return res
 
     @classmethod
@@ -260,7 +250,6 @@ class CpuCellcFuncs:
         mask_arr = cls.xp.asarray(mask_arr).astype(cls.xp.uint8)
         logging.debug("Masking for only maxima within mask")
         res = arr * (mask_arr > 0)
-        # Returning
         return res
 
     @classmethod
@@ -279,7 +268,6 @@ class CpuCellcFuncs:
             markers=maxima_arr,
             mask=mask_arr > 0,
         )
-        # Returning
         return res
 
     @classmethod
@@ -296,7 +284,6 @@ class CpuCellcFuncs:
         wshed_arr = cls.wshed_segm(raw_arr, maxima_arr, mask_arr)
         # Getting volumes of watershed regions
         res = cls.ids2volumes(wshed_arr)
-        # Returning
         return res
 
     @classmethod
@@ -323,7 +310,6 @@ class CpuCellcFuncs:
         df[CellColumns.VOLUME.value] = -1  # TODO: placeholder
         df[CellColumns.SUM_INTENSITY.value] = -1  # TODO: placeholder
         # df[CellColumns.MAX_INTENSITY.value] = -1  # TODO: placeholder
-        # Returning
         return df
 
     @classmethod
@@ -393,7 +379,6 @@ class CpuCellcFuncs:
         df = df[
             df[[Coords.Z.value, Coords.Y.value, Coords.X.value]].isna().sum(axis=1) == 0
         ]
-        # Returning
         return df
 
 

@@ -37,7 +37,6 @@ def make_outline(arr: np.ndarray) -> pd.DataFrame:
     coords_df = coords_df.sort_values(
         by=[Coords.Z.value, Coords.Y.value, Coords.X.value]
     ).reset_index(drop=True)
-    # Returning
     return coords_df
 
 
@@ -58,7 +57,6 @@ def fill_outline(coords_df: pd.DataFrame, shape: tuple) -> np.ndarray:
         # is_in = 0, stop filling in (after current voxel)
         elif x["is_in"] == 0:
             res[x[Coords.Z.value], x[Coords.Y.value], x[Coords.X.value] + 1 :] = 0
-    # Returning
     return res
 
 
@@ -77,7 +75,6 @@ def mask2region_counts(mask_arr: np.ndarray, annot_arr: np.ndarray) -> pd.DataFr
     mask_arr = mask_arr * annot_arr
     # Getting annotated region IDs
     id_labels, id_counts = np.unique(mask_arr, return_counts=True)
-    # Returning region IDs and counts as dataframe
     # NOTE: dropping the 0 index (background)
     return pd.DataFrame(
         {MASK_VOLUME: id_counts},

@@ -44,5 +44,4 @@ def reorient(arr: np.ndarray, orient_ls: tuple[int, ...]):
             arr = np.flip(arr, ax_new)
     # Reordering axes
     arr = arr.transpose(orient_ls)
-    # Returning
     return arr
