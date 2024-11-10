@@ -787,10 +787,7 @@ def transform_coords_pipeline(
         cells_df = cells_df * np.array((configs.z_fine, configs.y_fine, configs.x_fine))
         # Trimming/offsetting to sliced space
         cells_df = cells_df - np.array(
-            [
-                s[0] if s[0] else 0
-                for s in (configs.z_trim, configs.y_trim, configs.x_trim)
-            ]
+            [s[0] or 0 for s in (configs.z_trim, configs.y_trim, configs.x_trim)]
         )
 
         cells_trfm_df = transformation_coords(cells_df, pfm.ref, pfm.regresult)
