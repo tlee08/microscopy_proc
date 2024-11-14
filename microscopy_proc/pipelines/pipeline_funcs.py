@@ -886,13 +886,13 @@ def group_cells_pipeline(
         cells_df = pd.read_parquet(pfm.cells_df)
         # Sanitising (removing smb columns)
         cells_df = sanitise_smb_df(cells_df)
-        # Grouping cells by region name
+        # Grouping cells by region name and aggregating on given mappings
         cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPINGS)
         cells_agg_df.columns = list(CELL_AGG_MAPPINGS.keys())
         # Reading annotation mappings dataframe
         # Making df of region names and their parent region names
         annot_df = annot_dict2df(read_json(pfm.map))
-        # Combining (summing) the cells_groagg values for parent regions using the annot_df
+        # Combining (summing) the cells_agg_df values for parent regions using the annot_df
         cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
         # Calculating integrated average intensity (sum_intensity / volume)
         cells_agg_df[CellColumns.IOV.value] = (

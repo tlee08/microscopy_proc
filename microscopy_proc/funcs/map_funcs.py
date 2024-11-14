@@ -60,17 +60,19 @@ def annot_df_get_parents(annot_df: pd.DataFrame) -> pd.DataFrame:
     Returns a new dataframe with index as region ID,
     all original columns, and the new columns:
     - PARENT_ACRONYM
+
+    NOTE: any root rows (i.e. no parent region) will have NaN in the PARENT_ACRONYM column.
     """
     # For each region (i.e. row), storing the parent region name in a column
     # by merging the annot_df on parent_structure_id
-    # with the annot_df (as parent copy, so own id)
+    # with the annot_df (as parent copy) on its own id
     annot_df = pd.merge(
         left=annot_df,
-        right=annot_df[[AnnotColumns.ACRONYM.value]].rename(
+        right=annot_df.rename(
             columns={
                 AnnotColumns.ACRONYM.value: AnnotExtraColumns.PARENT_ACRONYM.value,
             }
-        ),
+        )[[AnnotExtraColumns.PARENT_ACRONYM.value]],
         left_on=AnnotColumns.PARENT_STRUCTURE_ID.value,
         right_index=True,
         # right_on=AnnotExtraColumns.PARENT_ID.value,
@@ -83,8 +85,6 @@ def annot_df_get_children(annot_df: pd.DataFrame) -> pd.DataFrame:
     """
     Get the children region information for all regions
     in the annotation mappings dataframe.
-
-    NOTE: assumes
 
     Returns a new dataframe with index as region ID
     and the columns:
@@ -129,8 +129,7 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     # Getting annot_df with parent region information for all regions
     annot_df = annot_df_get_parents(annot_df)
     # Merging the cells_agg df with the annot_df
-    # NOTE: we are setting the annot_df index as ID
-    # and assuming cells_agg index is ID (via groupby)
+    # NOTE: annot_df and cells_agg_df both have index as ID
     cells_agg_df = pd.merge(
         left=annot_df,
         right=cells_agg_df,
@@ -142,28 +141,30 @@ def combine_nested_regions(cells_agg_df: pd.DataFrame, annot_df: pd.DataFrame):
     # NOTE: we do this after the merge, in case there are NaN's
     # in the cells_agg_df regions (e.g. name is NaN, no-label or universal)
     cells_agg_df = annot_df_get_children(cells_agg_df)
+    # Imputing all NaN values in the measure columns with 0
+    cells_agg_df[sum_cols] = cells_agg_df[sum_cols].fillna(0)
 
     # Recursively summing the cells_agg_df columns with each child's and current value
-    def recursive_sum(i):
+    def recursive_sum(row_id):
         # NOTE: updates the cells_agg_df in place
         # BASE CASE: no children - use current values
         # REC CASE: has children - recursively sum children values + current values
-        cells_agg_df.loc[i, sum_cols] += np.sum(
+        cells_agg_df.loc[row_id, sum_cols] += np.sum(
             [
-                recursive_sum(j)
-                for j in cells_agg_df.at[i, AnnotExtraColumns.CHILDREN.value]
+                recursive_sum(child_id)
+                for child_id in cells_agg_df.at[
+                    row_id, AnnotExtraColumns.CHILDREN.value
+                ]
             ],
             axis=0,
         )
-        return cells_agg_df.loc[i, sum_cols]
+        return cells_agg_df.loc[row_id, sum_cols]
 
-    # Filling NaN values with 0
-    cells_agg_df[sum_cols] = cells_agg_df[sum_cols].fillna(0)
-    # For each root (i.e. nodes with no parent region), recursively summing
-    # (i.e. top-down recursive approach)
+    # For each root row (i.e. nodes with no parent region),
+    # recursively summing (i.e. top-down recursive approach)
     [
-        recursive_sum(i)
-        for i in cells_agg_df[
+        recursive_sum(row_id)
+        for row_id in cells_agg_df[
             cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
         ].index
     ]
@@ -196,8 +197,8 @@ def annot_df2dict(annot_df: pd.DataFrame) -> list:
         ]
         return tree
 
-    # For each root (i.e. nodes with no parent region), recursively storing
-    # (i.e. top-down recursive approach)
+    # For each root (i.e. nodes with no parent region),
+    # recursively storing (i.e. top-down recursive approach)
     tree = [
         recursive_gen(i)
         for i in annot_df[annot_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index

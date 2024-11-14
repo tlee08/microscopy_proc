@@ -7,6 +7,9 @@ from microscopy_proc.constants import ProjSubdirs, RefFolders
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 
+# TODO: add 10_adaptv_f.zarr and move the xxx_f.zarr files to a new folder (e.g. "cellcount_final")
+# NOTE: this allows "cellcount" to be removed to save space when pipeline is completed and output checked
+
 
 class RefFpModel(BaseModel):
     """
