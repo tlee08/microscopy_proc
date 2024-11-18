@@ -65,12 +65,15 @@ def page5_view():
         try:
             arr = da.from_zarr(pfm.overlap)
             # Initialising trimmer sliders
-            if st.session_state[TRIMMER][Coords.Z].stop is None:
-                for coord in Coords:
-                    st.session_state[TRIMMER][coord] = slice(0, arr.shape[coord])
+            for coord in Coords:
+                st.session_state[TRIMMER][coord] = slice(0, arr.shape[coord])
             break
         except Exception:
             st.warning(f"No {i} file found")
+    print(
+        st.session_state[TRIMMER][coord].start,
+        st.session_state[TRIMMER][coord].stop,
+    )
     # Making trimmer sliders if array exists
     if arr is not None:
         for i, coord in enumerate(Coords):
