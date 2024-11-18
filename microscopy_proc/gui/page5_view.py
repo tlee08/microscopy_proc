@@ -11,7 +11,7 @@ from microscopy_proc.funcs.viewer_funcs import CMAP as CMAP_D
 from microscopy_proc.funcs.viewer_funcs import IMGS as IMGS_D
 from microscopy_proc.funcs.viewer_funcs import VRANGE as VRANGE_D
 from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
-from microscopy_proc.gui.gui_funcs import PROJ_DIR, SliceNames, init_var, page_decorator
+from microscopy_proc.gui.gui_funcs import PROJ_DIR, init_var, page_decorator
 from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
@@ -41,14 +41,18 @@ class Colormaps(Enum):
 def trimmer_func(coord):
     print(st.session_state[f"{TRIMMER}_{coord}_w"])
     # Updating own input variable
-    st.session_state[TRIMMER][coord] = st.session_state[f"{TRIMMER}_{coord}_w"]
+    st.session_state[TRIMMER][coord] = slice(
+        st.session_state[f"{TRIMMER}_{coord}_w"][0],
+        st.session_state[f"{TRIMMER}_{coord}_w"][1],
+    )
+    # st.session_state[TRIMMER][coord] = st.session_state[f"{TRIMMER}_{coord}_w"]
 
 
 @page_decorator()
 def page5_view():
     # Initialising session state variables
     init_var(IMGS, deepcopy(IMGS_D))
-    init_var(TRIMMER, {coord: [0, 0] for coord in Coords})
+    init_var(TRIMMER, {coord: slice(None) for coord in Coords})
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
@@ -60,6 +64,10 @@ def page5_view():
     for i in [pfm.overlap, pfm.raw]:
         try:
             arr = da.from_zarr(pfm.overlap)
+            # Initialising trimmer sliders
+            if st.session_state[TRIMMER][Coords.Z].stop is None:
+                for coord in Coords:
+                    st.session_state[TRIMMER][coord] = slice(0, arr.shape[coord])
             break
         except Exception:
             st.warning(f"No {i} file found")
@@ -72,7 +80,10 @@ def page5_view():
                 min_value=0,
                 max_value=arr.shape[i],
                 step=10,
-                value=st.session_state[TRIMMER][coord],
+                value=(
+                    st.session_state[TRIMMER][coord].start,
+                    st.session_state[TRIMMER][coord].stop,
+                ),
                 on_change=trimmer_func,
                 args=(coord,),
                 key=f"{TRIMMER}_{coord}_w",
@@ -89,8 +100,6 @@ def page5_view():
         st.write("No Z trimming")
         st.write("No Y trimming")
         st.write("No X trimming")
-    # Convenience storing trimmer session state variable
-    trimmer = st.session_state[TRIMMER]
     # Making visualiser checkboxes for each array
     visualiser_imgs = st.session_state[IMGS]
     for group_k, group_v in visualiser_imgs.items():
@@ -142,12 +151,11 @@ def page5_view():
     if st.session_state[RUN]:
         # Showing selected visualiser
         st.write("### Running visualiser")
-        st.write(
-            "With trim of:\n"
-            + f" - Z trim: {trimmer[0].start or SliceNames.START.value} - {trimmer[0].stop or SliceNames.STOP.value}\n"
-            + f" - Y trim: {trimmer[1].start or SliceNames.START.value} - {trimmer[1].stop or SliceNames.STOP.value}\n"
-            + f" - X trim: {trimmer[2].start or SliceNames.START.value} - {trimmer[2].stop or SliceNames.STOP.value}\n"
-        )
+        st.write("With trim of:\n")
+        for coord in Coords:
+            st.write(
+                f" - {coord.value} trim: {st.session_state[TRIMMER][coord].start} - {st.session_state[TRIMMER][coord].stop}"
+            )
         # Writing description of current image
         for img_v in imgs_to_run_ls:
             st.write(
@@ -158,7 +166,7 @@ def page5_view():
         # Running visualiser
         view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
-            trimmer=trimmer,
+            trimmer=st.session_state[TRIMMER],
             name=tuple(i[NAME] for i in imgs_to_run_ls),
             contrast_limits=tuple(i[VRANGE] for i in imgs_to_run_ls),
             colormap=tuple(i[CMAP] for i in imgs_to_run_ls),
@@ -168,13 +176,17 @@ def page5_view():
 
     # Image size estimate
     # First checking if there are trimming dimensions
-    if np.all([trimmer[coord].start is not None for coord in Coords]) and np.all(
-        [trimmer[coord].start is not None for coord in Coords]
-    ):
+    if np.all([st.session_state[TRIMMER][coord].start is not None for coord in Coords]):
         # TODO: make more accurate with pixel data types (e.g. uint8, uint16, uint32)
         byte_size = (
             len(imgs_to_run_ls)
-            * np.prod([trimmer[coord].stop - trimmer[coord].start for coord in Coords])
+            * np.prod(
+                [
+                    st.session_state[TRIMMER][coord].stop
+                    - st.session_state[TRIMMER][coord].start
+                    for coord in Coords
+                ]
+            )
             * 16
         )
         byte_size_gb = byte_size / np.power(10, 9)
