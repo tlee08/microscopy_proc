@@ -71,12 +71,15 @@ def page5_view():
     if arr is not None:
         for i, coord in enumerate(Coords):
             # Initialising trimmer sliders
-            st.session_state[TRIMMER][coord] = slice(0, arr.shape[i])
+            if st.session_state[TRIMMER][coord].start is None:
+                st.session_state[TRIMMER][coord] = slice(0, arr.shape[i])
+                print("HELLO")
             # Making slider
-            # print(
-            #     st.session_state[TRIMMER][coord].start,
-            #     st.session_state[TRIMMER][coord].stop,
-            # )
+            print("ABCD")
+            print(
+                st.session_state[TRIMMER][coord].start,
+                st.session_state[TRIMMER][coord].stop,
+            )
             st.slider(
                 label=f"{coord.value} trimmer",
                 min_value=0,
