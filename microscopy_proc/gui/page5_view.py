@@ -65,6 +65,7 @@ def page5_view():
         try:
             arr = da.from_zarr(pfm.overlap)
             # Initialising trimmer sliders
+            print(st.session_state[TRIMMER][Coords.Z].stop)
             if st.session_state[TRIMMER][Coords.Z].stop is None:
                 for coord in Coords:
                     print("ABCD")
