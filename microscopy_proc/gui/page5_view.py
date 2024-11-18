@@ -65,10 +65,8 @@ def page5_view():
         try:
             arr = da.from_zarr(pfm.overlap)
             # Initialising trimmer sliders
-            print(st.session_state[TRIMMER][Coords.Z].stop)
             if st.session_state[TRIMMER][Coords.Z].stop is None:
                 for coord in Coords:
-                    print("ABCD")
                     st.session_state[TRIMMER][coord] = slice(0, arr.shape[coord])
             break
         except Exception:
@@ -77,6 +75,10 @@ def page5_view():
     if arr is not None:
         for i, coord in enumerate(Coords):
             # Making slider
+            print(
+                st.session_state[TRIMMER][coord].start,
+                st.session_state[TRIMMER][coord].stop,
+            )
             st.slider(
                 label=f"{coord.value} trimmer",
                 min_value=0,
