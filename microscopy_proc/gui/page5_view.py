@@ -39,13 +39,11 @@ class Colormaps(Enum):
 
 
 def trimmer_func(coord):
-    print(st.session_state[f"{TRIMMER}_{coord}_w"])
     # Updating own input variable
     st.session_state[TRIMMER][coord] = slice(
         st.session_state[f"{TRIMMER}_{coord}_w"][0],
         st.session_state[f"{TRIMMER}_{coord}_w"][1],
     )
-    # st.session_state[TRIMMER][coord] = st.session_state[f"{TRIMMER}_{coord}_w"]
 
 
 @page_decorator()
@@ -73,13 +71,7 @@ def page5_view():
             # Initialising trimmer sliders
             if st.session_state[TRIMMER][coord].start is None:
                 st.session_state[TRIMMER][coord] = slice(0, arr.shape[i])
-                print("HELLO")
             # Making slider
-            print("ABCD")
-            print(
-                st.session_state[TRIMMER][coord].start,
-                st.session_state[TRIMMER][coord].stop,
-            )
             st.slider(
                 label=f"{coord.value} trimmer",
                 min_value=0,
@@ -169,9 +161,18 @@ def page5_view():
                 + f"    - colourmap: {img_v[CMAP]}\n"
             )
         # Running visualiser
+        print(
+            {
+                "fp_ls": tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
+                "trimmer": st.session_state[TRIMMER],  # TODO: fix bug
+                "name": tuple(i[NAME] for i in imgs_to_run_ls),
+                "contrast_limits": tuple(i[VRANGE] for i in imgs_to_run_ls),
+                "colormap": tuple(i[CMAP] for i in imgs_to_run_ls),
+            }
+        )
         view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
-            trimmer=st.session_state[TRIMMER],
+            trimmer=st.session_state[TRIMMER],  # TODO: fix bug
             name=tuple(i[NAME] for i in imgs_to_run_ls),
             contrast_limits=tuple(i[VRANGE] for i in imgs_to_run_ls),
             colormap=tuple(i[CMAP] for i in imgs_to_run_ls),
