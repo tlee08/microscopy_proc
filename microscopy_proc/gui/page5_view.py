@@ -39,6 +39,7 @@ class Colormaps(Enum):
 
 
 def trimmer_func(coord):
+    print(st.session_state[f"{TRIMMER}_{coord}_w"])
     # Updating own input variable
     st.session_state[TRIMMER][coord] = st.session_state[f"{TRIMMER}_{coord}_w"]
 
@@ -47,7 +48,7 @@ def trimmer_func(coord):
 def page5_view():
     # Initialising session state variables
     init_var(IMGS, deepcopy(IMGS_D))
-    init_var(TRIMMER, {coord: slice(None) for coord in Coords})
+    init_var(TRIMMER, {coord: [0, 0] for coord in Coords})
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
