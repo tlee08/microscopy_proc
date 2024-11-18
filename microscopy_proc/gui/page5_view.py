@@ -164,7 +164,7 @@ def page5_view():
         print(
             {
                 "fp_ls": tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
-                "trimmer": st.session_state[TRIMMER],  # TODO: fix bug
+                "trimmer": tuple(st.session_state[TRIMMER][coord] for coord in Coords),
                 "name": tuple(i[NAME] for i in imgs_to_run_ls),
                 "contrast_limits": tuple(i[VRANGE] for i in imgs_to_run_ls),
                 "colormap": tuple(i[CMAP] for i in imgs_to_run_ls),
@@ -172,7 +172,7 @@ def page5_view():
         )
         view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
-            trimmer=st.session_state[TRIMMER],  # TODO: fix bug
+            trimmer=tuple(st.session_state[TRIMMER][coord] for coord in Coords),
             name=tuple(i[NAME] for i in imgs_to_run_ls),
             contrast_limits=tuple(i[VRANGE] for i in imgs_to_run_ls),
             colormap=tuple(i[CMAP] for i in imgs_to_run_ls),
