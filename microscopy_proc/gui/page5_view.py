@@ -67,6 +67,7 @@ def page5_view():
             # Initialising trimmer sliders
             if st.session_state[TRIMMER][Coords.Z].stop is None:
                 for coord in Coords:
+                    print("ABCD")
                     st.session_state[TRIMMER][coord] = slice(0, arr.shape[coord])
             break
         except Exception:
