@@ -161,15 +161,6 @@ def page5_view():
                 + f"    - colourmap: {img_v[CMAP]}\n"
             )
         # Running visualiser
-        print(
-            {
-                "fp_ls": tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
-                "trimmer": tuple(st.session_state[TRIMMER][coord] for coord in Coords),
-                "name": tuple(i[NAME] for i in imgs_to_run_ls),
-                "contrast_limits": tuple(i[VRANGE] for i in imgs_to_run_ls),
-                "colormap": tuple(i[CMAP] for i in imgs_to_run_ls),
-            }
-        )
         view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
             trimmer=tuple(st.session_state[TRIMMER][coord] for coord in Coords),

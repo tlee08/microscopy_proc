@@ -98,7 +98,7 @@ def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         # Reading arrays
         arr_ls = []
         for i, fp in enumerate(fp_ls):
-            logging.info(f"Loading image # {i} / {len(arr_ls)}")
+            logging.info(f"Loading image # {i} / {len(fp_ls)}")
             arr_ls.append(read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
