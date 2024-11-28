@@ -32,6 +32,7 @@ simpleitk-simpleelastix = { version = "^2.4.0.dev67", optional = true }
 ruff = "^0.4.8"
 mkdocs-material = "^9.5.18"
 mkdocstrings-python = "^1.9.2"
+pytest = "^8.3.3"
 
 [tool.poetry.extras]
 # gpu = ["cupy-cuda12x", "dask-cuda"]
