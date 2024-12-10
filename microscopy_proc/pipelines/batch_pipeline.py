@@ -118,5 +118,5 @@ if __name__ == "__main__":
         except Exception as e:
             logging.info(f"Error in {exp}: {e}")
             continue
-    # Running
+    # Combining all experiment dataframes
     combine_root_pipeline(root_dir, os.path.dirname(root_dir), overwrite=True)
