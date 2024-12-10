@@ -15,12 +15,12 @@ if __name__ == "__main__":
     pfm = get_proj_fp_model(proj_dir)
 
     trimmer = (
-        slice(600, 650, None),
-        slice(1400, 3100, None),
-        slice(500, 3100, None),
-        # slice(None, None, None),
-        # slice(None, None, None),
-        # slice(None, None, None),
+        # slice(600, 650, None),
+        # slice(1400, 3100, None),
+        # slice(500, 3100, None),
+        slice(None, None, None),
+        slice(None, None, None),
+        slice(None, None, None),
     )
 
     imgs_to_run_dict = {
@@ -68,6 +68,7 @@ if __name__ == "__main__":
         ],
     }
 
+    # Making parameter lists. Index i refers to the same image
     fp_ls = []
     name = []
     contrast_limits = []
@@ -78,7 +79,7 @@ if __name__ == "__main__":
             name.append(img_i)
             contrast_limits.append(IMGS[group_k][img_i][VRANGE])
             colormap.append(IMGS[group_k][img_i][CMAP])
-
+    # Running the Napari viewer
     view_arrs(
         fp_ls=tuple(fp_ls),
         trimmer=trimmer,

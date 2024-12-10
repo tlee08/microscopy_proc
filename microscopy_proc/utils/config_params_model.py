@@ -65,7 +65,7 @@ class ConfigParamsModel(BaseModel):
     heatmap_raw_radius: int = 5
     heatmap_trfm_radius: int = 3
     # COMBINE ARRAYS
-    combine_cellc_z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
+    combine_cellc_z_trim: tuple[int | None, int | None, int | None] = (0, 10, None)
     combine_cellc_y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     combine_cellc_x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
 

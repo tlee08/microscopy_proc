@@ -11,33 +11,29 @@ from microscopy_proc.utils.proj_org_utils import (
 
 if __name__ == "__main__":
     # Filenames
-    # atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
     in_root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
     root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
+    # Whether to overwrite existing files
+    overwrite = True
+
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_root_dir != root_dir
 
-    overwrite = True
-
     # Get all experiments
-    exp_ls = natsorted(os.listdir(in_root_dir))
-    exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(in_root_dir, i))]
-
-    for i in exp_ls:
-        # Only runs given files
-        if i not in [
-            "example_img",
-        ]:
-            continue
-        # Logging which file is being processed
-        logging.info(f"Running: {i}")
+    exp_ls = [
+        fp
+        for fp in natsorted(os.listdir(in_root_dir))
+        if os.path.isdir(os.path.join(in_root_dir, fp))
+    ]
+    # exp_ls = ["example_img"]
+    for exp in exp_ls:
+        logging.info(f"Running: {exp}")
         try:
             # Filenames
-            in_fp = os.path.join(in_root_dir, i)
-            proj_dir = os.path.join(root_dir, i)
-            # Getting file paths
+            in_fp = os.path.join(in_root_dir, exp)
+            proj_dir = os.path.join(root_dir, exp)
+            # Getting project filepaths model
             pfm = get_proj_fp_model(proj_dir)
-
             # Making params json
             update_configs(
                 pfm,
@@ -63,13 +59,20 @@ if __name__ == "__main__":
                 # tophat_sigma=10,
                 # dog_sigma1=1,
                 # dog_sigma2=4,
-                # gauss_sigma=101,
-                # thresh_p=60,
-                # min_threshd=100,
-                # max_threshd=9000,
+                # large_gauss_sigma=101,
+                # threshd_value=60,
+                # min_threshd_size=100,
+                # max_threshd_size=9000,
                 # maxima_sigma=10,
-                # min_wshed=1,
-                # max_wshed=700,
+                # min_wshed_size=1,
+                # max_wshed_size=700,
+                # # VISUAL CHECK
+                # heatmap_raw_radius=5,
+                # heatmap_trfm_radius=3,
+                # # COMBINE ARRAYS
+                combine_cellc_z_trim=(750, 760, None),
+                # combine_cellc_y_trim=(None, None, None),
+                # combine_cellc_x_trim=(None, None, None),
             )
 
             # Making zarr from tiff file(s)
@@ -115,5 +118,5 @@ if __name__ == "__main__":
             PipelineFuncs.combine_cellc(pfm, overwrite=overwrite)
             PipelineFuncs.combine_points(pfm, overwrite=overwrite)
         except Exception as e:
-            logging.info(f"Error in {i}: {e}")
+            logging.info(f"Error in {exp}: {e}")
             continue
