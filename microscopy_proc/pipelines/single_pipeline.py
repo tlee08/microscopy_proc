@@ -1,4 +1,4 @@
-from microscopy_proc.pipelines.pipeline_funcs import PipelineFuncs
+from microscopy_proc.pipeline_funcs.pipeline_funcs import PipelineFuncs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     update_configs,
@@ -18,9 +18,7 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_fp != proj_dir
 
-    # Getting project filepaths model
     pfm = get_proj_fp_model(proj_dir)
-    # Making params json
     update_configs(
         pfm,
         # # REFERENCE

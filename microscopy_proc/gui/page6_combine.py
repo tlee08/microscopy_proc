@@ -3,8 +3,8 @@ import os
 import streamlit as st
 from natsort import natsorted
 
+from microscopy_proc.funcs.batch_combine import combine_ls_pipeline
 from microscopy_proc.gui.page1_init import INPUT_M as PDIR_INPUT_M
-from microscopy_proc.pipelines.batch_combine import combine_ls_pipeline
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import ProjDirStatus, init_var, page_decorator
@@ -166,7 +166,7 @@ def page6_combine():
     elif st.session_state[INPUT_OUT_STATUS] == ProjDirStatus.NOT_EXIST:
         st.warning(
             "Output directory does not exist.\n\n"
-            + "Please make one or specify a valid directory."
+            "Please make one or specify a valid directory."
         )
     elif st.session_state[INPUT_OUT_STATUS] == ProjDirStatus.VALID:
         st.success("Output directory exists and ready to save files to.")

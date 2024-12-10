@@ -91,7 +91,7 @@ def page5_view():
         # Warning
         st.error(
             "No overlap or raw array files found.\n\n"
-            + "No trimming is available (if image too big this may crash the application)."
+            "No trimming is available (if image too big this may crash the application)."
         )
         # trimmers are set to None
         st.write("No Z trimming")
@@ -157,8 +157,8 @@ def page5_view():
         for img_v in imgs_to_run_ls:
             st.write(
                 f"- Showing {img_v[GROUPS]} - {img_v[NAME]}\n"
-                + f"    - intensity range: {img_v[VRANGE][0]} - {img_v[VRANGE][1]}\n"
-                + f"    - colourmap: {img_v[CMAP]}\n"
+                f"    - intensity range: {img_v[VRANGE][0]} - {img_v[VRANGE][1]}\n"
+                f"    - colourmap: {img_v[CMAP]}\n"
             )
         # Running visualiser
         view_arrs_mp(
@@ -192,5 +192,5 @@ def page5_view():
         # Otherwise outputting warning that trim dimensions are unknown
         st.warning(
             "Trim dimensions are unknown, "
-            + "because overlap and raw arr do not exist in the project"
+            "because overlap and raw arr do not exist in the project"
         )

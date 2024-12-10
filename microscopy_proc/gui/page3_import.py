@@ -8,7 +8,7 @@ from microscopy_proc.gui.gui_funcs import (
     init_var,
     page_decorator,
 )
-from microscopy_proc.pipelines.pipeline_funcs import tiff2zarr_pipeline
+from microscopy_proc.pipeline_funcs.pipeline_funcs import PipelineFuncs
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 IMPORT = "import"
@@ -74,7 +74,7 @@ def page3_import():
         st.write("Running")
         st.write(f"Importing image from {st.session_state[INPUT_SRC]} to {proj_dir}")
         # Running tiff2zarr
-        tiff2zarr_pipeline(
+        PipelineFuncs.tiff2zarr(
             pfm=pfm,
             src_fp=st.session_state[INPUT_SRC],
             overwrite=st.session_state[OVERWRITE],

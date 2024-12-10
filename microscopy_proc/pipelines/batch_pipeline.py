@@ -3,7 +3,8 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.pipelines.pipeline_funcs import PipelineFuncs
+from microscopy_proc.funcs.batch_combine import combine_root_pipeline
+from microscopy_proc.pipeline_funcs.pipeline_funcs import PipelineFuncs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     update_configs,
@@ -11,8 +12,8 @@ from microscopy_proc.utils.proj_org_utils import (
 
 if __name__ == "__main__":
     # Filenames
-    in_root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX Aggression cohort 1 stitched TIF images for analysis"
-    root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
+    in_root_dir = "/path/to/tiff_imgs_folder"
+    root_dir = "/path/to/analysis_outputs_folder"
     # Whether to overwrite existing files
     overwrite = True
 
@@ -29,12 +30,9 @@ if __name__ == "__main__":
     for exp in exp_ls:
         logging.info(f"Running: {exp}")
         try:
-            # Filenames
             in_fp = os.path.join(in_root_dir, exp)
             proj_dir = os.path.join(root_dir, exp)
-            # Getting project filepaths model
             pfm = get_proj_fp_model(proj_dir)
-            # Making params json
             update_configs(
                 pfm,
                 # # REFERENCE
@@ -120,3 +118,5 @@ if __name__ == "__main__":
         except Exception as e:
             logging.info(f"Error in {exp}: {e}")
             continue
+    # Running
+    combine_root_pipeline(root_dir, os.path.dirname(root_dir), overwrite=True)

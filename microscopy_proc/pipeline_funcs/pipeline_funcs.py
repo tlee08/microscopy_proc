@@ -78,8 +78,8 @@ else:
     Gf = Cf
     print(
         "Warning GPU functionality not installed.\n"
-        + "Using CPU functionality instead (much slower).\n"
-        + 'Can install with `pip install "microscopy_proc[gpu]"`'
+        "Using CPU functionality instead (much slower).\n"
+        'Can install with `pip install "microscopy_proc[gpu]"`'
     )
 # Optional dependency: elastix
 if ELASTIX_ENABLED:

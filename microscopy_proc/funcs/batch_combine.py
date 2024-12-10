@@ -11,6 +11,7 @@ from microscopy_proc.funcs.map_funcs import (
     annot_dict2df,
     df_include_special_ids,
 )
+from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.misc_utils import enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, update_configs
@@ -61,19 +62,19 @@ def combine_ls_pipeline(
         # to verify the same regions are being used
         assert atlas_dir0 == atlas_dir, (
             f"In configs file, there mismatch for {name} and {name}.\n"
-            + f'atlas_dir values "{atlas_dir0}" and "{atlas_dir}" are not equal'
+            f'atlas_dir values "{atlas_dir0}" and "{atlas_dir}" are not equal'
         )
         assert ref_v0 == ref_v, (
             f"In configs file, there mismatch for {name} and {name}.\n"
-            + f'ref_v values "{ref_v0}" and "{ref_v}" are not equal'
+            f'ref_v values "{ref_v0}" and "{ref_v}" are not equal'
         )
         assert annot_v0 == annot_v, (
             f"In configs file, there mismatch for {name} and {name}.\n"
-            + f'annot_v values "{annot_v0}" and "{annot_v}" are not equal'
+            f'annot_v values "{annot_v0}" and "{annot_v}" are not equal'
         )
         assert map_v0 == map_v, (
             f"In configs file, there mismatch for {name} and {name}.\n"
-            + f'map_v values "{map_v0}" and "{map_v}" are not equal'
+            f'map_v values "{map_v0}" and "{map_v}" are not equal'
         )
 
     # Making combined_agg_df
@@ -150,23 +151,14 @@ def combine_root_pipeline(
     # NOTE: not using the cells_agg and mask file to check for valid projects
     # so we can catch any projects that are missing these files
     proj_dir_ls = []
-    for i in natsorted(os.listdir(root_dir)):
-        # Making current proj_dir's ProjFpModel
-        proj_dir = os.path.join(root_dir, i)
+    for exp in natsorted(os.listdir(root_dir)):
+        proj_dir = os.path.join(root_dir, exp)
         pfm = get_proj_fp_model(proj_dir)
         try:
             # If proj has config_params file, then add to list of projs to combine
-            update_configs(pfm)
+            ConfigParamsModel.model_validate(read_json(pfm.config_params))
             proj_dir_ls.append(proj_dir)
         except FileNotFoundError:
             pass
     # Running combine pipeline
     combine_ls_pipeline(proj_dir_ls, out_dir, overwrite)
-
-
-if __name__ == "__main__":
-    # Filenames
-    root_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    out_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/"
-    # Running
-    combine_root_pipeline(root_dir, out_dir, overwrite=True)

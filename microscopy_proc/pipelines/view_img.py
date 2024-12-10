@@ -1,19 +1,11 @@
-import os
-
 from microscopy_proc.funcs.viewer_funcs import CMAP, IMGS, VRANGE, view_arrs
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 if __name__ == "__main__":
     # Filenames
-    # proj_dir = "/home/linux1/Desktop/A-1-1/large_cellcount"
-    # proj_dir = "/home/linux1/Desktop/A-1-1/cellcount"
-    proj_dir = "/run/user/1000/gvfs/smb-share:server=shared.sydney.edu.au,share=research-data/PRJ-BowenLab/Experiments/2024/Other/2024_whole_brain_clearing_TS/KNX_Aggression_cohort_1_analysed_images"
-    proj_dir = os.path.join(proj_dir, "P15_2.5x_1x_zoom_07082024")
-
-    proj_dir = "/home/linux1/Desktop/example_proj"
-
-    pfm = get_proj_fp_model(proj_dir)
-
+    in_fp = "/path/to/tiff_img_folder"
+    proj_dir = "/path/to/analysis_output_folder"
+    # Trimmer
     trimmer = (
         # slice(600, 650, None),
         # slice(1400, 3100, None),
@@ -22,7 +14,7 @@ if __name__ == "__main__":
         slice(None, None, None),
         slice(None, None, None),
     )
-
+    # Imgs to run
     imgs_to_run_dict = {
         "Atlas": [
             "ref",
@@ -68,6 +60,7 @@ if __name__ == "__main__":
         ],
     }
 
+    pfm = get_proj_fp_model(proj_dir)
     # Making parameter lists. Index i refers to the same image
     fp_ls = []
     name = []

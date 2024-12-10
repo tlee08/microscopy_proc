@@ -59,7 +59,7 @@ def load_configs():
 
 
 def page_decorator(check_proj_dir=True):
-    def decorator_wrapper(f):
+    def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             # Recalling session state variables
@@ -83,11 +83,11 @@ def page_decorator(check_proj_dir=True):
             if check_proj_dir and proj_dir_status != ProjDirStatus.VALID:
                 st.error(
                     "Project is not initialised.\n\n"
-                    + "Please set or create a project directory."
+                    "Please set or create a project directory."
                 )
                 return
             return f(*args, **kwargs)
 
         return wrapper
 
-    return decorator_wrapper
+    return decorator

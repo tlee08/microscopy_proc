@@ -200,12 +200,12 @@ def page1_init():
         elif st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.NOT_EXIST:
             st.error(
                 "Project directory does not exist (or is a file and not directory).\n\n"
-                + "Reverting to existing project directory (if one is set)."
+                "Reverting to existing project directory (if one is set)."
             )
         elif st.session_state[PROJ_DIR_STATUS] == ProjDirStatus.NOT_INIT:
             st.warning(
                 "Project directory does not contain config_params file.\n\n"
-                + "You can create a new project in this directory."
+                "You can create a new project in this directory."
             )
             st.button(
                 label="Create new project",
