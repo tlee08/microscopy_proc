@@ -3,34 +3,7 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.pipelines.pipeline_funcs import (
-    cell_mapping_pipeline,
-    cellc1_pipeline,
-    cellc2_pipeline,
-    cellc3_pipeline,
-    cellc4_pipeline,
-    cellc5_pipeline,
-    cellc6_pipeline,
-    cellc7_pipeline,
-    cellc8_pipeline,
-    cellc9_pipeline,
-    cellc10_pipeline,
-    cellc11_pipeline,
-    cells2csv_pipeline,
-    coords2heatmap_trfm_pipeline,
-    coords2points_raw_pipeline,
-    coords2points_trfm_pipeline,
-    group_cells_pipeline,
-    img_fine_pipeline,
-    img_overlap_pipeline,
-    img_rough_pipeline,
-    img_trim_pipeline,
-    make_mask_pipeline,
-    ref_prepare_pipeline,
-    registration_pipeline,
-    tiff2zarr_pipeline,
-    transform_coords_pipeline,
-)
+from microscopy_proc.pipelines.pipeline_funcs import PipelineFuncs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     update_configs,
@@ -44,20 +17,16 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_root_dir != root_dir
 
-    overwrite = False
+    overwrite = True
 
     # Get all experiments
     exp_ls = natsorted(os.listdir(in_root_dir))
     exp_ls = [i for i in exp_ls if os.path.isdir(os.path.join(in_root_dir, i))]
 
     for i in exp_ls:
-        # Only given files
+        # Only runs given files
         if i not in [
-            "B3_2.5x_1x_zoom_08082024",
-            "B9_2.5x_1x_zoom_06082024",
-            "G5_agg_2.5x_1xzoom_05072024",
-            "G8_2.5x_1x_zoom_08082024",
-            "G13_2.5x_1x_zoom_07082024",
+            "example_img",
         ]:
             continue
         # Logging which file is being processed
@@ -75,7 +44,7 @@ if __name__ == "__main__":
                 # # REFERENCE
                 # # RAW
                 # # REGISTRATION
-                # ref_orient_ls=(-2, 3, 1),
+                ref_orient_ls=(-2, 3, 1),
                 # ref_z_trim=(None, None, None),
                 # ref_y_trim=(None, None, None),
                 # ref_x_trim=(None, None, None),
@@ -104,43 +73,47 @@ if __name__ == "__main__":
             )
 
             # Making zarr from tiff file(s)
-            tiff2zarr_pipeline(pfm, in_fp, overwrite=overwrite)
+            PipelineFuncs.tiff2zarr(pfm, in_fp, overwrite=overwrite)
             # Preparing reference images
-            ref_prepare_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.ref_prepare(pfm, overwrite=overwrite)
             # Preparing image itself
-            img_rough_pipeline(pfm, overwrite=overwrite)
-            img_fine_pipeline(pfm, overwrite=overwrite)
-            img_trim_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.img_rough(pfm, overwrite=overwrite)
+            PipelineFuncs.img_fine(pfm, overwrite=overwrite)
+            PipelineFuncs.img_trim(pfm, overwrite=overwrite)
             # Running Elastix registration
-            registration_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.elastix_registration(pfm, overwrite=overwrite)
             # Running mask pipeline
-            make_mask_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.make_mask(pfm, overwrite=overwrite)
             # Making overlap chunks in preparation for cell counting
-            img_overlap_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.img_overlap(pfm, overwrite=overwrite)
             # Counting cells
-            cellc1_pipeline(pfm, overwrite=overwrite)
-            cellc2_pipeline(pfm, overwrite=overwrite)
-            cellc3_pipeline(pfm, overwrite=overwrite)
-            cellc4_pipeline(pfm, overwrite=overwrite)
-            cellc5_pipeline(pfm, overwrite=overwrite)
-            cellc6_pipeline(pfm, overwrite=overwrite)
-            cellc7_pipeline(pfm, overwrite=overwrite)
-            cellc8_pipeline(pfm, overwrite=overwrite)
-            cellc9_pipeline(pfm, overwrite=overwrite)
-            cellc10_pipeline(pfm, overwrite=overwrite)
-            cellc11_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc1(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc2(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc3(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc4(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc5(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc6(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc7(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc8(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc9(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc10(pfm, overwrite=overwrite)
+            PipelineFuncs.cellc11(pfm, overwrite=overwrite)
             # Converting maxima from raw space to refernce atlas space
-            transform_coords_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.transform_coords(pfm, overwrite=overwrite)
             # Getting Region ID mappings for each cell
-            cell_mapping_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.cell_mapping(pfm, overwrite=overwrite)
             # Grouping cells
-            group_cells_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.group_cells(pfm, overwrite=overwrite)
             # Exporting cells_agg parquet as csv
-            cells2csv_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.cells2csv(pfm, overwrite=overwrite)
             # Making points and heatmap images
-            coords2points_raw_pipeline(pfm, overwrite=overwrite)
-            coords2points_trfm_pipeline(pfm, overwrite=overwrite)
-            coords2heatmap_trfm_pipeline(pfm, overwrite=overwrite)
+            PipelineFuncs.coords2points_raw(pfm, overwrite=overwrite)
+            PipelineFuncs.coords2points_trfm(pfm, overwrite=overwrite)
+            PipelineFuncs.coords2heatmap_trfm(pfm, overwrite=overwrite)
+            # Combining arrays
+            PipelineFuncs.combine_reg(pfm, overwrite=overwrite)
+            PipelineFuncs.combine_cellc(pfm, overwrite=overwrite)
+            PipelineFuncs.combine_points(pfm, overwrite=overwrite)
         except Exception as e:
             logging.info(f"Error in {i}: {e}")
             continue

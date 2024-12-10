@@ -1,14 +1,24 @@
 import logging
 import os
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
-from microscopy_proc.constants import ProjSubdirs, RefFolders
+from microscopy_proc.constants import RefFolders
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 
 # TODO: add 10_adaptv_f.zarr and move the xxx_f.zarr files to a new folder (e.g. "cellcount_final")
 # NOTE: this allows "cellcount" to be removed to save space when pipeline is completed and output checked
+
+
+class ProjSubdirs(Enum):
+    REGISTRATION = "registration"
+    MASK = "mask"
+    CELLCOUNT = "cellcount"
+    ANALYSIS = "analysis"
+    VISUALISATION = "visualisation"
+    COMBINED = "combined"
 
 
 class RefFpModel(BaseModel):
@@ -109,6 +119,10 @@ class ProjFpModel(BaseModel):
     heatmap_raw: str
     points_trfm: str
     heatmap_trfm: str
+    # COMBINED ARRAYS
+    combined_reg: str
+    combined_cellc: str
+    combined_points: str
 
     @classmethod
     def get_proj_fp_model(cls, proj_dir):
@@ -117,6 +131,7 @@ class ProjFpModel(BaseModel):
         cellc_dir = ProjSubdirs.CELLCOUNT.value
         analysis_dir = ProjSubdirs.ANALYSIS.value
         visual_dir = ProjSubdirs.VISUALISATION.value
+        combined_dir = ProjSubdirs.COMBINED.value
 
         return cls(
             # ROOT DIR
@@ -164,11 +179,15 @@ class ProjFpModel(BaseModel):
             cells_df=os.path.join(proj_dir, analysis_dir, "13_cells.parquet"),
             cells_agg_df=os.path.join(proj_dir, analysis_dir, "14_cells_agg.parquet"),
             cells_agg_csv=os.path.join(proj_dir, analysis_dir, "15_cells_agg.csv"),
-            # VISUAL CHECK FROM CELL DF FILES
+            # VISUAL CHECK
             points_raw=os.path.join(proj_dir, visual_dir, "points_raw.zarr"),
             heatmap_raw=os.path.join(proj_dir, visual_dir, "heatmap_raw.zarr"),
             points_trfm=os.path.join(proj_dir, visual_dir, "points_trfm.tif"),
             heatmap_trfm=os.path.join(proj_dir, visual_dir, "heatmap_trfm.tif"),
+            # COMBINE ARRAYS
+            combined_reg=os.path.join(proj_dir, combined_dir, "combined_reg.tif"),
+            combined_cellc=os.path.join(proj_dir, combined_dir, "combined_cellc.tif"),
+            combined_points=os.path.join(proj_dir, combined_dir, "combined_points.tif"),
         )
 
 
@@ -189,7 +208,9 @@ def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
     If there are no kwargs, will not update the file
     (other than making it if it did not exist).
 
-    Also makes all the project sub-directories as well.
+    Also creates all the project sub-directories too.
+
+    Finally, returns the ConfigParamsModel object.
     """
     # Firstly makes all the project sub-directories
     make_proj_dirs(pfm)

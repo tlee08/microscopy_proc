@@ -1,3 +1,4 @@
+import numpy as np
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from microscopy_proc.constants import (
@@ -25,11 +26,11 @@ class ConfigParamsModel(BaseModel):
 
     # REFERENCE
     atlas_dir: str = RESOURCES_DIR
-    ref_v: RefVersions = RefVersions.AVERAGE_TEMPLATE_25
-    annot_v: AnnotVersions = AnnotVersions.CCF_2016_25
-    map_v: MapVersions = MapVersions.ABA_ANNOTATIONS
+    ref_version: RefVersions = RefVersions.AVERAGE_TEMPLATE_25
+    annot_version: AnnotVersions = AnnotVersions.CCF_2016_25
+    map_version: MapVersions = MapVersions.ABA_ANNOTATIONS
     # RAW
-    chunksize: tuple[int, int, int] = PROC_CHUNKS
+    zarr_chunksize: tuple[int, int, int] = PROC_CHUNKS
     # REGISTRATION
     ref_orient_ls: tuple[int, int, int] = (1, 2, 3)
     ref_z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
@@ -48,28 +49,35 @@ class ConfigParamsModel(BaseModel):
     mask_gaus_blur: int = 1
     mask_thresh: int = 300
     # OVERLAP
-    depth: int = DEPTH
+    overlap_depth: int = DEPTH
     # CELL COUNTING
     tophat_sigma: int = 10
     dog_sigma1: int = 1
     dog_sigma2: int = 4
-    gauss_sigma: int = 101
-    thresh_p: int = 60
-    min_threshd: int = 100
-    max_threshd: int = 10000
+    large_gauss_sigma: int = 101
+    threshd_value: int = 60
+    min_threshd_size: int = 100
+    max_threshd_size: int = 10000
     maxima_sigma: int = 10
-    min_wshed: int = 1
-    max_wshed: int = 1000
+    min_wshed_size: int = 1
+    max_wshed_size: int = 1000
+    # VISUAL CHECK
+    heatmap_raw_radius: int = 5
+    heatmap_trfm_radius: int = 3
+    # COMBINE ARRAYS
+    combine_cellc_z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
+    combine_cellc_y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
+    combine_cellc_x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
 
     @model_validator(mode="after")
     def validate_trims(self):
         # Orient validation
-        ref_orient_ls_abs = [abs(i) for i in self.ref_orient_ls]
-        assert max(ref_orient_ls_abs) == 3
-        assert min(ref_orient_ls_abs) == 1
-        assert sum(ref_orient_ls_abs) == 6
-        # Size validation
-        # Trim validation
+        vect = np.array(self.ref_orient_ls)
+        vect_abs = np.abs(vect)
+        vect_abs_sorted = np.sort(vect_abs)
+        assert np.all(vect_abs_sorted == np.array([1, 2, 3]))
+        # TODO: Size validation
+        # TODO: Trim validation
         return self
 
     def update(self, **kwargs):

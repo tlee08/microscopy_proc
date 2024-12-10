@@ -42,18 +42,18 @@ def combine_ls_pipeline(
     pfm0 = get_proj_fp_model(proj_dir_ls[0])
     configs0 = update_configs(pfm0)
     atlas_dir0 = configs0.atlas_dir
-    ref_v0 = configs0.ref_v
-    annot_v0 = configs0.annot_v
-    map_v0 = configs0.map_v
+    ref_v0 = configs0.ref_version
+    annot_v0 = configs0.annot_version
+    map_v0 = configs0.map_version
     for proj_dir in proj_dir_ls:
         # Getting project info
         name = os.path.basename(proj_dir)
         pfm = get_proj_fp_model(proj_dir)
         configs = update_configs(pfm)
         atlas_dir = configs.atlas_dir
-        ref_v = configs.ref_v
-        annot_v = configs.annot_v
-        map_v = configs.map_v
+        ref_v = configs.ref_version
+        annot_v = configs.annot_version
+        map_v = configs.map_version
         # Asserting that all projects have cells_agg and mask_df files
         assert os.path.exists(pfm.cells_agg_df), f"Missing cells_agg_df for {name}"
         assert os.path.exists(pfm.mask_df), f"Missing mask_df for {name}"

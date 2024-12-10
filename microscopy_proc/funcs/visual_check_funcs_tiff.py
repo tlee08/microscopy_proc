@@ -1,9 +1,10 @@
-import dask.array as da
+import os
+
 import numpy as np
 import pandas as pd
 import tifffile
 
-from microscopy_proc.constants import AnnotColumns, Coords
+from microscopy_proc.constants import TEMP_DIR, AnnotColumns, Coords
 from microscopy_proc.utils.io_utils import silentremove
 
 #####################################################################
@@ -34,22 +35,15 @@ def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame):
     return arr
 
 
-def coords2points_start(shape: tuple, out_fp: str) -> da.Array:
+def make_mmap(shape: tuple, out_fp: str) -> np.ndarray:
     # Initialising spatial array
     arr = np.memmap(
-        "temp.dat",
+        out_fp,
         mode="w+",
         shape=shape,
         dtype=np.uint8,
     )
     return arr
-
-
-def coords2points_end(arr, out_fp):
-    # # Saving the subsampled array
-    tifffile.imwrite(out_fp, arr)
-    # Removing temporary memmap
-    silentremove("temp.dat")
 
 
 #####################################################################
@@ -74,18 +68,21 @@ def coords2points(
         The output image array
     """
     # Initialising spatial array
-    arr = coords2points_start(shape, out_fp)
+    temp_fp = os.path.join(TEMP_DIR, f"temp_{os.getpid()}.dat")
+    arr = make_mmap(shape, temp_fp)
     # Adding coords to image
     coords2points_workers(arr, coords)
     # Saving the subsampled array
-    coords2points_end(arr, out_fp)
+    tifffile.imwrite(out_fp, arr)
+    # Removing temporary memmap
+    silentremove(temp_fp)
 
 
 def coords2heatmap(
     coords: pd.DataFrame,
     shape: tuple[int, ...],
     out_fp: str,
-    r: int,
+    radius: int,
 ):
     """
     Converts list of coordinates to spatial array as voxels.
@@ -101,13 +98,16 @@ def coords2heatmap(
         The output image array
     """
     # Initialising spatial array
-    arr = coords2points_start(shape, out_fp)
+    temp_fp = os.path.join(TEMP_DIR, f"temp_{os.getpid()}.dat")
+    arr = make_mmap(shape, temp_fp)
 
     # Constructing sphere array mask
-    zz, yy, xx = np.ogrid[1 : r * 2, 1 : r * 2, 1 : r * 2]
-    circ = np.sqrt((xx - r) ** 2 + (yy - r) ** 2 + (zz - r) ** 2) < r
+    zz, yy, xx = np.ogrid[1 : radius * 2, 1 : radius * 2, 1 : radius * 2]
+    circ = (
+        np.sqrt((xx - radius) ** 2 + (yy - radius) ** 2 + (zz - radius) ** 2) < radius
+    )
     # Constructing offset indices
-    i = np.arange(-r + 1, r)
+    i = np.arange(-radius + 1, radius)
     z_ind, y_ind, x_ind = np.meshgrid(i, i, i, indexing="ij")
     # Adding coords to image
     for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
@@ -119,7 +119,9 @@ def coords2heatmap(
             coords2points_workers(arr, coords_i)
 
     # Saving the subsampled array
-    coords2points_end(arr, out_fp)
+    tifffile.imwrite(out_fp, arr)
+    # Removing temporary memmap
+    silentremove(temp_fp)
 
 
 def coords2regions(coords, shape, out_fp):
@@ -135,7 +137,8 @@ def coords2regions(coords, shape, out_fp):
         The output image array
     """
     # Initialising spatial array
-    arr = coords2points_start(shape)
+    temp_fp = os.path.join(TEMP_DIR, f"temp_{os.getpid()}.dat")
+    arr = make_mmap(shape, temp_fp)
 
     # Adding coords to image with np.apply_along_axis
     def f(coord):
@@ -154,4 +157,6 @@ def coords2regions(coords, shape, out_fp):
         np.apply_along_axis(f, 1, coords)
 
     # Saving the subsampled array
-    coords2points_end(arr, out_fp)
+    tifffile.imwrite(out_fp, arr)
+    # Removing temporary memmap
+    silentremove(temp_fp)

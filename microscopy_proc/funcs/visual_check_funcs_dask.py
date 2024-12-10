@@ -128,7 +128,7 @@ def coords2heatmap(
     coords: pd.DataFrame,
     shape: tuple[int, ...],
     out_fp: str,
-    r: int,
+    radius: int,
 ):
     """
     Converts list of coordinates to spatial array as voxels.
@@ -147,7 +147,7 @@ def coords2heatmap(
     arr = da.zeros(shape, chunks=PROC_CHUNKS, dtype=np.uint8)
     # Adding coords to image
     arr = arr.map_blocks(
-        lambda i, block_info=None: coords2sphere_workers(i, coords, r, block_info)
+        lambda i, block_info=None: coords2sphere_workers(i, coords, radius, block_info)
     )
     # Computing and saving
     arr.to_zarr(out_fp, overwrite=True)

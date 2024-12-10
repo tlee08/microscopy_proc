@@ -116,14 +116,6 @@ class MaskColumns(Enum):
     VOLUME_PROP = f"{MASK_VOLUME}_prop"
 
 
-class ProjSubdirs(Enum):
-    REGISTRATION = "registration"
-    MASK = "mask"
-    CELLCOUNT = "cellcount"
-    ANALYSIS = "analysis"
-    VISUALISATION = "visualisation"
-
-
 CONFIGS_DIR = ".microscopy_proc"
 
 

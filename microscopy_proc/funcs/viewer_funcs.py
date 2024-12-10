@@ -83,9 +83,15 @@ def read_img(fp, trimmer: Optional[tuple[slice, ...]] = None):
     """
     if re.search(r"\.zarr$", fp):
         with cluster_proc_contxt(LocalCluster()):
-            return da.from_zarr(fp)[*trimmer].compute()
+            arr = da.from_zarr(fp)
+            if trimmer:
+                arr = arr[*trimmer]
+            return arr.compute()
     elif re.search(r"\.tif$", fp):
-        return tifffile.imread(fp)[*trimmer]
+        arr = tifffile.imread(fp)
+        if trimmer:
+            arr = arr[*trimmer]
+        return arr
     else:
         raise NotImplementedError("Only .zarr and .tif files are supported.")
 
