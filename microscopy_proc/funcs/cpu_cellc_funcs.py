@@ -235,7 +235,7 @@ class CpuCellcFuncs:
         logging.debug("Getting local maxima (where arr - max_arr == 1)")
         res = arr - max_arr == 1
         # If a mask is given, then keep only the maxima within the mask
-        if mask_arr:
+        if mask_arr is not None:
             logging.debug(
                 "Mask provided. Maxima will only be found within mask regions."
             )
