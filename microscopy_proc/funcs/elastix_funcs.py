@@ -42,13 +42,13 @@ def registration(
     # parameter_map_translation = sitk.GetDefaultParameterMap("translation")
     # elastix_img_filt.SetParameterMap(parameter_map_translation)
     # Affine
-    if affine_fp:
+    if affine_fp is not None:
         params_affine = sitk.ReadParameterFile(affine_fp)
     else:
         params_affine = sitk.GetDefaultParameterMap("affine")
     elastix_img_filt.SetParameterMap(params_affine)
     # Bspline
-    if affine_fp:
+    if affine_fp is not None:
         params_bspline = sitk.ReadParameterFile(bspline_fp)
     else:
         params_bspline = sitk.GetDefaultParameterMap("bspline")

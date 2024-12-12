@@ -89,7 +89,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
 
 def coords2block(df: dd.DataFrame | pd.DataFrame, block_info: dict) -> dd.DataFrame:
     """
-    Converts the coords to a block, given the block info.
+    Converts the coords to a block, given the block info (so relevant block offsets are used).
 
     The block info is from Dask, in the map_blocks function
     (and other relevant functions like map_overlap).

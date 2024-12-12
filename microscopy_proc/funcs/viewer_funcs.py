@@ -75,19 +75,19 @@ IMGS = {
 }
 
 
-def read_img(fp, trimmer: Optional[tuple[slice, ...]] = None):
+def read_img(fp, trimmer: None | tuple[slice, ...] = None):
     """
     Reading, trimming (if possible), and returning the array in memory.
     """
     if re.search(r"\.zarr$", fp):
         with cluster_proc_contxt(LocalCluster()):
             arr = da.from_zarr(fp)
-            if trimmer:
+            if trimmer is not None:
                 arr = arr[*trimmer]
             return arr.compute()
     elif re.search(r"\.tif$", fp):
         arr = tifffile.imread(fp)
-        if trimmer:
+        if trimmer is not None:
             arr = arr[*trimmer]
         return arr
     else:

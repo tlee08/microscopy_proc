@@ -16,7 +16,7 @@ from microscopy_proc.utils.dask_utils import coords2block
 def coords2points_workers(arr: np.ndarray, coords: pd.DataFrame, block_info=None):
     arr = arr.copy()
     # Offsetting coords with chunk space
-    if block_info:
+    if block_info is not None:
         coords = coords2block(coords, block_info)
     # Formatting coord values as (z, y, x),
     # rounding to integers, and

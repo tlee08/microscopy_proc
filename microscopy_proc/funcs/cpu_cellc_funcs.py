@@ -70,16 +70,18 @@ class CpuCellcFuncs:
 
     @classmethod
     # @task
-    def intensity_cutoff(cls, arr: np.ndarray, min_=None, max_=None) -> np.ndarray:
+    def intensity_cutoff(
+        cls, arr: np.ndarray, min_: None | float = None, max_: None | float = None
+    ) -> np.ndarray:
         """
         Performing cutoffs on a 3D tensor.
         """
         arr = cls.xp.asarray(arr)
         logging.debug("Making cutoffs")
         res = arr
-        if min_:
+        if min_ is not None:
             res = cls.xp.maximum(res, min_)
-        if max_:
+        if max_ is not None:
             res = cls.xp.minimum(res, max_)
         return res
 
