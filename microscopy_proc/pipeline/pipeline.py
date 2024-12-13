@@ -636,9 +636,9 @@ class Pipeline:
             threshd_final_arr = da_trim(threshd_filt_arr, d=configs.overlap_depth)
             wshed_final_arr = da_trim(wshed_volumes_arr, d=configs.overlap_depth)
             # Computing and saving
-            disk_cache(maxima_final_arr, pfm.maxima_final)
-            disk_cache(threshd_final_arr, pfm.threshd_final)
-            disk_cache(wshed_final_arr, pfm.wshed_final)
+            maxima_final_arr = disk_cache(maxima_final_arr, pfm.maxima_final)
+            threshd_final_arr = disk_cache(threshd_final_arr, pfm.threshd_final)
+            wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final)
 
     @classmethod
     def cellc11(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:

@@ -33,7 +33,6 @@ class PipelineTuning(Pipeline):
         ]
         # Converting to tuning filepaths
         pfm = pfm.copy().convert_to_tuning()
-        print(pfm.raw)
         # Checking if overwrite
         if not overwrite and cls._check_file_exists(pfm, ("raw",)):
             return
