@@ -95,4 +95,4 @@ for func in [
     PipelineFuncs.cellc_coords_only,
 ]:
     func_name = func.__name__
-    setattr(PipelineFuncsTuning, func_name, create_wrapped_method(func))
+    setattr(PipelineTuningFuncs, func_name, create_wrapped_method(func))
