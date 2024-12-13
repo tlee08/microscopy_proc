@@ -1,9 +1,7 @@
-import functools
 import logging
 import os
 import re
 import shutil
-from typing import Callable
 
 import dask.array as da
 import numpy as np
@@ -89,53 +87,35 @@ else:
     transformation_coords = import_extra_error_func("elastix")
 
 
-###################################################################################################
-# OVERWRITE DECORATOR
-###################################################################################################
-
-
-def overwrite_check_decorator(pfm_fp_ls: tuple[str, ...] = tuple()):
-    """
-    Decorator to check overwrite and will
-    not run the function if the fpm attribute in
-    `pfm_fp_ls` is a filepath that already exsits.
-    """
-
-    def decorator(func: Callable):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            """Signature is `wrapper(cls, pfm, overwrite, **kwargs)`"""
-            # Getting pfm arg
-            pfm: ProjFpModel = kwargs.get("pfm", args[1])
-            assert isinstance(pfm, ProjFpModel)
-            # Getting overwrite arg
-            overwrite = kwargs.get("overwrite", False)
-            assert isinstance(overwrite, bool)
-            # If overwrite is False, check if output file exists
-            if not overwrite:
-                # Iterating through attributes in pfm_fp_ls
-                for pfm_fp in pfm_fp_ls:
-                    # If attribute exists and is a filepath, then don't run func
-                    if os.path.exists(getattr(pfm, pfm_fp)):
-                        logging.info(
-                            f"Skipping {func.__name__} as {pfm_fp} already exists."
-                        )
-                        return
-            # Running func
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
 class PipelineFuncs:
+    ###################################################################################################
+    # OVERWRITE DECORATOR
+    ###################################################################################################
+
+    @staticmethod
+    def _check_file_exists(pfm: ProjFpModel, pfm_fp_ls: tuple[str, ...] = tuple()):
+        """
+        Returns whether the fpm attribute in
+        `pfm_fp_ls` is a filepath that already exsits.
+        """
+        # Iterating through attributes in pfm_fp_ls
+        for pfm_fp in pfm_fp_ls:
+            # If attribute exists and is a filepath, then don't run func
+            if os.path.exists(getattr(pfm, pfm_fp)):
+                logging.info(
+                    f"Skipping as {pfm_fp} already exists.\n"
+                    f"Will not overwrite {pfm_fp_ls}."
+                )
+                # File exists
+                return True
+        # File does not exist
+        return False
+
     ###################################################################################################
     # CONVERT TIFF TO ZARR FUNCS
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("raw",))
     def tiff2zarr(cls, pfm: ProjFpModel, in_fp: str, overwrite: bool = False) -> None:
         """
         _summary_
@@ -154,6 +134,8 @@ class PipelineFuncs:
         ValueError
             _description_
         """
+        if not overwrite and cls._check_file_exists(pfm, ("raw",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Making zarr from tiff file(s)
@@ -186,10 +168,11 @@ class PipelineFuncs:
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("ref", "annot", "map", "affine", "bspline"))
     def ref_prepare(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        # Not overwriting if specified and output file exists
-        # TODO
+        if not overwrite and cls._check_file_exists(
+            pfm, ("ref", "annot", "map", "affine", "bspline")
+        ):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Making ref_fp_model of original atlas images filepaths
@@ -223,8 +206,9 @@ class PipelineFuncs:
         shutil.copyfile(rfm.bspline, pfm.bspline)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("downsmpl1",))
     def img_rough(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("downsmpl1",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         with cluster_proc_contxt(LocalCluster()):
@@ -240,8 +224,9 @@ class PipelineFuncs:
             tifffile.imwrite(pfm.downsmpl1, downsmpl1_arr)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("downsmpl2",))
     def img_fine(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("downsmpl2",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading
@@ -254,8 +239,9 @@ class PipelineFuncs:
         tifffile.imwrite(pfm.downsmpl2, downsmpl2_arr)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("trimmed",))
     def img_trim(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("trimmed",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading
@@ -270,8 +256,9 @@ class PipelineFuncs:
         tifffile.imwrite(pfm.trimmed, trimmed_arr)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("regresult",))
     def elastix_registration(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("regresult",)):
+            return
         # Running Elastix registration
         registration(
             fixed_img_fp=pfm.trimmed,
@@ -286,13 +273,16 @@ class PipelineFuncs:
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("mask", "outline", "mask_reg", "mask_df"))
     def make_mask(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Makes mask of actual image in reference space.
         Also stores # and proportion of existent voxels
         for each region.
         """
+        if not overwrite and cls._check_file_exists(
+            pfm, ("mask", "outline", "mask_reg", "mask_df")
+        ):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading annot (proj oriented and trimmed) and trimmed imgs
@@ -383,8 +373,9 @@ class PipelineFuncs:
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("overlap",))
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("overlap",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Making overlap image
@@ -394,13 +385,14 @@ class PipelineFuncs:
             overlap_arr = disk_cache(overlap_arr, pfm.overlap)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("bgrm",))
     def cellc1(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 1
 
         Top-hat filter (background subtraction)
         """
+        if not overwrite and cls._check_file_exists(pfm, ("bgrm",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -417,13 +409,14 @@ class PipelineFuncs:
             bgrm_arr = disk_cache(bgrm_arr, pfm.bgrm)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("dog",))
     def cellc2(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 2
 
         Difference of Gaussians (edge detection)
         """
+        if not overwrite and cls._check_file_exists(pfm, ("dog",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -441,13 +434,14 @@ class PipelineFuncs:
             dog_arr = disk_cache(dog_arr, pfm.dog)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("adaptv",))
     def cellc3(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 3
 
         Gaussian subtraction with large sigma for adaptive thresholding
         """
+        if not overwrite and cls._check_file_exists(pfm, ("adaptv",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -464,7 +458,6 @@ class PipelineFuncs:
             adaptv_arr = disk_cache(adaptv_arr, pfm.adaptv)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("threshd",))
     def cellc4(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 4
@@ -472,6 +465,8 @@ class PipelineFuncs:
         Currently, manual thresholding.
         Ideally, mean thresholding with standard deviation offset
         """
+        if not overwrite and cls._check_file_exists(pfm, ("threshd",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
@@ -492,13 +487,14 @@ class PipelineFuncs:
             threshd_arr = disk_cache(threshd_arr, pfm.threshd)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("threshd_volumes",))
     def cellc5(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 5
 
         Getting object sizes
         """
+        if not overwrite and cls._check_file_exists(pfm, ("threshd_volumes",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Reading input images
@@ -512,13 +508,14 @@ class PipelineFuncs:
             threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("threshd_filt",))
     def cellc6(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 6
 
         Filter out large objects (likely outlines, not cells)
         """
+        if not overwrite and cls._check_file_exists(pfm, ("threshd_filt",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
@@ -536,13 +533,14 @@ class PipelineFuncs:
             threshd_filt_arr = disk_cache(threshd_filt_arr, pfm.threshd_filt)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("maxima",))
     def cellc7(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 7
 
         Get maxima of image masked by labels.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("maxima",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -561,13 +559,14 @@ class PipelineFuncs:
             maxima_arr = disk_cache(maxima_arr, pfm.maxima)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("wshed_volumes",))
     def cellc8(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 8
 
         Watershed segmentation volumes.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("wshed_volumes",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
             # n_workers=2
@@ -586,13 +585,14 @@ class PipelineFuncs:
             wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("wshed_filt",))
     def cellc9(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 9
 
         Filter out large watershed objects (again likely outlines, not cells).
         """
+        if not overwrite and cls._check_file_exists(pfm, ("wshed_filt",)):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
@@ -610,9 +610,6 @@ class PipelineFuncs:
             wshed_filt_arr = disk_cache(wshed_filt_arr, pfm.wshed_filt)
 
     @classmethod
-    @overwrite_check_decorator(
-        pfm_fp_ls=("maxima_final", "threshd_final", "wshed_final")
-    )
     def cellc10(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 10
@@ -622,6 +619,10 @@ class PipelineFuncs:
         - Trimmed threshold image
         - Trimmed watershed image
         """
+        if not overwrite and cls._check_file_exists(
+            pfm, ("maxima_final", "threshd_final", "wshed_final")
+        ):
+            return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
@@ -640,13 +641,14 @@ class PipelineFuncs:
             disk_cache(wshed_final_arr, pfm.wshed_final)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("cells_raw_df",))
     def cellc11(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 11
 
         From maxima and watershed, save the cells.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("cells_raw_df",)):
+            return
         with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
             # n_workers=2
             # Getting configs
@@ -677,12 +679,13 @@ class PipelineFuncs:
             cells_df.to_parquet(pfm.cells_raw_df)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("maxima_df",))
     def cellc_coords_only(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Get maxima coords.
         Very basic but faster version of cellc11_pipeline get_cells.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("maxima_df",)):
+            return
         # Reading filtered and maxima images (trimmed - orig space)
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Read filtered and maxima images (trimmed - orig space)
@@ -703,13 +706,14 @@ class PipelineFuncs:
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("cells_trfm_df",))
     def transform_coords(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         `in_id` and `out_id` are either maxima or region
 
         NOTE: saves the cells_trfm dataframe as pandas parquet.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("cells_trfm_df",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
@@ -749,7 +753,6 @@ class PipelineFuncs:
             cells_trfm_df.to_parquet(pfm.cells_trfm_df)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("cells_df",))
     def cell_mapping(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Using the transformed cell coordinates, get the region ID and name for each cell
@@ -757,6 +760,8 @@ class PipelineFuncs:
 
         NOTE: saves the cells dataframe as pandas parquet.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("cells_df",)):
+            return
         # Getting region for each detected cell (i.e. row) in cells_df
         with cluster_proc_contxt(LocalCluster()):
             # Reading cells_raw and cells_trfm dataframes
@@ -811,7 +816,6 @@ class PipelineFuncs:
             cells_df.to_parquet(pfm.cells_df)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("cells_agg_df",))
     def group_cells(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Grouping cells by region name and aggregating total cell volume
@@ -819,6 +823,8 @@ class PipelineFuncs:
 
         NOTE: saves the cells_agg dataframe as pandas parquet.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("cells_agg_df",)):
+            return
         # Making cells_agg_df
         with cluster_proc_contxt(LocalCluster()):
             # Reading cells dataframe
@@ -848,8 +854,9 @@ class PipelineFuncs:
             cells_agg_df.to_parquet(pfm.cells_agg_df)
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("cells_agg_csv",))
     def cells2csv(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("cells_agg_csv",)):
+            return
         # Reading cells dataframe
         cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
         # Sanitising (removing smb columns)
@@ -861,8 +868,9 @@ class PipelineFuncs:
     # VISUAL CHECK
     ###################################################################################################
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("points_raw",))
     def coords2points_raw(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("points_raw",)):
+            return
         with cluster_proc_contxt(LocalCluster()):
             coords2points_dask(
                 coords=pd.read_parquet(pfm.cells_raw_df),
@@ -871,8 +879,9 @@ class PipelineFuncs:
             )
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("heatmap_raw",))
     def coords2heatmap_raw(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("heatmap_raw",)):
+            return
         with cluster_proc_contxt(LocalCluster()):
             configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
             coords2heatmap_dask(
@@ -883,8 +892,9 @@ class PipelineFuncs:
             )
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("points_trfm",))
     def coords2points_trfm(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("points_trfm",)):
+            return
         with cluster_proc_contxt(LocalCluster()):
             coords2points_tiff(
                 coords=pd.read_parquet(pfm.cells_trfm_df),
@@ -893,8 +903,9 @@ class PipelineFuncs:
             )
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("heatmap_trfm",))
     def coords2heatmap_trfm(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("heatmap_trfm",)):
+            return
         with cluster_proc_contxt(LocalCluster()):
             configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
             coords2heatmap_tiff(
@@ -909,8 +920,9 @@ class PipelineFuncs:
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("combined_reg",))
     def combine_reg(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("combined_reg",)):
+            return
         combine_arrs(
             fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
             # 2nd regresult means the combining works in ImageJ
@@ -918,8 +930,9 @@ class PipelineFuncs:
         )
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("combined_cellc",))
     def combine_cellc(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("combined_cellc",)):
+            return
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         combine_arrs(
             fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
@@ -932,8 +945,9 @@ class PipelineFuncs:
         )
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("combined_points",))
     def combine_points(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_file_exists(pfm, ("combined_points",)):
+            return
         combine_arrs(
             fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
             # 2nd regresult means the combining works in ImageJ
@@ -945,7 +959,7 @@ class PipelineFuncs:
     ###################################################################################################
 
     @classmethod
-    def all_pipeline(in_fp: str, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def run_all(cls, in_fp: str, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Running all pipelines in order.
         """
