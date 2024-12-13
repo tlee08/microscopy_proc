@@ -21,8 +21,6 @@ class PipelineTuning(Pipeline):
         """
         Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
         """
-        if not overwrite and cls._check_file_exists(pfm, ("overlap",)):
-            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading
@@ -36,6 +34,9 @@ class PipelineTuning(Pipeline):
         # Converting to tuning filepaths
         pfm = pfm.copy().convert_to_tuning()
         print(pfm.raw)
+        # Checking if overwrite
+        if not overwrite and cls._check_file_exists(pfm, ("raw",)):
+            return
         # Saving
         raw_arr = disk_cache(raw_arr, pfm.raw)
 
