@@ -46,7 +46,7 @@ class PipelineTuning(Pipeline):
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         pfm = pfm.convert_to_tuning()
         print(pfm)
-        cls.img_overlap(pfm, overwrite=overwrite)
+        # cls.img_overlap(pfm, overwrite=overwrite)
 
     @classmethod
     def cellc1(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
