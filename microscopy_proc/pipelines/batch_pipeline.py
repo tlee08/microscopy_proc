@@ -3,7 +3,7 @@ import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.batch_combine import combine_root_pipeline
+from microscopy_proc.funcs.batch_combine_funcs import combine_root_pipeline
 from microscopy_proc.pipeline_funcs.pipeline_funcs import PipelineFuncs
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,

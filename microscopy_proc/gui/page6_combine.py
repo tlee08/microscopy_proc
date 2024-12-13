@@ -3,7 +3,7 @@ import os
 import streamlit as st
 from natsort import natsorted
 
-from microscopy_proc.funcs.batch_combine import combine_ls_pipeline
+from microscopy_proc.funcs.batch_combine_funcs import combine_ls_pipeline
 from microscopy_proc.gui.page1_init import INPUT_M as PDIR_INPUT_M
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 

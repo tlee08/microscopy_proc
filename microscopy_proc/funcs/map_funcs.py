@@ -5,6 +5,7 @@ from microscopy_proc.constants import (
     ANNOT_COLUMNS_TYPES,
     AnnotColumns,
     AnnotExtraColumns,
+    SpecialRegions,
 )
 
 
@@ -30,7 +31,7 @@ def annot_dict2df(data_dict: dict) -> pd.DataFrame:
         curr_row = pd.DataFrame(
             {i.value: [annot_dict[i.value]] for i in AnnotColumns},
         )
-        # Recursively concatenating all children as well
+        # Recursively concatenating all children
         return pd.concat(
             [
                 curr_row,
@@ -225,9 +226,9 @@ def df_include_special_ids(cells_df: pd.DataFrame) -> pd.DataFrame:
     id_col = AnnotColumns.ID.value
     name_col = AnnotColumns.NAME.value
     # Setting points with ID == -1 as "invalid" label
-    cells_df.loc[cells_df[id_col] == -1, name_col] = "invalid"
+    cells_df.loc[cells_df[id_col] == -1, name_col] = SpecialRegions.INVALID.value
     # Setting points with ID == 0 as "universe" label
-    cells_df.loc[cells_df[id_col] == 0, name_col] = "universe"
+    cells_df.loc[cells_df[id_col] == 0, name_col] = SpecialRegions.UNIVERSE.value
     # Setting points with no region map name (but have a positive ID value) as "no label" label
-    cells_df.loc[cells_df[name_col].isna(), name_col] = "no label"
+    cells_df.loc[cells_df[name_col].isna(), name_col] = SpecialRegions.NO_LABEL.value
     return cells_df

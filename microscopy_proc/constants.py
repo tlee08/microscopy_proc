@@ -107,6 +107,13 @@ CELL_AGG_MAPPINGS = {
     # CellMeasures.MAX_INTENSITY.value: "max",
 }
 
+
+class SpecialRegions(Enum):
+    INVALID = "invalid"
+    UNIVERSE = "universe"
+    NO_LABEL = "no_label"
+
+
 MASK_VOLUME = "volume"
 
 
