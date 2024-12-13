@@ -1,9 +1,6 @@
 import dask.array as da
 
-from microscopy_proc.pipeline_funcs.pipeline_funcs import (
-    PipelineFuncs,
-    overwrite_check_decorator,
-)
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     disk_cache,
@@ -14,17 +11,18 @@ from microscopy_proc.utils.proj_org_utils import (
 )
 
 
-class PipelineTuningFuncs:
+class PipelineTuning(Pipeline):
     ###################################################################################################
     # CROP RAW ZARR TO MAKE TUNING ZARR
     ###################################################################################################
 
     @classmethod
-    @overwrite_check_decorator(pfm_fp_ls=("overlap",))
     def make_tuning_arr(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
         """
+        if not overwrite and cls._check_file_exists(pfm, ("overlap",)):
+            return
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Reading
@@ -47,54 +45,52 @@ class PipelineTuningFuncs:
 
     @classmethod
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.img_overlap(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.img_overlap(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc1(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc1(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc1(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc2(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc2(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc2(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc3(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc3(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc3(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc4(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc4(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc4(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc5(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc5(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc5(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc6(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc6(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc6(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc7(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc7(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc7(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc8(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc8(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc8(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc9(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc9(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc9(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc10(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc10(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc10(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc11(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc11(pfm.copy().convert_to_tuning(), overwrite=overwrite)
+        cls.cellc11(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc_coords_only(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        PipelineFuncs.cellc_coords_only(
-            pfm.copy().convert_to_tuning(), overwrite=overwrite
-        )
+        cls.cellc_coords_only(pfm.copy().convert_to_tuning(), overwrite=overwrite)

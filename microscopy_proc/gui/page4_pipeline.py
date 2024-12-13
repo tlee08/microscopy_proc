@@ -1,6 +1,6 @@
 import streamlit as st
 
-from microscopy_proc.pipeline_funcs.pipeline_funcs import PipelineFuncs
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import PROJ_DIR, init_var, page_decorator
@@ -34,33 +34,33 @@ def page4_pipeline():
         CHECKBOXES,
         # TODO: dynamically generate this dictionary
         {
-            PipelineFuncs.ref_prepare: False,
-            PipelineFuncs.img_rough: False,
-            PipelineFuncs.img_fine: False,
-            PipelineFuncs.img_trim: False,
-            PipelineFuncs.elastix_registration: False,
-            PipelineFuncs.make_mask: False,
-            PipelineFuncs.img_overlap: False,
-            PipelineFuncs.cellc1: False,
-            PipelineFuncs.cellc2: False,
-            PipelineFuncs.cellc3: False,
-            PipelineFuncs.cellc4: False,
-            PipelineFuncs.cellc5: False,
-            PipelineFuncs.cellc6: False,
-            PipelineFuncs.cellc7: False,
-            PipelineFuncs.cellc8: False,
-            PipelineFuncs.cellc9: False,
-            PipelineFuncs.cellc10: False,
-            PipelineFuncs.cellc11: False,
-            PipelineFuncs.cellc_coords_only: False,
-            PipelineFuncs.transform_coords: False,
-            PipelineFuncs.cell_mapping: False,
-            PipelineFuncs.group_cells: False,
-            PipelineFuncs.cells2csv: False,
-            PipelineFuncs.coords2points_raw: False,
-            PipelineFuncs.coords2heatmap_raw: False,
-            PipelineFuncs.coords2points_trfm: False,
-            PipelineFuncs.coords2heatmap_trfm: False,
+            Pipeline.ref_prepare: False,
+            Pipeline.img_rough: False,
+            Pipeline.img_fine: False,
+            Pipeline.img_trim: False,
+            Pipeline.elastix_registration: False,
+            Pipeline.make_mask: False,
+            Pipeline.img_overlap: False,
+            Pipeline.cellc1: False,
+            Pipeline.cellc2: False,
+            Pipeline.cellc3: False,
+            Pipeline.cellc4: False,
+            Pipeline.cellc5: False,
+            Pipeline.cellc6: False,
+            Pipeline.cellc7: False,
+            Pipeline.cellc8: False,
+            Pipeline.cellc9: False,
+            Pipeline.cellc10: False,
+            Pipeline.cellc11: False,
+            Pipeline.cellc_coords_only: False,
+            Pipeline.transform_coords: False,
+            Pipeline.cell_mapping: False,
+            Pipeline.group_cells: False,
+            Pipeline.cells2csv: False,
+            Pipeline.coords2points_raw: False,
+            Pipeline.coords2heatmap_raw: False,
+            Pipeline.coords2points_trfm: False,
+            Pipeline.coords2heatmap_trfm: False,
         },
     )
     init_var(OVERWRITE, False)

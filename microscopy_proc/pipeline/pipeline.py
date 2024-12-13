@@ -87,9 +87,9 @@ else:
     transformation_coords = import_extra_error_func("elastix")
 
 
-class PipelineFuncs:
+class Pipeline:
     ###################################################################################################
-    # OVERWRITE DECORATOR
+    # CHECK PFM FILE EXISTS
     ###################################################################################################
 
     @staticmethod
@@ -964,34 +964,34 @@ class PipelineFuncs:
         Running all pipelines in order.
         """
         # Running all pipelines in order
-        PipelineFuncs.tiff2zarr(pfm, in_fp, overwrite=overwrite)
-        PipelineFuncs.ref_prepare(pfm, overwrite=overwrite)
-        PipelineFuncs.img_rough(pfm, overwrite=overwrite)
-        PipelineFuncs.img_fine(pfm, overwrite=overwrite)
-        PipelineFuncs.img_trim(pfm, overwrite=overwrite)
-        PipelineFuncs.elastix_registration(pfm, overwrite=overwrite)
-        PipelineFuncs.make_mask(pfm, overwrite=overwrite)
-        PipelineFuncs.img_overlap(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc1(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc2(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc3(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc4(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc5(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc6(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc7(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc8(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc9(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc10(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc11(pfm, overwrite=overwrite)
-        PipelineFuncs.cellc_coords_only(pfm, overwrite=overwrite)
-        PipelineFuncs.transform_coords(pfm, overwrite=overwrite)
-        PipelineFuncs.cell_mapping(pfm, overwrite=overwrite)
-        PipelineFuncs.group_cells(pfm, overwrite=overwrite)
-        PipelineFuncs.cells2csv(pfm, overwrite=overwrite)
-        PipelineFuncs.coords2points_raw(pfm, overwrite=overwrite)
-        PipelineFuncs.coords2heatmap_raw(pfm, overwrite=overwrite)
-        PipelineFuncs.coords2points_trfm(pfm, overwrite=overwrite)
-        PipelineFuncs.coords2heatmap_trfm(pfm, overwrite=overwrite)
-        PipelineFuncs.combine_reg(pfm, overwrite=overwrite)
-        PipelineFuncs.combine_cellc(pfm, overwrite=overwrite)
-        PipelineFuncs.combine_points(pfm, overwrite=overwrite)
+        Pipeline.tiff2zarr(pfm, in_fp, overwrite=overwrite)
+        Pipeline.ref_prepare(pfm, overwrite=overwrite)
+        Pipeline.img_rough(pfm, overwrite=overwrite)
+        Pipeline.img_fine(pfm, overwrite=overwrite)
+        Pipeline.img_trim(pfm, overwrite=overwrite)
+        Pipeline.elastix_registration(pfm, overwrite=overwrite)
+        Pipeline.make_mask(pfm, overwrite=overwrite)
+        Pipeline.img_overlap(pfm, overwrite=overwrite)
+        Pipeline.cellc1(pfm, overwrite=overwrite)
+        Pipeline.cellc2(pfm, overwrite=overwrite)
+        Pipeline.cellc3(pfm, overwrite=overwrite)
+        Pipeline.cellc4(pfm, overwrite=overwrite)
+        Pipeline.cellc5(pfm, overwrite=overwrite)
+        Pipeline.cellc6(pfm, overwrite=overwrite)
+        Pipeline.cellc7(pfm, overwrite=overwrite)
+        Pipeline.cellc8(pfm, overwrite=overwrite)
+        Pipeline.cellc9(pfm, overwrite=overwrite)
+        Pipeline.cellc10(pfm, overwrite=overwrite)
+        Pipeline.cellc11(pfm, overwrite=overwrite)
+        Pipeline.cellc_coords_only(pfm, overwrite=overwrite)
+        Pipeline.transform_coords(pfm, overwrite=overwrite)
+        Pipeline.cell_mapping(pfm, overwrite=overwrite)
+        Pipeline.group_cells(pfm, overwrite=overwrite)
+        Pipeline.cells2csv(pfm, overwrite=overwrite)
+        Pipeline.coords2points_raw(pfm, overwrite=overwrite)
+        Pipeline.coords2heatmap_raw(pfm, overwrite=overwrite)
+        Pipeline.coords2points_trfm(pfm, overwrite=overwrite)
+        Pipeline.coords2heatmap_trfm(pfm, overwrite=overwrite)
+        Pipeline.combine_reg(pfm, overwrite=overwrite)
+        Pipeline.combine_cellc(pfm, overwrite=overwrite)
+        Pipeline.combine_points(pfm, overwrite=overwrite)

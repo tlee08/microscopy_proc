@@ -4,7 +4,7 @@ import os
 from natsort import natsorted
 
 from microscopy_proc.funcs.batch_combine_funcs import combine_root_pipeline
-from microscopy_proc.pipeline_funcs.pipeline_funcs import PipelineFuncs
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
     update_configs,
@@ -78,47 +78,47 @@ if __name__ == "__main__":
             )
 
             # Making zarr from tiff file(s)
-            PipelineFuncs.tiff2zarr(pfm, in_fp, overwrite=overwrite)
+            Pipeline.tiff2zarr(pfm, in_fp, overwrite=overwrite)
             # Preparing reference images
-            PipelineFuncs.ref_prepare(pfm, overwrite=overwrite)
+            Pipeline.ref_prepare(pfm, overwrite=overwrite)
             # Preparing image itself
-            PipelineFuncs.img_rough(pfm, overwrite=overwrite)
-            PipelineFuncs.img_fine(pfm, overwrite=overwrite)
-            PipelineFuncs.img_trim(pfm, overwrite=overwrite)
+            Pipeline.img_rough(pfm, overwrite=overwrite)
+            Pipeline.img_fine(pfm, overwrite=overwrite)
+            Pipeline.img_trim(pfm, overwrite=overwrite)
             # Running Elastix registration
-            PipelineFuncs.elastix_registration(pfm, overwrite=overwrite)
+            Pipeline.elastix_registration(pfm, overwrite=overwrite)
             # Running mask pipeline
-            PipelineFuncs.make_mask(pfm, overwrite=overwrite)
+            Pipeline.make_mask(pfm, overwrite=overwrite)
             # Making overlap chunks in preparation for cell counting
-            PipelineFuncs.img_overlap(pfm, overwrite=overwrite)
+            Pipeline.img_overlap(pfm, overwrite=overwrite)
             # Counting cells
-            PipelineFuncs.cellc1(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc2(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc3(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc4(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc5(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc6(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc7(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc8(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc9(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc10(pfm, overwrite=overwrite)
-            PipelineFuncs.cellc11(pfm, overwrite=overwrite)
+            Pipeline.cellc1(pfm, overwrite=overwrite)
+            Pipeline.cellc2(pfm, overwrite=overwrite)
+            Pipeline.cellc3(pfm, overwrite=overwrite)
+            Pipeline.cellc4(pfm, overwrite=overwrite)
+            Pipeline.cellc5(pfm, overwrite=overwrite)
+            Pipeline.cellc6(pfm, overwrite=overwrite)
+            Pipeline.cellc7(pfm, overwrite=overwrite)
+            Pipeline.cellc8(pfm, overwrite=overwrite)
+            Pipeline.cellc9(pfm, overwrite=overwrite)
+            Pipeline.cellc10(pfm, overwrite=overwrite)
+            Pipeline.cellc11(pfm, overwrite=overwrite)
             # Converting maxima from raw space to refernce atlas space
-            PipelineFuncs.transform_coords(pfm, overwrite=overwrite)
+            Pipeline.transform_coords(pfm, overwrite=overwrite)
             # Getting Region ID mappings for each cell
-            PipelineFuncs.cell_mapping(pfm, overwrite=overwrite)
+            Pipeline.cell_mapping(pfm, overwrite=overwrite)
             # Grouping cells
-            PipelineFuncs.group_cells(pfm, overwrite=overwrite)
+            Pipeline.group_cells(pfm, overwrite=overwrite)
             # Exporting cells_agg parquet as csv
-            PipelineFuncs.cells2csv(pfm, overwrite=overwrite)
+            Pipeline.cells2csv(pfm, overwrite=overwrite)
             # Making points and heatmap images
-            PipelineFuncs.coords2points_raw(pfm, overwrite=overwrite)
-            PipelineFuncs.coords2points_trfm(pfm, overwrite=overwrite)
-            PipelineFuncs.coords2heatmap_trfm(pfm, overwrite=overwrite)
+            Pipeline.coords2points_raw(pfm, overwrite=overwrite)
+            Pipeline.coords2points_trfm(pfm, overwrite=overwrite)
+            Pipeline.coords2heatmap_trfm(pfm, overwrite=overwrite)
             # Combining arrays
-            PipelineFuncs.combine_reg(pfm, overwrite=overwrite)
-            PipelineFuncs.combine_cellc(pfm, overwrite=overwrite)
-            PipelineFuncs.combine_points(pfm, overwrite=overwrite)
+            Pipeline.combine_reg(pfm, overwrite=overwrite)
+            Pipeline.combine_cellc(pfm, overwrite=overwrite)
+            Pipeline.combine_points(pfm, overwrite=overwrite)
         except Exception as e:
             logging.info(f"Error in {exp}: {e}")
             continue
