@@ -73,6 +73,8 @@ def create_wrapped_method(func: Callable):
         pfm = pfm.copy()
         pfm.convert_to_tuning()
         # Running process
+        print(func)
+        print(func.__doc__)
         func(pfm, overwrite)
 
     return wrapper
