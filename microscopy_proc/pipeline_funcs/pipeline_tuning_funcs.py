@@ -21,7 +21,7 @@ class PipelineTuningFuncs(PipelineFuncs):
 
     @classmethod
     @overwrite_check_decorator(pfm_fp_ls=("overlap",))
-    def make_tuning_img(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def make_tuning_arr(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         """
         Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
         """

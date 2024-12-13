@@ -389,8 +389,6 @@ class PipelineFuncs:
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Making overlap image
         with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
-            print(pfm.raw)
-            print(os.path.exists(pfm.raw))
             raw_arr = da.from_zarr(pfm.raw, chunks=configs.zarr_chunksize)
             overlap_arr = da_overlap(raw_arr, d=configs.overlap_depth)
             overlap_arr = disk_cache(overlap_arr, pfm.overlap)
