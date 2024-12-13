@@ -34,8 +34,7 @@ class PipelineTuning(Pipeline):
             slice(*configs.tuning_x_trim),
         ]
         # Converting to tuning filepaths
-        pfm = pfm.copy()
-        pfm.convert_to_tuning()
+        pfm = pfm.convert_to_tuning()
         # Saving
         raw_arr = disk_cache(raw_arr, pfm.raw)
 
@@ -45,7 +44,7 @@ class PipelineTuning(Pipeline):
 
     @classmethod
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        pfm = pfm.copy().convert_to_tuning()
+        pfm = pfm.convert_to_tuning()
         print(pfm)
         cls.img_overlap(pfm, overwrite=overwrite)
 
