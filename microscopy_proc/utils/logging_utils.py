@@ -10,11 +10,11 @@ def init_logger() -> logging.Logger:
     Setup logging configuration
     """
     # For total logging
-    total_log_fp = os.path.join(TEMP_DIR, "log.log")
+    total_log_fp = os.path.join(TEMP_DIR, "debug.log")
     os.makedirs(TEMP_DIR, exist_ok=True)
     # Setting up logging configuration
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(total_log_fp),

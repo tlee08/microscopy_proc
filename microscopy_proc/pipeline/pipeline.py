@@ -87,12 +87,11 @@ else:
 
 
 class Pipeline:
+    logger = init_logger()
+
     ###################################################################################################
     # CHECK PFM FILE EXISTS
     ###################################################################################################
-
-    logger = init_logger()
-
     @classmethod
     @log_func_decorator(logger)
     def _check_file_exists(cls, pfm: ProjFpModel, pfm_fp_ls: tuple[str, ...] = tuple()):
@@ -100,14 +99,13 @@ class Pipeline:
         Returns whether the fpm attribute in
         `pfm_fp_ls` is a filepath that already exsits.
         """
-        cls.logger.debug(f"Iterating through attributes in `pfm_fp_ls`: {pfm_fp_ls}")
+        cls.logger.debug(f"Iterating through filepaths in `pfm_fp_ls`: {pfm_fp_ls}")
         for pfm_fp in pfm_fp_ls:
-            # If attribute exists and is a filepath, then don't run func
             if os.path.exists(getattr(pfm, pfm_fp)):
                 cls.logger.debug(f"{pfm_fp} already exists.\n")
                 cls.logger.debug("Returning True.")
                 return True
-        # File does not exist
+        cls.logger.debug("None of the filepaths in `pfm_fp_ls` exist.\n")
         cls.logger.debug("Returning False.")
         return False
 

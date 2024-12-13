@@ -18,7 +18,6 @@ class CpuCellcFuncs:
     logger = init_logger()
 
     @classmethod
-    # @task
     def tophat_filt(cls, arr: np.ndarray, sigma: int = 10) -> np.ndarray:
         """
         Top hat is calculated as:
@@ -36,7 +35,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    # @task
     def dog_filt(cls, arr: np.ndarray, sigma1=1, sigma2=2) -> np.ndarray:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         cls.logger.debug("Making gaussian blur 1")
@@ -50,7 +48,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    # @task
     def gauss_blur_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         cls.logger.debug("Calculate Gaussian blur")
@@ -58,7 +55,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    # @task
     def gauss_subt_filt(cls, arr: np.ndarray, sigma=10) -> np.ndarray:
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         cls.logger.debug("Calculate local Gaussian blur")
@@ -70,7 +66,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    # @task
     def intensity_cutoff(
         cls, arr: np.ndarray, min_: None | float = None, max_: None | float = None
     ) -> np.ndarray:
@@ -87,7 +82,6 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    # @task
     def otsu_thresh(cls, arr: np.ndarray) -> np.ndarray:
         """
         Perform Otsu's thresholding on a 3D tensor.
@@ -117,7 +111,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    # @task
     def mean_thresh(cls, arr: np.ndarray, offset_sd: float = 0.0) -> np.ndarray:
         """
         Perform adaptive thresholding on a 3D tensor on GPU.
@@ -132,7 +125,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    # @task
     def manual_thresh(cls, arr: np.ndarray, val: int) -> np.ndarray:
         """
         Perform manual thresholding on a tensor.
@@ -143,7 +135,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    # @task
     def mask2ids(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
@@ -155,7 +146,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint32)
 
     @classmethod
-    # @task
     def ids2volumes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Convert array of label values to
@@ -172,7 +162,6 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    # @task
     def label_with_volumes(cls, arr: np.ndarray) -> np.ndarray:
         """
         Label objects in a 3D tensor.
@@ -182,7 +171,6 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    # @task
     def visualise_stats(cls, arr: np.ndarray):
         """
         Visualise statistics.
@@ -202,7 +190,6 @@ class CpuCellcFuncs:
         return fig
 
     @classmethod
-    # @task
     def volume_filter(cls, arr: np.ndarray, smin=None, smax=None) -> np.ndarray:
         """
         Assumes `arr` is array of objects labelled with their volumes.
@@ -217,7 +204,6 @@ class CpuCellcFuncs:
         return arr
 
     @classmethod
-    # @task
     def get_local_maxima(
         cls,
         arr: np.ndarray,
@@ -249,7 +235,6 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    # @task
     def mask(cls, arr: np.ndarray, mask_arr: np.ndarray) -> np.ndarray:
         arr = cls.xp.asarray(arr)
         mask_arr = cls.xp.asarray(mask_arr).astype(cls.xp.uint8)
@@ -258,7 +243,6 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    # @task
     def wshed_segm(
         cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
     ) -> np.ndarray:
@@ -276,7 +260,6 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    # @task
     def wshed_segm_volumes(
         cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
     ) -> np.ndarray:
@@ -292,7 +275,6 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    # @task
     def get_coords(cls, arr: np.ndarray) -> pd.DataFrame:
         """
         Get coordinates of regions in 3D tensor.
@@ -318,7 +300,6 @@ class CpuCellcFuncs:
         return df
 
     @classmethod
-    # @task
     def get_cells(
         cls,
         raw_arr: np.ndarray,
