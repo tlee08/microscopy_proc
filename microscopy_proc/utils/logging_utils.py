@@ -31,8 +31,9 @@ def log_func_decorator(logger: logging.Logger):
         def wrapper(*args, **kwargs):
             try:
                 logger.info(f"STARTED {func.__name__}")
-                func(*args, **kwargs)
+                output = func(*args, **kwargs)
                 logger.info(f"FINISHED {func.__name__}")
+                return output
             except Exception as e:
                 logger.error(f"ERROR {func.__name__}")
                 logger.error(traceback.format_exc())
