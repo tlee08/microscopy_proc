@@ -2,10 +2,7 @@ import functools
 from typing import Callable
 
 import dask.array as da
-from dask.distributed import LocalCluster
 
-from microscopy_proc import ELASTIX_ENABLED, GPU_ENABLED
-from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs as Cf
 from microscopy_proc.pipeline_funcs.pipeline_funcs import (
     PipelineFuncs,
     overwrite_check_decorator,
@@ -15,30 +12,9 @@ from microscopy_proc.utils.dask_utils import (
     disk_cache,
 )
 from microscopy_proc.utils.io_utils import read_json
-from microscopy_proc.utils.misc_utils import import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
 )
-
-# Optional dependency: gpu
-if GPU_ENABLED:
-    from dask_cuda import LocalCUDACluster
-
-    from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
-else:
-    LocalCUDACluster = LocalCluster
-    Gf = Cf
-    print(
-        "Warning GPU functionality not installed.\n"
-        "Using CPU functionality instead (much slower).\n"
-        'Can install with `pip install "microscopy_proc[gpu]"`'
-    )
-# Optional dependency: elastix
-if ELASTIX_ENABLED:
-    from microscopy_proc.funcs.elastix_funcs import registration, transformation_coords
-else:
-    registration = import_extra_error_func("elastix")
-    transformation_coords = import_extra_error_func("elastix")
 
 
 class PipelineTuningFuncs(PipelineFuncs):
