@@ -216,12 +216,14 @@ class ProjFpModel(BaseModel):
         self.maxima = os.path.join(root_dir, cellc_dir, "7_maxima.zarr")
         self.wshed_volumes = os.path.join(root_dir, cellc_dir, "8_wshed_volumes.zarr")
         self.wshed_filt = os.path.join(root_dir, cellc_dir, "9_wshed_filt.zarr")
+        # Returning
+        return self
 
     def convert_to_tuning(self):
-        self._convert_to(ProjSubdirs.CELLCOUNT_TUNING.value)
+        return self._convert_to(ProjSubdirs.CELLCOUNT_TUNING.value)
 
     def convert_to_processing(self):
-        self._convert_to(ProjSubdirs.CELLCOUNT.value)
+        return self._convert_to(ProjSubdirs.CELLCOUNT.value)
 
 
 def get_proj_fp_model(proj_dir: str):
