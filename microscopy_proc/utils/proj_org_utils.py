@@ -220,10 +220,12 @@ class ProjFpModel(BaseModel):
         return self
 
     def convert_to_tuning(self):
-        return self._convert_to(ProjSubdirs.CELLCOUNT_TUNING.value)
+        self._convert_to(ProjSubdirs.CELLCOUNT_TUNING.value)
+        return self
 
     def convert_to_processing(self):
-        return self._convert_to(ProjSubdirs.CELLCOUNT.value)
+        self._convert_to(ProjSubdirs.CELLCOUNT.value)
+        return self
 
 
 def get_proj_fp_model(proj_dir: str):
