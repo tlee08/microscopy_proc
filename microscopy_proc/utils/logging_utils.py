@@ -15,6 +15,7 @@ def init_logger() -> logging.Logger:
     # Setting up logging configuration
     logging.basicConfig(
         level=logging.DEBUG,
+        filemode="a",
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(total_log_fp),
