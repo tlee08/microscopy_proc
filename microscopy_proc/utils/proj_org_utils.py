@@ -16,6 +16,7 @@ class ProjSubdirs(Enum):
     REGISTRATION = "registration"
     MASK = "mask"
     CELLCOUNT = "cellcount"
+    CELLCOUNT_TUNING = "cellcount_tuning"
     ANALYSIS = "analysis"
     VISUALISATION = "visualisation"
     COMBINED = "combined"
@@ -189,6 +190,38 @@ class ProjFpModel(BaseModel):
             combined_cellc=os.path.join(proj_dir, combined_dir, "combined_cellc.tif"),
             combined_points=os.path.join(proj_dir, combined_dir, "combined_points.tif"),
         )
+
+    def copy(self):
+        return self.model_validate(self.model_dump())
+
+    def _convert_to(self, cellc_dir: str):
+        # Getting root_dir
+        root_dir = self.root_dir
+        # Converting raw filepath
+        # TODO: a better way to do this with encapsulation and not hardcoding
+        if cellc_dir == ProjSubdirs.CELLCOUNT.value:
+            self.raw = os.path.join(root_dir, "raw.zarr")
+        elif cellc_dir == ProjSubdirs.CELLCOUNT_TUNING.value:
+            self.raw = os.path.join(root_dir, "raw_tuning.zarr")
+        # Converting all the cellcount filepaths to the new directory
+        self.overlap = os.path.join(root_dir, cellc_dir, "0_overlap.zarr")
+        self.bgrm = os.path.join(root_dir, cellc_dir, "1_bgrm.zarr")
+        self.dog = os.path.join(root_dir, cellc_dir, "2_dog.zarr")
+        self.adaptv = os.path.join(root_dir, cellc_dir, "3_adaptv.zarr")
+        self.threshd = os.path.join(root_dir, cellc_dir, "4_threshd.zarr")
+        self.threshd_volumes = os.path.join(
+            root_dir, cellc_dir, "5_threshd_volumes.zarr"
+        )
+        self.threshd_filt = os.path.join(root_dir, cellc_dir, "6_threshd_filt.zarr")
+        self.maxima = os.path.join(root_dir, cellc_dir, "7_maxima.zarr")
+        self.wshed_volumes = os.path.join(root_dir, cellc_dir, "8_wshed_volumes.zarr")
+        self.wshed_filt = os.path.join(root_dir, cellc_dir, "9_wshed_filt.zarr")
+
+    def convert_to_tuning(self):
+        self._convert_to(ProjSubdirs.CELLCOUNT_TUNING.value)
+
+    def convert_to_processing(self):
+        self._convert_to(ProjSubdirs.CELLCOUNT.value)
 
 
 def get_proj_fp_model(proj_dir: str):

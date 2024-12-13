@@ -16,8 +16,8 @@ from microscopy_proc.utils.misc_utils import const2iter
 
 def block2coords(func, *args: Any) -> dd.DataFrame:
     """
-    Applies the `func` to `ar`.
-    Expects `func` to convert `ar` to coords df (of sorts).
+    Applies the `func` to `arr`.
+    Expects `func` to convert `arr` to coords df (of sorts).
 
     Importantly, this offsets the coords in each block using ONLY
     the chunks of the first da.Array object in `args`.
@@ -27,7 +27,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
 
     Process is:
         - Convert dask arrays to delayed object blocks
-        - Perform `func([ar1_blocki, ar2_blocki, ...], *args)` for each block
+        - Perform `func([arr1_blocki, arr2_blocki, ...], *args)` for each block
         - At each block, offset the coords by the block's location in the entire array.
     """
     # Assertions
@@ -105,21 +105,21 @@ def coords2block(df: dd.DataFrame | pd.DataFrame, block_info: dict) -> dd.DataFr
     return df
 
 
-def disk_cache(ar: da.Array, fp):
-    ar.to_zarr(fp, overwrite=True)
+def disk_cache(arr: da.Array, fp):
+    arr.to_zarr(fp, overwrite=True)
     return da.from_zarr(fp)
 
 
-def da_overlap(ar, d=DEPTH):
-    return da.overlap.overlap(ar, depth=d, boundary="reflect").rechunk(
-        [i + 2 * d for i in ar.chunksize]
+def da_overlap(arr, d=DEPTH):
+    return da.overlap.overlap(arr, depth=d, boundary="reflect").rechunk(
+        [i + 2 * d for i in arr.chunksize]
     )
 
 
-def da_trim(ar, d=DEPTH):
-    return ar.map_blocks(
+def da_trim(arr, d=DEPTH):
+    return arr.map_blocks(
         lambda x: x[d:-d, d:-d, d:-d],
-        chunks=[tuple(np.array(i) - d * 2) for i in ar.chunks],
+        chunks=[tuple(np.array(i) - d * 2) for i in arr.chunks],
     )
 
 

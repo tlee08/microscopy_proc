@@ -52,6 +52,10 @@ if __name__ == "__main__":
                 # y_trim=(None, None, None),
                 # x_trim=(None, None, None),
                 # # MASK
+                # # CELL COUNT TUNING CROP
+                tuning_z_trim=(700, 800, None),
+                tuning_y_trim=(1000, 3000, None),
+                tuning_x_trim=(1000, 3000, None),
                 # # OVERLAP
                 # # CELL COUNTING
                 # tophat_sigma=10,
