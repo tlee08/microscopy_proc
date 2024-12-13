@@ -95,28 +95,27 @@ def read_img(fp, trimmer: None | tuple[slice, ...] = None):
 
 
 def view_arrs(fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
-    with cluster_proc_contxt(LocalCluster()):
-        # Asserting all kwargs_ls list lengths are equal to fp_ls length
-        for k, v in kwargs.items():
-            assert len(v) == len(fp_ls)
-        # Reading arrays
-        arr_ls = []
-        for i, fp in enumerate(fp_ls):
-            logging.info(f"Loading image # {i} / {len(fp_ls)}")
-            arr_ls.append(read_img(fp, trimmer))
-        # "Transposing" kwargs from dict of lists to list of dicts
-        kwargs_ls = dictlists2listdicts(kwargs)
-        # Making napari viewer
-        viewer = napari.Viewer()
-        # Adding image to napari viewer
-        for i, arr in enumerate(arr_ls):
-            logging.info(f"Napari viewer - adding image # {i} / {len(arr_ls)}")
-            # NOTE: best kwargs to use are name, contrast_limits, and colormap
-            viewer.add_image(
-                data=arr,
-                blending="additive",
-                **kwargs_ls[i],
-            )
+    # Asserting all kwargs_ls list lengths are equal to fp_ls length
+    for k, v in kwargs.items():
+        assert len(v) == len(fp_ls)
+    # Reading arrays
+    arr_ls = []
+    for i, fp in enumerate(fp_ls):
+        logging.info(f"Loading image # {i} / {len(fp_ls)}")
+        arr_ls.append(read_img(fp, trimmer))
+    # "Transposing" kwargs from dict of lists to list of dicts
+    kwargs_ls = dictlists2listdicts(kwargs)
+    # Making napari viewer
+    viewer = napari.Viewer()
+    # Adding image to napari viewer
+    for i, arr in enumerate(arr_ls):
+        logging.info(f"Napari viewer - adding image # {i} / {len(arr_ls)}")
+        # NOTE: best kwargs to use are name, contrast_limits, and colormap
+        viewer.add_image(
+            data=arr,
+            blending="additive",
+            **kwargs_ls[i],
+        )
     # Running viewer
     napari.run()
 
