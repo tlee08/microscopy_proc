@@ -68,13 +68,17 @@ class PipelineTuningFuncs(PipelineFuncs):
 
 def create_wrapped_method(func: Callable):
     @functools.wraps(func)
-    def wrapper(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def wrapper(*args, **kwargs) -> None:
+        """Signature is `wrapper(cls, pfm, overwrite, **kwargs)`"""
+        # Getting pfm arg
+        pfm: ProjFpModel = kwargs.get("pfm", args[1])
+        assert isinstance(pfm, ProjFpModel)
         # Converting pfm to tuning filepaths
         pfm = pfm.copy()
         pfm.convert_to_tuning()
+        # Getting overwrite arg
+        overwrite = kwargs.get("overwrite", False)
         # Running process
-        print(func)
-        print(func.__doc__)
         func(pfm, overwrite)
 
     return wrapper
