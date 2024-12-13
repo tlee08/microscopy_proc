@@ -24,7 +24,7 @@ def const2iter(x: Any, n: int) -> Iterable[Any]:
         yield x
 
 
-def const2ls(x: Any, n: int) -> list[Any]:
+def const2list(x: Any, n: int) -> list[Any]:
     """
     Iterates the list, `ls`, `n` times.
     """

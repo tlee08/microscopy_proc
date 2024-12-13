@@ -8,6 +8,6 @@ def is_installed(package_name):
 
 
 # Checking if gpu extra dependency is installed
-GPU_ENABLED = is_installed("cupy")
+GPU_ENABLED = is_installed("cupy") and is_installed("dask_cuda")
 # Checking if elastix extra dependency is installed
 ELASTIX_ENABLED = is_installed("SimpleITK")

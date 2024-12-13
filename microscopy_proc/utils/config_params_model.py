@@ -1,3 +1,5 @@
+from enum import Enum
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -5,11 +7,24 @@ from microscopy_proc.constants import (
     DEPTH,
     PROC_CHUNKS,
     RESOURCES_DIR,
-    AnnotVersions,
-    MapVersions,
-    RefVersions,
 )
 from microscopy_proc.utils.io_utils import read_json, write_json
+
+
+class RefVersions(Enum):
+    AVERAGE_TEMPLATE_25 = "average_template_25"
+    ARA_NISSL_25 = "ara_nissl_25"
+
+
+class AnnotVersions(Enum):
+    CCF_2017_25 = "ccf_2017_25"
+    CCF_2016_25 = "ccf_2016_25"
+    CCF_2015_25 = "ccf_2015_25"
+
+
+class MapVersions(Enum):
+    ABA_ANNOTATIONS = "ABA_annotations"
+    CM_ANNOTATIONS = "CM_annotations"
 
 
 class ConfigParamsModel(BaseModel):

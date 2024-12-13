@@ -4,7 +4,6 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
-from microscopy_proc.constants import RefFolders
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, write_json
 
@@ -20,6 +19,13 @@ class ProjSubdirs(Enum):
     ANALYSIS = "analysis"
     VISUALISATION = "visualisation"
     COMBINED = "combined"
+
+
+class RefFolders(Enum):
+    REFERENCE = "reference"
+    ANNOTATION = "annotation"
+    MAPPING = "region_mapping"
+    ELASTIX = "elastix_params"
 
 
 class RefFpModel(BaseModel):

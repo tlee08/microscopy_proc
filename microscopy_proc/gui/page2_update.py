@@ -16,7 +16,7 @@ from microscopy_proc.gui.gui_funcs import (
 )
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import write_json
-from microscopy_proc.utils.misc_utils import const2ls, dictlists2listdicts, enum2list
+from microscopy_proc.utils.misc_utils import const2list, dictlists2listdicts, enum2list
 from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 UPDATE = "update"
@@ -203,14 +203,17 @@ class ConfigsUpdater:
         # For each number input, making into list to input to func
         columns_ls = container.columns(n)
         output_ls = [None for _ in range(n)]
-        func_ls = func if isinstance(func, tuple) else const2ls(func, n)
-        nullable_ls = nullable if isinstance(nullable, tuple) else const2ls(nullable, n)
-        default_ls = default if isinstance(default, tuple) else const2ls(default, n)
+        func_ls = func if isinstance(func, tuple) else const2list(func, n)
+        nullable_ls = (
+            nullable if isinstance(nullable, tuple) else const2list(nullable, n)
+        )
+        default_ls = default if isinstance(default, tuple) else const2list(default, n)
         sublabels_ls = sublabels if isinstance(sublabels, tuple) else range(n)
         sublabels_ls = [f"{label}_{sublabel}" for sublabel in sublabels_ls]
         # Making kwargs into kwargs_ls dict of lists
         kwargs_ls = {
-            k: v if isinstance(v, tuple) else const2ls(v, n) for k, v in kwargs.items()
+            k: v if isinstance(v, tuple) else const2list(v, n)
+            for k, v in kwargs.items()
         }
         # Asserting all list lengths are equal to n
         assert len(func_ls) == n
