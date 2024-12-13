@@ -47,52 +47,54 @@ class PipelineTuningFuncs(PipelineFuncs):
 
     @classmethod
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().img_overlap(pfm.copy().convert_to_tuning(), overwrite)
+        pfm = pfm.copy().convert_to_tuning()
+        print(pfm.raw)
+        super().img_overlap(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc1(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc1(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc1(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc2(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc2(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc2(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc3(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc3(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc3(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc4(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc4(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc4(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc5(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc5(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc5(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc6(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc6(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc6(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc7(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc7(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc7(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc8(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc8(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc8(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc9(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc9(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc9(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc10(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc10(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc10(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc11(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc11(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc11(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
     def cellc_coords_only(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        super().cellc_coords_only(pfm.copy().convert_to_tuning(), overwrite)
+        super().cellc_coords_only(pfm.copy().convert_to_tuning(), overwrite=overwrite)
