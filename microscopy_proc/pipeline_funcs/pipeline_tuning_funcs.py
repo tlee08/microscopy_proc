@@ -41,7 +41,7 @@ else:
     transformation_coords = import_extra_error_func("elastix")
 
 
-class PipelineFuncsTuning(PipelineFuncs):
+class PipelineTuningFuncs(PipelineFuncs):
     ###################################################################################################
     # CROP RAW ZARR TO MAKE TUNING ZARR
     ###################################################################################################
