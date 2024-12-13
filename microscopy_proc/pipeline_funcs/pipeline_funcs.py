@@ -104,8 +104,9 @@ def overwrite_check_decorator(pfm_fp_ls: tuple[str, ...] = tuple()):
     def decorator(func: Callable):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            """Signature is `wrapper(cls, pfm, overwrite, **kwargs)`"""
             # Getting pfm arg
-            pfm: ProjFpModel = kwargs.get("pfm", args[0])
+            pfm: ProjFpModel = kwargs.get("pfm", args[1])
             assert isinstance(pfm, ProjFpModel)
             # Getting overwrite arg
             overwrite = kwargs.get("overwrite", False)
