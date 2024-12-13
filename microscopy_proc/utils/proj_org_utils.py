@@ -199,6 +199,7 @@ class ProjFpModel(BaseModel):
         root_dir = self.root_dir
         # Converting raw filepath
         # TODO: a better way to do this with encapsulation and not hardcoding
+        print(cellc_dir, ProjSubdirs.CELLCOUNT.value)
         if cellc_dir == ProjSubdirs.CELLCOUNT.value:
             self.raw = os.path.join(root_dir, "raw.zarr")
         elif cellc_dir == ProjSubdirs.CELLCOUNT_TUNING.value:
