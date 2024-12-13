@@ -89,6 +89,18 @@ class Pipeline:
         return False
 
     ###################################################################################################
+    # GETTING PROJECT FILEPATH MODEL
+    ###################################################################################################
+
+    @classmethod
+    @log_func_decorator(logger)
+    def get_pfm(cls, proj_dir: str) -> ProjFpModel:
+        """
+        Returns a ProjFpModel object created from the project directory.
+        """
+        return ProjFpModel.get_proj_fp_model(proj_dir)
+
+    ###################################################################################################
     # UPDATE CONFIGS
     ###################################################################################################
 

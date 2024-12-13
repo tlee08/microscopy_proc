@@ -5,9 +5,6 @@ from natsort import natsorted
 from microscopy_proc.funcs.batch_combine_funcs import BatchCombineFuncs
 from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.logging_utils import init_logger
-from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_model,
-)
 
 if __name__ == "__main__":
     # Filenames
@@ -33,7 +30,7 @@ if __name__ == "__main__":
         try:
             in_fp = os.path.join(in_root_dir, exp)
             proj_dir = os.path.join(root_dir, exp)
-            pfm = get_proj_fp_model(proj_dir)
+            pfm = Pipeline.get_pfm(proj_dir)
             Pipeline.update_configs(
                 pfm,
                 # # REFERENCE

@@ -1,5 +1,5 @@
 from microscopy_proc.funcs.viewer_funcs import CMAP, IMGS, VRANGE, ViewerFuncs
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
+from microscopy_proc.pipeline.pipeline import Pipeline
 
 if __name__ == "__main__":
     # Filenames
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         ],
     }
 
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
     # Making parameter lists. Index i refers to the same image
     fp_ls = []
     name = []

@@ -1,8 +1,5 @@
 from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.logging_utils import init_logger
-from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_model,
-)
 
 if __name__ == "__main__":
     # Filenames
@@ -16,7 +13,7 @@ if __name__ == "__main__":
 
     logger = init_logger()
 
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
     Pipeline.update_configs(
         pfm,
         # # REFERENCE

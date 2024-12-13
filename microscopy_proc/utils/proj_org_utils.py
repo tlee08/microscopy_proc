@@ -234,10 +234,6 @@ class ProjFpModel(BaseModel):
         return self
 
 
-def get_proj_fp_model(proj_dir: str):
-    return ProjFpModel.get_proj_fp_model(proj_dir)
-
-
 def make_proj_dirs(pfm: ProjFpModel):
     for folder in ProjSubdirs:
         os.makedirs(os.path.join(pfm.root_dir, folder.value), exist_ok=True)
