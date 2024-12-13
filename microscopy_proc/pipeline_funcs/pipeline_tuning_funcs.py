@@ -70,6 +70,8 @@ def create_wrapped_method(func: Callable):
     @functools.wraps(func)
     def wrapper(*args, **kwargs) -> None:
         """Signature is `wrapper(cls, pfm, overwrite, **kwargs)`"""
+        print(args)
+        print(kwargs)
         # Getting pfm arg
         pfm: ProjFpModel = kwargs.get("pfm", args[1])
         assert isinstance(pfm, ProjFpModel)
