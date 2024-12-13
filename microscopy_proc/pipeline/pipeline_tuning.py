@@ -35,6 +35,7 @@ class PipelineTuning(Pipeline):
         ]
         # Converting to tuning filepaths
         pfm = pfm.copy().convert_to_tuning()
+        print(pfm.raw)
         # Saving
         raw_arr = disk_cache(raw_arr, pfm.raw)
 
