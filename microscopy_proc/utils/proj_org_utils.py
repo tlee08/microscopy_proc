@@ -3,8 +3,6 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
-from microscopy_proc.utils.config_params_model import ConfigParamsModel
-from microscopy_proc.utils.io_utils import read_json, write_json
 from microscopy_proc.utils.logging_utils import init_logger
 
 # TODO: add 10_adaptv_f.zarr and move the xxx_f.zarr files to a new folder (e.g. "cellcount_final")
@@ -243,33 +241,3 @@ def get_proj_fp_model(proj_dir: str):
 def make_proj_dirs(pfm: ProjFpModel):
     for folder in ProjSubdirs:
         os.makedirs(os.path.join(pfm.root_dir, folder.value), exist_ok=True)
-
-
-def update_configs(pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
-    """
-    If config_params file does not exist, makes a new one.
-
-    Then updates the config_params file with the kwargs.
-    If there are no kwargs, will not update the file
-    (other than making it if it did not exist).
-
-    Also creates all the project sub-directories too.
-
-    Finally, returns the ConfigParamsModel object.
-    """
-    # Firstly makes all the project sub-directories
-    make_proj_dirs(pfm)
-    # Reading/making registration params json
-    try:  # If file exists
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
-    except FileNotFoundError as e:  # If file does not exist
-        logger.info(e)
-        logger.info("Making new params json")
-        configs = ConfigParamsModel()
-        write_json(pfm.config_params, configs.model_dump())
-    # Updating and saving configs if kwargs is not empty
-    if kwargs != {}:
-        configs = configs.model_validate(configs.model_copy(update=kwargs))
-        write_json(pfm.config_params, configs.model_dump())
-    # and returning the configs
-    return configs

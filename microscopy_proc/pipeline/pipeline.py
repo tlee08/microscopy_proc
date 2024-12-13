@@ -36,13 +36,13 @@ from microscopy_proc.utils.dask_utils import (
     da_trim,
     disk_cache,
 )
-from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
+from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df, write_json
 from microscopy_proc.utils.logging_utils import init_logger, log_func_decorator
 from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     RefFpModel,
-    update_configs,
+    make_proj_dirs,
 )
 
 # Optional dependency: gpu
@@ -93,12 +93,34 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def update_configs(cls, pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
         """
-        Updates the ConfigParamsModel with the current project's config_params.json.
+        If config_params file does not exist, makes a new one.
+
+        Then updates the config_params file with the kwargs.
+        If there are no kwargs, will not update the file
+        (other than making it if it did not exist).
+
+        Also creates all the project sub-directories too.
+
+        Finally, returns the ConfigParamsModel object.
         """
-        return update_configs(pfm, **kwargs)
+        # Firstly makes all the project sub-directories
+        make_proj_dirs(pfm)
+        # Reading/making registration params json
+        try:  # If file exists
+            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        except FileNotFoundError as e:  # If file does not exist
+            cls.logger.info(e)
+            cls.logger.info("Making new params json")
+            configs = ConfigParamsModel()
+            write_json(pfm.config_params, configs.model_dump())
+        # Updating and saving configs if kwargs is not empty
+        if kwargs != {}:
+            configs = configs.model_validate(configs.model_copy(update=kwargs))
+            write_json(pfm.config_params, configs.model_dump())
+        # and returning the configs
+        return configs
 
     ###################################################################################################
     # CONVERT TIFF TO ZARR FUNCS
