@@ -166,9 +166,12 @@ def cluster_proc_contxt(cluster: SpecCluster):
     then closes the client and cluster.
     """
     client = Client(cluster)
-    logger.debug(client.dashboard_link)
+    logger.debug("Created Dask Cluster and Client")
+    logger.info(f"Dask Dashboard is accessible at {client.dashboard_link}")
     try:
         yield
     finally:
         client.close()
+        logger.debug("Closed Dask Client")
         cluster.close()
+        logger.debug("Closed Dask Cluster")
