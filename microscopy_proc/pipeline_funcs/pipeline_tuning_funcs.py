@@ -47,8 +47,6 @@ class PipelineTuningFuncs(PipelineFuncs):
 
     @classmethod
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        pfm = pfm.copy().convert_to_tuning()
-        print(pfm.raw)
         super().img_overlap(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
