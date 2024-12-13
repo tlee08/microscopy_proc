@@ -76,6 +76,6 @@ def page3_import():
         # Running tiff2zarr
         Pipeline.tiff2zarr(
             pfm=pfm,
-            src_fp=st.session_state[INPUT_SRC],
+            in_fp=st.session_state[INPUT_SRC],
             overwrite=st.session_state[OVERWRITE],
         )

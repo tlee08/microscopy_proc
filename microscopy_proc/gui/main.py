@@ -1,4 +1,3 @@
-import logging
 import os
 import subprocess
 
@@ -11,7 +10,7 @@ from microscopy_proc.gui.page4_pipeline import page4_pipeline
 from microscopy_proc.gui.page5_view import page5_view
 from microscopy_proc.gui.page6_combine import page6_combine
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 
 #####################################################################

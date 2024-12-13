@@ -21,35 +21,13 @@ from microscopy_proc.constants import (
     MaskColumns,
 )
 from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs as Cf
-from microscopy_proc.funcs.map_funcs import (
-    annot_dict2df,
-    combine_nested_regions,
-    df_map_ids,
-)
-from microscopy_proc.funcs.mask_funcs import (
-    fill_outline,
-    make_outline,
-    mask2region_counts,
-)
-from microscopy_proc.funcs.reg_funcs import (
-    downsmpl_fine,
-    downsmpl_rough,
-    reorient,
-)
-from microscopy_proc.funcs.tiff2zarr_funcs import btiff2zarr, tiffs2zarr
-from microscopy_proc.funcs.viewer_funcs import combine_arrs
-from microscopy_proc.funcs.visual_check_funcs_dask import (
-    coords2heatmap as coords2heatmap_dask,
-)
-from microscopy_proc.funcs.visual_check_funcs_dask import (
-    coords2points as coords2points_dask,
-)
-from microscopy_proc.funcs.visual_check_funcs_tiff import (
-    coords2heatmap as coords2heatmap_tiff,
-)
-from microscopy_proc.funcs.visual_check_funcs_tiff import (
-    coords2points as coords2points_tiff,
-)
+from microscopy_proc.funcs.map_funcs import MapFuncs
+from microscopy_proc.funcs.mask_funcs import MaskFuncs
+from microscopy_proc.funcs.reg_funcs import RegFuncs
+from microscopy_proc.funcs.tiff2zarr_funcs import Tiff2ZarrFuncs
+from microscopy_proc.funcs.viewer_funcs import ViewerFuncs
+from microscopy_proc.funcs.visual_check_funcs_dask import VisualCheckFuncsDask
+from microscopy_proc.funcs.visual_check_funcs_tiff import VisualCheckFuncsTiff
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block2coords,
@@ -64,6 +42,7 @@ from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     RefFpModel,
+    update_configs,
 )
 
 # Optional dependency: gpu
@@ -110,6 +89,18 @@ class Pipeline:
         return False
 
     ###################################################################################################
+    # UPDATE CONFIGS
+    ###################################################################################################
+
+    @classmethod
+    @log_func_decorator(logger)
+    def update_configs(cls, pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
+        """
+        Updates the ConfigParamsModel with the current project's config_params.json.
+        """
+        return update_configs(pfm, **kwargs)
+
+    ###################################################################################################
     # CONVERT TIFF TO ZARR FUNCS
     ###################################################################################################
 
@@ -142,13 +133,15 @@ class Pipeline:
             if os.path.isdir(in_fp):
                 cls.logger.debug(f"in_fp ({in_fp}) is a directory")
                 cls.logger.debug("Making zarr from tiff file stack in directory")
-                tiffs2zarr(
-                    in_fp_ls=natsorted(
-                        [
-                            os.path.join(in_fp, i)
-                            for i in os.listdir(in_fp)
-                            if re.search(r".tif$", i)
-                        ]
+                Tiff2ZarrFuncs.tiffs2zarr(
+                    in_fp_ls=tuple(
+                        natsorted(
+                            (
+                                os.path.join(in_fp, i)
+                                for i in os.listdir(in_fp)
+                                if re.search(r".tif$", i)
+                            )
+                        )
                     ),
                     out_fp=pfm.raw,
                     chunks=configs.zarr_chunksize,
@@ -156,7 +149,7 @@ class Pipeline:
             elif os.path.isfile(in_fp):
                 cls.logger.debug(f"in_fp ({in_fp}) is a file")
                 cls.logger.debug("Making zarr from big-tiff file")
-                btiff2zarr(
+                Tiff2ZarrFuncs.btiff2zarr(
                     in_fp=in_fp,
                     out_fp=pfm.raw,
                     chunks=configs.zarr_chunksize,
@@ -192,7 +185,7 @@ class Pipeline:
             # Reading
             arr = tifffile.imread(fp_i)
             # Reorienting
-            arr = reorient(arr, configs.ref_orient_ls)
+            arr = RegFuncs.reorient(arr, configs.ref_orient_ls)
             # Slicing
             arr = arr[
                 slice(*configs.ref_z_trim),
@@ -218,7 +211,7 @@ class Pipeline:
             # Reading
             raw_arr = da.from_zarr(pfm.raw)
             # Rough downsample
-            downsmpl1_arr = downsmpl_rough(
+            downsmpl1_arr = RegFuncs.downsmpl_rough(
                 raw_arr, configs.z_rough, configs.y_rough, configs.x_rough
             )
             # Computing (from dask array)
@@ -236,7 +229,7 @@ class Pipeline:
         # Reading
         downsmpl1_arr = tifffile.imread(pfm.downsmpl1)
         # Fine downsample
-        downsmpl2_arr = downsmpl_fine(
+        downsmpl2_arr = RegFuncs.downsmpl_fine(
             downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine
         )
         # Saving
@@ -304,7 +297,7 @@ class Pipeline:
         tifffile.imwrite(pfm.mask, mask_arr)
 
         # Make outline
-        outline_df = make_outline(mask_arr)
+        outline_df = MaskFuncs.make_outline(mask_arr)
         # Transformix on coords
         outline_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]] = (
             ElastixFuncs.transformation_coords(
@@ -324,14 +317,18 @@ class Pipeline:
 
         # Make outline img (1 for in, 2 for out)
         # TODO: convert to return np.array and save out-of-function
-        coords2points_tiff(outline_df[outline_df.is_in == 1], s, pfm.outline)
+        VisualCheckFuncsTiff.coords2points(
+            outline_df[outline_df.is_in == 1], s, pfm.outline
+        )
         in_arr = tifffile.imread(pfm.outline)
-        coords2points_tiff(outline_df[outline_df.is_in == 0], s, pfm.outline)
+        VisualCheckFuncsTiff.coords2points(
+            outline_df[outline_df.is_in == 0], s, pfm.outline
+        )
         out_arr = tifffile.imread(pfm.outline)
         tifffile.imwrite(pfm.outline, in_arr + out_arr * 2)
 
         # Fill in outline to recreate mask (not perfect)
-        mask_reg_arr = fill_outline(outline_df, s)
+        mask_reg_arr = MaskFuncs.fill_outline(outline_df, s)
         # Opening (removes FP) and closing (fills FN)
         mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(
             np.uint8
@@ -354,17 +351,19 @@ class Pipeline:
         annot_orig_arr = tifffile.imread(rfm.annot)
         # Getting the annotation name for every cell (zyx coord)
         mask_df = pd.merge(
-            left=mask2region_counts(np.full(annot_orig_arr.shape, 1), annot_orig_arr),
-            right=mask2region_counts(mask_reg_arr, annot_arr),
+            left=MaskFuncs.mask2region_counts(
+                np.full(annot_orig_arr.shape, 1), annot_orig_arr
+            ),
+            right=MaskFuncs.mask2region_counts(mask_reg_arr, annot_arr),
             how="left",
             left_index=True,
             right_index=True,
             suffixes=("_annot", "_mask"),
         ).fillna(0)
         # Reading annotation mappings json
-        annot_df = annot_dict2df(read_json(pfm.map))
+        annot_df = MapFuncs.annot_dict2df(read_json(pfm.map))
         # Combining (summing) the mask_df volumes for parent regions using the annot_df
-        mask_df = combine_nested_regions(mask_df, annot_df)
+        mask_df = MapFuncs.combine_nested_regions(mask_df, annot_df)
         # Calculating proportion of mask volume in each region
         mask_df[MaskColumns.VOLUME_PROP.value] = (
             mask_df[MaskColumns.VOLUME_MASK.value]
@@ -486,7 +485,6 @@ class Pipeline:
             # # Visually inspect sd offset
             # t_p =adaptv_arr.sum() / (np.prod(adaptv_arr.shape) - (adaptv_arr == 0).sum())
             # t_p = t_p.compute()
-            # logging.debug(t_p)
             # Reading input images
             adaptv_arr = da.from_zarr(pfm.adaptv)
             # Declaring processing instructions
@@ -831,9 +829,9 @@ class Pipeline:
             ).fillna(-1)
 
             # Reading annotation mappings dataframe
-            annot_df = annot_dict2df(read_json(pfm.map))
+            annot_df = MapFuncs.annot_dict2df(read_json(pfm.map))
             # Getting the annotation name for every cell (zyx coord)
-            cells_df = df_map_ids(cells_df, annot_df)
+            cells_df = MapFuncs.df_map_ids(cells_df, annot_df)
             # Saving to disk
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_df = dd.from_pandas(cells_df)
@@ -863,9 +861,9 @@ class Pipeline:
             cells_agg_df.columns = list(CELL_AGG_MAPPINGS.keys())
             # Reading annotation mappings dataframe
             # Making df of region names and their parent region names
-            annot_df = annot_dict2df(read_json(pfm.map))
+            annot_df = MapFuncs.annot_dict2df(read_json(pfm.map))
             # Combining (summing) the cells_agg_df values for parent regions using the annot_df
-            cells_agg_df = combine_nested_regions(cells_agg_df, annot_df)
+            cells_agg_df = MapFuncs.combine_nested_regions(cells_agg_df, annot_df)
             # Calculating integrated average intensity (sum_intensity / volume)
             cells_agg_df[CellColumns.IOV.value] = (
                 cells_agg_df[CellColumns.SUM_INTENSITY.value]
@@ -899,7 +897,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("points_raw",)):
             return
         with cluster_proc_contxt(LocalCluster()):
-            coords2points_dask(
+            VisualCheckFuncsDask.coords2points(
                 coords=pd.read_parquet(pfm.cells_raw_df),
                 shape=da.from_zarr(pfm.raw).shape,
                 out_fp=pfm.points_raw,
@@ -912,7 +910,7 @@ class Pipeline:
             return
         with cluster_proc_contxt(LocalCluster()):
             configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
-            coords2heatmap_dask(
+            VisualCheckFuncsDask.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_raw_df),
                 shape=da.from_zarr(pfm.raw).shape,
                 out_fp=pfm.heatmap_raw,
@@ -925,7 +923,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("points_trfm",)):
             return
         with cluster_proc_contxt(LocalCluster()):
-            coords2points_tiff(
+            VisualCheckFuncsTiff.coords2points(
                 coords=pd.read_parquet(pfm.cells_trfm_df),
                 shape=tifffile.imread(pfm.ref).shape,
                 out_fp=pfm.points_trfm,
@@ -938,7 +936,7 @@ class Pipeline:
             return
         with cluster_proc_contxt(LocalCluster()):
             configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
-            coords2heatmap_tiff(
+            VisualCheckFuncsTiff.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_trfm_df),
                 shape=tifffile.imread(pfm.ref).shape,
                 out_fp=pfm.heatmap_trfm,
@@ -954,7 +952,7 @@ class Pipeline:
     def combine_reg(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_file_exists(pfm, ("combined_reg",)):
             return
-        combine_arrs(
+        ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
             # 2nd regresult means the combining works in ImageJ
             fp_out=pfm.combined_reg,
@@ -966,7 +964,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("combined_cellc",)):
             return
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
-        combine_arrs(
+        ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
             fp_out=pfm.combined_cellc,
             trimmer=(
@@ -981,7 +979,7 @@ class Pipeline:
     def combine_points(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_file_exists(pfm, ("combined_points",)):
             return
-        combine_arrs(
+        ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
             # 2nd regresult means the combining works in ImageJ
             fp_out=pfm.combined_points,

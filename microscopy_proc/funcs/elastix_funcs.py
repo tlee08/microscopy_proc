@@ -6,8 +6,9 @@ import pandas as pd
 import tifffile
 
 from microscopy_proc import ELASTIX_ENABLED
-from microscopy_proc.constants import TEMP_DIR, Coords
+from microscopy_proc.constants import CACHE_DIR, Coords
 from microscopy_proc.utils.io_utils import silentremove
+from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import import_extra_error_func
 
 # Optional dependency: elastix
@@ -18,6 +19,8 @@ else:
 
 
 class ElastixFuncs:
+    logger = init_logger()
+
     @classmethod
     def registration(
         cls,
@@ -95,8 +98,8 @@ class ElastixFuncs:
         # coords = coords.compute() if isinstance(coords, Delayed) else coords
         # Getting the output image directory (i.e. where registration results are stored)
         reg_dir = os.path.dirname(output_img_fp)
-        # Using TEMP_DIR in user home directory (faster than network drive)
-        out_dir = os.path.join(TEMP_DIR, f"transformed_coords_{os.getpid()}")
+        # Using CACHE_DIR to store temporary transformix outputs
+        out_dir = os.path.join(CACHE_DIR, f"transformed_coords_{os.getpid()}")
         os.makedirs(out_dir, exist_ok=True)
         # Setting up Transformix object
         transformix_img_filt = sitk.TransformixImageFilter()
@@ -190,8 +193,8 @@ class ElastixFuncs:
         """
         # Getting the output image directory (i.e. where registration results are stored)
         reg_dir = os.path.dirname(output_img_fp)
-        # Using TEMP_DIR in user home directory (faster than network drive)
-        out_dir = os.path.join(TEMP_DIR, f"transformed_coords_{os.getpid()}")
+        # Using CACHE_DIR to store temporary transformix outputs
+        out_dir = os.path.join(CACHE_DIR, f"transformed_coords_{os.getpid()}")
         os.makedirs(out_dir, exist_ok=True)
         # Setting up Transformix object
         transformix_img_filt = sitk.TransformixImageFilter()

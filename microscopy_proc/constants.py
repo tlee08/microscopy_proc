@@ -104,4 +104,4 @@ class MaskColumns(Enum):
 # Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
 RESOURCES_DIR = os.path.join(os.path.dirname(__file__), "resources")
 
-TEMP_DIR = os.path.join(pathlib.Path.home(), ".microscopy_proc_temp")
+CACHE_DIR = os.path.join(pathlib.Path.home(), ".microscopy_proc_temp")

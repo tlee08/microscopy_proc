@@ -1,13 +1,12 @@
-import logging
 import os
 
 from natsort import natsorted
 
-from microscopy_proc.funcs.batch_combine_funcs import combine_root_pipeline
+from microscopy_proc.funcs.batch_combine_funcs import BatchCombineFuncs
 from microscopy_proc.pipeline.pipeline import Pipeline
+from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.proj_org_utils import (
     get_proj_fp_model,
-    update_configs,
 )
 
 if __name__ == "__main__":
@@ -20,6 +19,8 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_root_dir != root_dir
 
+    logger = init_logger()
+
     # Get all experiments
     exp_ls = [
         fp
@@ -28,12 +29,12 @@ if __name__ == "__main__":
     ]
     # exp_ls = ["example_img"]
     for exp in exp_ls:
-        logging.info(f"Running: {exp}")
+        logger.info(f"Running: {exp}")
         try:
             in_fp = os.path.join(in_root_dir, exp)
             proj_dir = os.path.join(root_dir, exp)
             pfm = get_proj_fp_model(proj_dir)
-            update_configs(
+            Pipeline.update_configs(
                 pfm,
                 # # REFERENCE
                 # # RAW
@@ -120,7 +121,9 @@ if __name__ == "__main__":
             Pipeline.combine_cellc(pfm, overwrite=overwrite)
             Pipeline.combine_points(pfm, overwrite=overwrite)
         except Exception as e:
-            logging.info(f"Error in {exp}: {e}")
+            logger.info(f"Error in {exp}: {e}")
             continue
     # Combining all experiment dataframes
-    combine_root_pipeline(root_dir, os.path.dirname(root_dir), overwrite=True)
+    BatchCombineFuncs.combine_root_pipeline(
+        root_dir, os.path.dirname(root_dir), overwrite=True
+    )

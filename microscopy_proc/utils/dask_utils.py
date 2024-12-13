@@ -1,5 +1,4 @@
 import contextlib
-import logging
 from typing import Any, Callable
 
 import dask
@@ -11,7 +10,10 @@ import pandas as pd
 from dask.distributed import Client, SpecCluster
 
 from microscopy_proc.constants import DEPTH, Coords
+from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import const2iter
+
+logger = init_logger()
 
 
 def block2coords(func, *args: Any) -> dd.DataFrame:
@@ -87,7 +89,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     )
 
 
-def coords2block(df: dd.DataFrame | pd.DataFrame, block_info: dict) -> dd.DataFrame:
+def coords2block(df: pd.DataFrame, block_info: dict) -> pd.DataFrame:
     """
     Converts the coords to a block, given the block info (so relevant block offsets are used).
 
@@ -146,7 +148,7 @@ def cluster_proc_dec(cluster_factory: Callable[[], SpecCluster]):
         def wrapper(*args, **kwargs):
             cluster = cluster_factory()
             client = Client(cluster)
-            logging.debug(client.dashboard_link)
+            logger.debug(client.dashboard_link)
             res = func(*args, **kwargs)
             client.close()
             cluster.close()
@@ -164,7 +166,7 @@ def cluster_proc_contxt(cluster: SpecCluster):
     then closes the client and cluster.
     """
     client = Client(cluster)
-    logging.debug(client.dashboard_link)
+    logger.debug(client.dashboard_link)
     try:
         yield
     finally:

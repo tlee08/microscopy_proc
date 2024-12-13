@@ -4,10 +4,13 @@ Utility functions.
 
 from __future__ import annotations
 
-import logging
 from multiprocessing import current_process
 
 from dask.distributed import get_worker
+
+from microscopy_proc.utils.logging_utils import init_logger
+
+logger = init_logger()
 
 
 @staticmethod
@@ -18,6 +21,7 @@ def get_cpid() -> int:
 
 def get_dask_pid() -> int:
     """Get the Dask process ID."""
-    logging.debug(get_worker())
-    logging.debug(get_worker().id)
-    return get_worker().id
+    logger.debug(get_worker())
+    logger.debug(get_worker().id)
+    worker_id = get_worker().id
+    return int(worker_id)

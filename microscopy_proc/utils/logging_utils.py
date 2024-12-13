@@ -2,7 +2,7 @@ import logging
 import os
 import traceback
 
-from microscopy_proc.constants import TEMP_DIR
+from microscopy_proc.constants import CACHE_DIR
 
 
 def init_logger() -> logging.Logger:
@@ -10,8 +10,8 @@ def init_logger() -> logging.Logger:
     Setup logging configuration
     """
     # For total logging
-    total_log_fp = os.path.join(TEMP_DIR, "debug.log")
-    os.makedirs(TEMP_DIR, exist_ok=True)
+    total_log_fp = os.path.join(CACHE_DIR, "debug.log")
+    os.makedirs(CACHE_DIR, exist_ok=True)
     # Setting up logging configuration
     logging.basicConfig(
         level=logging.DEBUG,

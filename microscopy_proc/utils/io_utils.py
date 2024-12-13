@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import re
 import shutil
@@ -7,12 +6,16 @@ import shutil
 import numpy as np
 from natsort import natsorted
 
+from microscopy_proc.utils.logging_utils import init_logger
+
 # TODO: add request functionality to download Allen Mouse Atlas image:
 # Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
 
 #####################################################################
 #                     Getting filepaths in order
 #####################################################################
+
+logger = init_logger()
 
 
 def get_fps(dir, pattern):
@@ -38,13 +41,13 @@ def rename_slices_fps(dir, pattern):
     """
 
     for fp in os.listdir(dir):
-        logging.debug(fp)
+        logger.debug(fp)
         fp_new = re.sub(
             pattern,
             lambda x: x.group(0).zfill(4),
             fp,
         )
-        logging.debug(fp_new)
+        logger.debug(fp_new)
         # os.rename(os.path.join(dir, fp), os.path.join(dir, new_fp))
 
 
