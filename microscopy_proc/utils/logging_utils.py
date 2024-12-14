@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import traceback
@@ -5,6 +6,7 @@ from typing import Callable
 
 from microscopy_proc.constants import CACHE_DIR
 
+LOG_FILE_FORMAT = "%Y-%m-$d_%H-%M-%S"
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 
@@ -12,8 +14,7 @@ def init_logger(name: str = __name__) -> logging.Logger:
     """
     Setup logging configuration
     """
-    # Getting logger output filepath
-    total_log_fp = os.path.join(CACHE_DIR, "debug.log")
+    # Making cache directory if it does not exist
     os.makedirs(CACHE_DIR, exist_ok=True)
     # Initialising/getting logger and its configuration
     logger = logging.getLogger(name)
@@ -23,7 +24,9 @@ def init_logger(name: str = __name__) -> logging.Logger:
         # Formatter
         formatter = logging.Formatter(LOG_FORMAT)
         # File handler
-        file_handler = logging.FileHandler(total_log_fp, mode="a")
+        curr_time = datetime.datetime.now().strftime(LOG_FILE_FORMAT)
+        log_fp = os.path.join(CACHE_DIR, f"debug_{curr_time}.log")
+        file_handler = logging.FileHandler(log_fp, mode="w")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
