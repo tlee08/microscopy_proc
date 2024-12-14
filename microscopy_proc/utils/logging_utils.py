@@ -32,7 +32,8 @@ def init_logger(name: str = __name__) -> logging.Logger:
         console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
-    logger.info("Logging configuration set up")
+        # Logging initial msg
+        logger.debug("Logging configuration set up")
     return logger
 
 
