@@ -24,9 +24,10 @@ def init_logger(name: str = __name__) -> logging.Logger:
         # Formatter
         formatter = logging.Formatter(LOG_FORMAT)
         # File handler
+        # NOTE: May not work for multiprocessing - multiple files will be created
         curr_time = datetime.datetime.now().strftime(LOG_FILE_FORMAT)
         log_fp = os.path.join(CACHE_DIR, f"debug_{curr_time}.log")
-        file_handler = logging.FileHandler(log_fp, mode="w")
+        file_handler = logging.FileHandler(log_fp, mode="a")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
