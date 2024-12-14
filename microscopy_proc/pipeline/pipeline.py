@@ -53,11 +53,10 @@ if GPU_ENABLED:
 else:
     LocalCUDACluster = LocalCluster
     Gf = Cf
-    print(
-        "Warning GPU functionality not installed.\n"
-        "Using CPU functionality instead (much slower).\n"
-        'Can install with `pip install "microscopy_proc[gpu]"`'
-    )
+    logger = init_logger()
+    logger.info("Warning GPU functionality not installed.")
+    logger.info("Using CPU functionality instead (much slower).")
+    logger.info('Can install with `pip install "microscopy_proc[gpu]"`')
 # Optional dependency: elastix
 if ELASTIX_ENABLED:
     from microscopy_proc.funcs.elastix_funcs import ElastixFuncs
@@ -81,10 +80,10 @@ class Pipeline:
         cls.logger.debug(f"Iterating through filepaths in `pfm_fp_ls`: {pfm_fp_ls}")
         for pfm_fp in pfm_fp_ls:
             if os.path.exists(getattr(pfm, pfm_fp)):
-                cls.logger.debug(f"{pfm_fp} already exists.\n")
+                cls.logger.debug(f"{pfm_fp} already exists.")
                 cls.logger.debug("Returning True.")
                 return True
-        cls.logger.debug("None of the filepaths in `pfm_fp_ls` exist.\n")
+        cls.logger.debug("None of the filepaths in `pfm_fp_ls` exist.")
         cls.logger.debug("Returning False.")
         return False
 
