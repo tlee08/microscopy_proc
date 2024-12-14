@@ -1,6 +1,7 @@
 import logging
 import os
 import traceback
+from typing import Callable
 
 from microscopy_proc.constants import CACHE_DIR
 
@@ -28,7 +29,7 @@ def init_logger() -> logging.Logger:
 
 
 def log_func_decorator(logger: logging.Logger):
-    def decorator(func):
+    def decorator(func: Callable):
         def wrapper(*args, **kwargs):
             try:
                 logger.info(f"STARTED {func.__name__}")

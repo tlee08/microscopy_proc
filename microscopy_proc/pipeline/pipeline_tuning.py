@@ -7,6 +7,8 @@ from microscopy_proc.utils.io_utils import read_json
 from microscopy_proc.utils.logging_utils import init_logger, log_func_decorator
 from microscopy_proc.utils.proj_org_utils import ProjFpModel
 
+MSG_TO_TUNING_PFM = "Converting pfm to tuning filepaths (copy)"
+
 
 class PipelineTuning(Pipeline):
     logger = init_logger()
@@ -31,7 +33,7 @@ class PipelineTuning(Pipeline):
             slice(*configs.tuning_y_trim),
             slice(*configs.tuning_x_trim),
         ]
-        cls.logger.debug("Converting pfm to tuning filepaths (copy)")
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         pfm = pfm.copy().convert_to_tuning()
         if not overwrite and cls._check_file_exists(pfm, ("raw",)):
             cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
@@ -44,66 +46,66 @@ class PipelineTuning(Pipeline):
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().img_overlap(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc1(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc1(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc2(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc2(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc3(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc3(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc4(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc4(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc5(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc5(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc6(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc6(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc7(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc7(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc8(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc8(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc9(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc9(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc10(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc10(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc11(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc11(pfm.copy().convert_to_tuning(), overwrite=overwrite)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc_coords_only(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        cls.logger.debug(MSG_TO_TUNING_PFM)
         super().cellc_coords_only(pfm.copy().convert_to_tuning(), overwrite=overwrite)
