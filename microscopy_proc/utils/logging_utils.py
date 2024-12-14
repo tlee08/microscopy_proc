@@ -5,25 +5,33 @@ from typing import Callable
 
 from microscopy_proc.constants import CACHE_DIR
 
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-def init_logger() -> logging.Logger:
+
+def init_logger(name: str = __name__) -> logging.Logger:
     """
     Setup logging configuration
     """
-    # For total logging
+    # Getting logger output filepath
     total_log_fp = os.path.join(CACHE_DIR, "debug.log")
     os.makedirs(CACHE_DIR, exist_ok=True)
-    # Setting up logging configuration
-    logging.basicConfig(
-        level=logging.DEBUG,
-        filemode="a",
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[
-            logging.FileHandler(total_log_fp),
-            logging.StreamHandler(),
-        ],
-    )
-    logger = logging.getLogger(__name__)
+    # Initialising/getting logger and its configuration
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    # If logger does not have handlers, add them
+    if not logger.hasHandlers():
+        # Formatter
+        formatter = logging.Formatter(LOG_FORMAT)
+        # File handler
+        file_handler = logging.FileHandler(total_log_fp, mode="a")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+        # Console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.DEBUG)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
     logger.info("Logging configuration set up")
     return logger
 
