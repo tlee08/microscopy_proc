@@ -98,7 +98,9 @@ class Pipeline:
         """
         Returns a ProjFpModel object created from the project directory.
         """
-        return ProjFpModel(proj_dir)
+        pfm = ProjFpModel(proj_dir)
+        pfm.make_subdirs()
+        return pfm
 
     @classmethod
     @log_func_decorator(logger)
@@ -106,7 +108,9 @@ class Pipeline:
         """
         Returns a ProjFpModel object created from the project directory.
         """
-        return ProjFpModelTuning(proj_dir)
+        pfm_tuning = ProjFpModelTuning(proj_dir)
+        pfm_tuning.make_subdirs()
+        return pfm_tuning
 
     ###################################################################################################
     # UPDATE CONFIGS
@@ -127,7 +131,6 @@ class Pipeline:
         Finally, returns the ConfigParamsModel object.
         """
         cls.logger.debug("Making all the project sub-directories")
-        pfm.make_subdirs()
         cls.logger.debug("Reading/creating params json")
         try:
             configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
