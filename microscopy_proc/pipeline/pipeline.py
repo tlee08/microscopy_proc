@@ -218,7 +218,7 @@ class Pipeline:
         # Getting configs
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         # Making ref_fp_model of original atlas images filepaths
-        rfm = RefFpModel.get_ref_fp_model(
+        rfm = RefFpModel(
             configs.atlas_dir,
             configs.ref_version,
             configs.annot_version,
@@ -388,7 +388,7 @@ class Pipeline:
 
         # Counting mask voxels in each region
         # Getting original annot fp by making ref_fp_model
-        rfm = RefFpModel.get_ref_fp_model(
+        rfm = RefFpModel(
             configs.atlas_dir,
             configs.ref_version,
             configs.annot_version,
