@@ -1,3 +1,5 @@
+import functools
+
 from microscopy_proc import GPU_ENABLED
 from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs
 from microscopy_proc.utils.logging_utils import init_logger
@@ -37,6 +39,7 @@ class GpuCellcFuncs(CpuCellcFuncs):
 
     @classmethod
     def _clear_cuda_mem_dec(cls, func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             cls._clear_cuda_mem()
             res = func(*args, **kwargs)

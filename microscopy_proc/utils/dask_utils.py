@@ -1,4 +1,5 @@
 import contextlib
+import functools
 from typing import Any, Callable
 
 import dask
@@ -145,6 +146,7 @@ def cluster_proc_dec(cluster_factory: Callable[[], SpecCluster]):
     """
 
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             cluster = cluster_factory()
             client = Client(cluster)

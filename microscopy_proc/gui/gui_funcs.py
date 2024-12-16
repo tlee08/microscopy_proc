@@ -57,8 +57,8 @@ def load_configs():
 
 
 def page_decorator(check_proj_dir=True):
-    def decorator(f):
-        @functools.wraps(f)
+    def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # Recalling session state variables
             proj_dir = st.session_state[PROJ_DIR]
@@ -84,7 +84,7 @@ def page_decorator(check_proj_dir=True):
                     "Please set or create a project directory."
                 )
                 return
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
 
         return wrapper
 
