@@ -11,6 +11,11 @@ RUN = f"{PIPELINE}_run"
 IS_TUNING = f"{PIPELINE}_is_tuning"
 
 
+def is_tuning_func():
+    # Set tuning mode
+    pass
+
+
 @page_decorator()
 def page4_pipeline():
     """
@@ -71,16 +76,17 @@ def page4_pipeline():
     pfm = Pipeline.get_pfm(proj_dir)
 
     st.write("## Pipeline")
-    # Overwrite box
+    # Making overwrite box
     st.toggle(
         label="Overwrite",
         value=st.session_state[OVERWRITE],
         key=OVERWRITE,
     )
-    # Is processing box
+    # Making is_tuning box
     st.toggle(
         label="Switch to tuning mode",
         value=st.session_state[IS_TUNING],
+        on_change=is_tuning_func,
         key=IS_TUNING,
     )
     if st.session_state[IS_TUNING]:

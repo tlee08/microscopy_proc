@@ -25,6 +25,7 @@ VRANGE = f"{VIEW}_vrange"
 CMAP = f"{VIEW}_cmap"
 SEL = f"{VIEW}_sel"
 RUN = f"{VIEW}_visualiser_run"
+IS_TUNING = f"{VIEW}_is_tuning"
 
 
 class Colormaps(Enum):
@@ -36,6 +37,14 @@ class Colormaps(Enum):
     VIRIDIS = "viridis"
     MAGMA = "magma"
     SET1 = "Set1"
+
+
+def is_tuning_func():
+    # Set tuning mode
+    # Resetting trimmer
+    if TRIMMER in st.session_state:
+        del st.session_state[TRIMMER]
+    init_var(TRIMMER, {coord: slice(None) for coord in Coords})
 
 
 def trimmer_func(coord):
@@ -51,12 +60,23 @@ def page5_view():
     # Initialising session state variables
     init_var(IMGS, deepcopy(IMGS_D))
     init_var(TRIMMER, {coord: slice(None) for coord in Coords})
+    init_var(IS_TUNING, False)
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
     pfm = Pipeline.get_pfm(proj_dir)
 
     st.write("## Visualiser")
+    # Making is_tuning box
+    st.toggle(
+        label="Switch to tuning mode",
+        value=st.session_state[IS_TUNING],
+        on_change=is_tuning_func,
+        key=IS_TUNING,
+    )
+    if st.session_state[IS_TUNING]:
+        st.write("Tuning mode ON")
+        pfm = pfm.copy().convert_to_tuning()
     # Checking the max dimensions for trimmer sliders
     arr = None
     for i in [pfm.overlap, pfm.raw]:
@@ -85,13 +105,12 @@ def page5_view():
                 args=(coord,),
                 key=f"{TRIMMER}_{coord}_w",
             )
-
     else:
         # Otherwise arr is None
         # Warning
         st.error(
             "No overlap or raw array files found.\n\n"
-            "No trimming is available (if image too big this may crash the application)."
+            "No trimming is available (if image too big, this may crash the application)."
         )
         # trimmers are set to None
         st.write("No Z trimming")
