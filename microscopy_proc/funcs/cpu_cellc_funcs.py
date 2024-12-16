@@ -222,11 +222,11 @@ class CpuCellcFuncs:
         )
         max_arr = cls.xdimage.maximum_filter(arr, sigma)
         cls.logger.debug(
-            "Add 1 to arr (so we separate the max pixel from the max_filter)"
+            "Getting local maxima (where arr == max_arr, i.e. arr is the maxima as well)"
         )
-        arr = arr + 1
-        cls.logger.debug("Getting local maxima (where arr - max_arr == 1)")
-        res = arr - max_arr == 1
+        cls.logger.debug(f"max_arr max: {max_arr.max()}")
+        cls.logger.debug(f"arr max: {arr.max()}")
+        res = arr == max_arr
         cls.logger.debug(f"Number of maxima: {res.sum()}")
         # If a mask is given, then keep only the maxima within the mask
         if mask_arr is not None:
