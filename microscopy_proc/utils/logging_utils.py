@@ -1,4 +1,5 @@
 import datetime
+import functools
 import logging
 import os
 import traceback
@@ -43,6 +44,7 @@ def init_logger(name: str = __name__) -> logging.Logger:
 
 def log_func_decorator(logger: logging.Logger):
     def decorator(func: Callable):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
                 logger.info(f"STARTED {func.__name__}")
