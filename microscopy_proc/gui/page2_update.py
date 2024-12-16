@@ -437,19 +437,30 @@ def page2_configs():
     with st.expander("Mask"):
         ConfigsUpdater.field2updater_mapped(configs, "mask_gaus_blur")
         ConfigsUpdater.field2updater_mapped(configs, "mask_thresh")
+    with st.expander("Cell Count Tuning"):
+        ConfigsUpdater.field2updater_mapped(configs, "tuning_z_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "tuning_y_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "tuning_x_trim")
     with st.expander("Overlap"):
         ConfigsUpdater.field2updater_mapped(configs, "overlap_depth")
     with st.expander("Cell Counting"):
         ConfigsUpdater.field2updater_mapped(configs, "tophat_sigma")
         ConfigsUpdater.field2updater_mapped(configs, "dog_sigma1")
         ConfigsUpdater.field2updater_mapped(configs, "dog_sigma2")
-        ConfigsUpdater.field2updater_mapped(configs, "gauss_sigma")
-        ConfigsUpdater.field2updater_mapped(configs, "thresh_p")
-        ConfigsUpdater.field2updater_mapped(configs, "min_threshd")
-        ConfigsUpdater.field2updater_mapped(configs, "max_threshd")
+        ConfigsUpdater.field2updater_mapped(configs, "large_gauss_sigma")
+        ConfigsUpdater.field2updater_mapped(configs, "threshd_value")
+        ConfigsUpdater.field2updater_mapped(configs, "min_threshd_size")
+        ConfigsUpdater.field2updater_mapped(configs, "max_threshd_size")
         ConfigsUpdater.field2updater_mapped(configs, "maxima_sigma")
-        ConfigsUpdater.field2updater_mapped(configs, "min_wshed")
-        ConfigsUpdater.field2updater_mapped(configs, "max_wshed")
+        ConfigsUpdater.field2updater_mapped(configs, "min_wshed_size")
+        ConfigsUpdater.field2updater_mapped(configs, "max_wshed_size")
+    with st.expander("Visual Check"):
+        ConfigsUpdater.field2updater_mapped(configs, "heatmap_raw_radius")
+        ConfigsUpdater.field2updater_mapped(configs, "heatmap_trfm_radius")
+    with st.expander("Combine Arrays"):
+        ConfigsUpdater.field2updater_mapped(configs, "combine_cellc_z_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "combine_cellc_y_trim")
+        ConfigsUpdater.field2updater_mapped(configs, "combine_cellc_x_trim")
 
     # Checking configs and updating in session_state
     # NOTE: an error can occur with the validation here
