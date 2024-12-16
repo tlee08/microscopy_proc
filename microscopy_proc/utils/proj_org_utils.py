@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from typing import Type
 
 from microscopy_proc.utils.logging_utils import init_logger
 
@@ -88,10 +89,8 @@ class ProjFpModelBase:
     Abstract model for project file paths.
     """
 
-    # ROOT DIR
     root_dir: str
-    # # SUBDIRS
-    # subdirs: Enum
+    subdirs: Type[Enum]
 
     _config_params: tuple[str | None, str] = (None, "config_params.json")
     _raw: tuple[str | None, str] = ("RAW", "raw.zarr")
@@ -369,9 +368,20 @@ class ProjFpModelBase:
         """
         Refer to the attribute (NOT the property. i.e. attribute has "_<name>")
         and return the file path.
+        The attribute is in the format:
+
+        ```
+        _<name> = (subdir, basename)
+
+        subdir -> refers to attribute in self.subdir Enum
+        basename -> basename string
+        ```
         """
         subdir, basename = getattr(self, f"_{attr}")
-        return os.path.join(self.root_dir, subdir, basename)
+        if subdir is None:
+            return os.path.join(self.root_dir, basename)
+        else:
+            return os.path.join(self.root_dir, self.subdirs[subdir].value, basename)
 
 
 class ProjFpModel(ProjFpModelBase):
