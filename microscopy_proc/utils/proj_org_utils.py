@@ -38,7 +38,7 @@ class RefFolders(Enum):
 
 class RefFpModel:
     """
-    Pydantic model for reference file paths.
+    Model for reference file paths.
     """
 
     def __init__(self, atlas_dir, ref_v, annot_v, map_v):
@@ -62,12 +62,66 @@ class RefFpModel:
         self.bspline = os.path.join(atlas_dir, elastix_dir, "align_bspline.txt")
 
 
-class ProjFpModel:
+class ProjFpModelBase:
     """
-    Pydantic model for project file paths.
+    Model for project file paths.
     """
 
-    def __init__(self, root_dir: str, subdirs=ProjSubdirs):
+    # ROOT DIR
+    root_dir: str
+    # FROM root_dir AND subdirs
+    # CONFIGS
+    config_params: str
+    # RAW IMG FILE
+    raw: str | None
+    # MY ATLAS AND ELASTIX PARAMS FILES AND REGISTRATION PROCESSING FILES
+    ref: str | None
+    annot: str | None
+    map: str | None
+    affine: str | None
+    bspline: str | None
+    downsmpl1: str | None
+    downsmpl2: str | None
+    trimmed: str | None
+    regresult: str | None
+    # WHOLE MASK
+    premask_blur: str | None
+    mask: str | None
+    outline: str | None
+    mask_reg: str | None
+    mask_df: str | None
+    # CELL COUNTING ARRAY FILES AND CELL COUNTING TRIMMED TO RAW ARRAY FILES
+    overlap: str | None
+    bgrm: str | None
+    dog: str | None
+    adaptv: str | None
+    threshd: str | None
+    threshd_volumes: str | None
+    threshd_filt: str | None
+    maxima: str | None
+    wshed_volumes: str | None
+    wshed_filt: str | None
+    threshd_final: str | None
+    maxima_final: str | None
+    wshed_final: str | None
+    # CELL COUNTING DF FILES
+    maxima_df: str | None
+    cells_raw_df: str | None
+    cells_trfm_df: str | None
+    cells_df: str | None
+    cells_agg_df: str | None
+    cells_agg_csv: str | None
+    # VISUAL CHECK
+    points_raw: str | None
+    heatmap_raw: str | None
+    points_trfm: str | None
+    heatmap_trfm: str | None
+    # COMBINE ARRAYS
+    combined_reg: str | None
+    combined_cellc: str | None
+    combined_points: str | None
+
+    def __init__(self, root_dir: str, subdirs):
         # ROOT DIR
         self.root_dir = root_dir
         # SUBDIRS
@@ -113,12 +167,12 @@ class ProjFpModel:
         self.wshed_final = os.path.join(root_dir, cellc, "10_wshed_f.zarr")
         # CELL COUNTING DF FILES
         analysis = subdirs.ANALYSIS.value
-        self.maxima_df = os.path.join(root_dir, analysis, "11_maxima.parquet")
-        self.cells_raw_df = os.path.join(root_dir, analysis, "11_cells_raw.parquet")
-        self.cells_trfm_df = os.path.join(root_dir, analysis, "12_cells_trfm.parquet")
-        self.cells_df = os.path.join(root_dir, analysis, "13_cells.parquet")
-        self.cells_agg_df = os.path.join(root_dir, analysis, "14_cells_agg.parquet")
-        self.cells_agg_csv = os.path.join(root_dir, analysis, "15_cells_agg.csv")
+        self.maxima_df = os.path.join(root_dir, analysis, "1_maxima.parquet")
+        self.cells_raw_df = os.path.join(root_dir, analysis, "1_cells_raw.parquet")
+        self.cells_trfm_df = os.path.join(root_dir, analysis, "2_cells_trfm.parquet")
+        self.cells_df = os.path.join(root_dir, analysis, "3_cells.parquet")
+        self.cells_agg_df = os.path.join(root_dir, analysis, "4_cells_agg.parquet")
+        self.cells_agg_csv = os.path.join(root_dir, analysis, "5_cells_agg.csv")
         # VISUAL CHECK
         visual = subdirs.VISUALISATION.value
         self.points_raw = os.path.join(root_dir, visual, "points_raw.zarr")
@@ -134,20 +188,50 @@ class ProjFpModel:
     def copy(self):
         return self.__init__(self.root_dir, self.subdirs)
 
-    def update_subdirs(self, subdirs):
-        return self.__init__(self.root_dir, subdirs)
-
-    @classmethod
-    def init_model_production(cls, root_dir: str):
-        return cls(root_dir, ProjSubdirs)
-
-    @classmethod
-    def init_model_tuning(cls, root_dir: str):
-        return cls(root_dir, ProjSubdirsTuning)
-
     def make_subdirs(self):
         """
         Make project directories.
         """
         for folder in self.subdirs:
             os.makedirs(os.path.join(self.root_dir, folder.value), exist_ok=True)
+
+
+class ProjFpModel(ProjFpModelBase):
+    def __init__(self, root_dir: str):
+        super().__init__(root_dir, ProjSubdirs)
+
+
+class ProjFpModelTuning(ProjFpModelBase):
+    def __init__(self, root_dir: str):
+        super().__init__(root_dir, ProjSubdirsTuning)
+        # NOTE: some of the files are not used in tuning mode. They are set to None
+        # MY ATLAS AND ELASTIX PARAMS FILES AND REGISTRATION PROCESSING FILES
+        self.ref = None
+        self.annot = None
+        self.map = None
+        self.affine = None
+        self.bspline = None
+        self.downsmpl1 = None
+        self.downsmpl2 = None
+        self.trimmed = None
+        self.regresult = None
+        # WHOLE MASK
+        self.premask_blur = None
+        self.mask = None
+        self.outline = None
+        self.mask_reg = None
+        self.mask_df = None
+        # CELL COUNTING DF FILES
+        self.cells_trfm_df = None
+        self.cells_df = None
+        self.cells_agg_df = None
+        self.cells_agg_csv = None
+        # VISUAL CHECK
+        self.points_raw = None
+        self.heatmap_raw = None
+        self.points_trfm = None
+        self.heatmap_trfm = None
+        # COMBINE ARRAYS
+        self.combined_reg = None
+        self.combined_cellc = None
+        self.combined_points = None

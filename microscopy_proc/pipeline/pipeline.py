@@ -41,6 +41,8 @@ from microscopy_proc.utils.logging_utils import init_logger, log_func_decorator
 from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
+    ProjFpModelBase,
+    ProjFpModelTuning,
     RefFpModel,
 )
 
@@ -92,19 +94,19 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def get_pfm(cls, proj_dir: str) -> ProjFpModel:
+    def get_pfm(cls, proj_dir: str) -> ProjFpModelBase:
         """
         Returns a ProjFpModel object created from the project directory.
         """
-        return ProjFpModel.init_model_production(proj_dir)
+        return ProjFpModel(proj_dir)
 
     @classmethod
     @log_func_decorator(logger)
-    def get_pfm_tuning(cls, proj_dir: str) -> ProjFpModel:
+    def get_pfm_tuning(cls, proj_dir: str) -> ProjFpModelBase:
         """
         Returns a ProjFpModel object created from the project directory.
         """
-        return ProjFpModel.init_model_tuning(proj_dir)
+        return ProjFpModelTuning(proj_dir)
 
     ###################################################################################################
     # UPDATE CONFIGS

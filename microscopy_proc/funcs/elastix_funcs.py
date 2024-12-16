@@ -130,7 +130,7 @@ class ElastixFuncs:
             os.path.join(out_dir, "outputpoints.txt")
         )
         # Removing temporary and unecessary transformix files
-        silentremove(out_dir)
+        # silentremove(out_dir)
         return coords_transformed
 
     @staticmethod
