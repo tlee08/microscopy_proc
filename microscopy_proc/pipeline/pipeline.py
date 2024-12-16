@@ -413,6 +413,34 @@ class Pipeline:
         mask_df.to_parquet(pfm.mask_df)
 
     ###################################################################################################
+    # CROP RAW ZARR TO MAKE TUNING ZARR
+    ###################################################################################################
+
+    @classmethod
+    @log_func_decorator(logger)
+    def make_tuning_arr(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        """
+        Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
+        """
+        cls.logger.debug("Reading config params")
+        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        cls.logger.debug("Reading raw zarr")
+        raw_arr = da.from_zarr(pfm.raw)
+        cls.logger.debug("Cropping raw zarr")
+        raw_arr = raw_arr[
+            slice(*configs.tuning_z_trim),
+            slice(*configs.tuning_y_trim),
+            slice(*configs.tuning_x_trim),
+        ]
+        cls.logger.debug("Converting pfm to tuning filepaths (copy)")
+        pfm = pfm.copy().convert_to_tuning()
+        if not overwrite and cls._check_file_exists(pfm, ("raw",)):
+            cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
+            return
+        cls.logger.debug("Saving cropped raw zarr")
+        raw_arr = disk_cache(raw_arr, pfm.raw)
+
+    ###################################################################################################
     # CELL COUNTING PIPELINE FUNCS
     ###################################################################################################
 

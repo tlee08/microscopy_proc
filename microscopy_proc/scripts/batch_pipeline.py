@@ -87,6 +87,8 @@ if __name__ == "__main__":
             Pipeline.elastix_registration(pfm, overwrite=overwrite)
             # Running mask pipeline
             Pipeline.make_mask(pfm, overwrite=overwrite)
+            # Can change cell counting to tuning mode here
+            pfm = pfm.copy().convert_to_tuning()
             # Making overlap chunks in preparation for cell counting
             Pipeline.img_overlap(pfm, overwrite=overwrite)
             # Counting cells

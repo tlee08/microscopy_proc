@@ -175,7 +175,7 @@ class ProjFpModel(BaseModel):
             maxima=os.path.join(proj_dir, cellc_dir, "7_maxima.zarr"),
             wshed_volumes=os.path.join(proj_dir, cellc_dir, "8_wshed_volumes.zarr"),
             wshed_filt=os.path.join(proj_dir, cellc_dir, "9_wshed_filt.zarr"),
-            # CELL COUNTING TRIMMED ARRAY FILES
+            # CELL COUNTING TRIMMED TO RAW ARRAY FILES
             threshd_final=os.path.join(proj_dir, cellc_dir, "10_threshd_f.zarr"),
             maxima_final=os.path.join(proj_dir, cellc_dir, "10_maxima_f.zarr"),
             wshed_final=os.path.join(proj_dir, cellc_dir, "10_wshed_f.zarr"),
@@ -222,6 +222,10 @@ class ProjFpModel(BaseModel):
         self.maxima = os.path.join(root_dir, cellc_dir, "7_maxima.zarr")
         self.wshed_volumes = os.path.join(root_dir, cellc_dir, "8_wshed_volumes.zarr")
         self.wshed_filt = os.path.join(root_dir, cellc_dir, "9_wshed_filt.zarr")
+        # Converting all the cellcount trimmed to raw filepaths to the new directory
+        self.threshd_final = os.path.join(root_dir, cellc_dir, "10_threshd_f.zarr")
+        self.maxima_final = os.path.join(root_dir, cellc_dir, "10_maxima_f.zarr")
+        self.wshed_final = os.path.join(root_dir, cellc_dir, "10_wshed_f.zarr")
         # Returning
         return self
 
