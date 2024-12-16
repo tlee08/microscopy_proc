@@ -217,7 +217,7 @@ class CpuCellcFuncs:
         If `mask_arr` is provided, then only maxima within the mask are kept.
         """
         cls.logger.debug(f"arr max A: {arr.max()}")
-        cls.logger.debug(f"arr type: {arr.dtype}")
+        cls.logger.debug(f"arr type A: {arr.dtype}")
         arr = cls.xp.asarray(arr)
         cls.logger.debug(f"arr type: {arr.dtype}")
         cls.logger.debug(f"arr max B: {arr.max()}")
