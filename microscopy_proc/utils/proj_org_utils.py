@@ -366,7 +366,11 @@ class ProjFpModelBase:
         )
 
     def _set_attribute(self, attr: str):
-        subdir, basename = getattr(self, attr)
+        """
+        Refer to the attribute (NOT the property. i.e. attribute has "_<name>")
+        and return the file path.
+        """
+        subdir, basename = getattr(self, f"_{attr}")
         return os.path.join(self.root_dir, subdir, basename)
 
 
