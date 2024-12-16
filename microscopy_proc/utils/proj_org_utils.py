@@ -361,7 +361,7 @@ class ProjFpModelBase:
 
     def _raise_not_set(self, attr):
         raise NotImplementedError(
-            f"The property '{attr}' is not implemented in the tuning model."
+            f"The property '{attr}' is not implemented in the model '{type(self)}'."
         )
 
     def _set_attribute(self, attr: str):
