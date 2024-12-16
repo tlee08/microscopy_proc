@@ -216,7 +216,11 @@ class CpuCellcFuncs:
 
         If `mask_arr` is provided, then only maxima within the mask are kept.
         """
+        cls.logger.debug(f"arr max A: {arr.max()}")
+        cls.logger.debug(f"arr type: {arr.dtype}")
         arr = cls.xp.asarray(arr)
+        cls.logger.debug(f"arr type: {arr.dtype}")
+        cls.logger.debug(f"arr max B: {arr.max()}")
         cls.logger.debug(
             "Making max filter for raw arr (holds the maximum in given area)"
         )
@@ -225,7 +229,7 @@ class CpuCellcFuncs:
             "Getting local maxima (where arr == max_arr, i.e. arr is the maxima as well)"
         )
         cls.logger.debug(f"max_arr max: {max_arr.max()}")
-        cls.logger.debug(f"arr max: {arr.max()}")
+        cls.logger.debug(f"arr max C: {arr.max()}")
         res = arr == max_arr
         cls.logger.debug(f"Number of maxima: {res.sum()}")
         # If a mask is given, then keep only the maxima within the mask
