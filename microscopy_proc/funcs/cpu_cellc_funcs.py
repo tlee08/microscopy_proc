@@ -216,30 +216,16 @@ class CpuCellcFuncs:
 
         If `mask_arr` is provided, then only maxima within the mask are kept.
         """
-        cls.logger.debug(f"arr max A: {arr.max()}")
-        cls.logger.debug(f"arr type A: {arr.dtype}")
         arr = cls.xp.asarray(arr)
-        cls.logger.debug(f"arr type: {arr.dtype}")
-        cls.logger.debug(f"arr max B: {arr.max()}")
-        cls.logger.debug(
-            "Making max filter for raw arr (holds the maximum in given area)"
-        )
+        cls.logger.debug("Making max filter for raw arr (maximum in given area)")
         max_arr = cls.xdimage.maximum_filter(arr, sigma)
-        cls.logger.debug(
-            "Getting local maxima (where arr == max_arr, i.e. arr is the maxima as well)"
-        )
-        cls.logger.debug(f"max_arr max: {max_arr.max()}")
-        cls.logger.debug(f"arr max C: {arr.max()}")
+        cls.logger.debug("Getting local maxima (where arr == max_arr)")
         res = arr == max_arr
-        cls.logger.debug(f"Number of maxima: {res.sum()}")
         # If a mask is given, then keep only the maxima within the mask
         if mask_arr is not None:
-            cls.logger.debug(
-                "Mask provided. Maxima will only be found within mask regions."
-            )
+            cls.logger.debug("Mask provided. Maxima only in mask regions considered.")
             mask_arr = (cls.xp.asarray(mask_arr) > 0).astype(cls.xp.uint8)
             res = res * mask_arr
-            cls.logger.debug(f"Number of maxima (AFTER MASK): {res.sum()}")
         return res
 
     @classmethod
