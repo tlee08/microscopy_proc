@@ -11,10 +11,7 @@ from microscopy_proc.gui.gui_funcs import (
     load_configs,
     page_decorator,
 )
-from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_model,
-    update_configs,
-)
+from microscopy_proc.pipeline.pipeline import Pipeline
 
 INIT = "init"
 INPUT_S = f"{INIT}_input_s"
@@ -109,8 +106,8 @@ def create_func():
     Makes project folders and configs file.
     """
     proj_dir = st.session_state[PROJ_DIR]
-    pfm = get_proj_fp_model(proj_dir)
-    update_configs(pfm)
+    pfm = Pipeline.get_pfm(proj_dir)
+    Pipeline.update_configs(pfm)
     # Rerunning set func to update session state
     st.session_state[INPUT] = proj_dir
     set_func()

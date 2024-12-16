@@ -12,14 +12,13 @@ from microscopy_proc.constants import (
     SpecialRegions,
 )
 from microscopy_proc.funcs.map_funcs import (
-    annot_df_get_parents,
-    annot_dict2df,
+    MapFuncs,
 )
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import enum2list
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model, update_configs
 
 COMBINED_FP = "combined_df"
 
@@ -50,8 +49,8 @@ class BatchCombineFuncs:
         # Asserting that proj_dir_ls is not empty
         assert len(proj_dir_ls) > 0, "proj_dir_ls is empty"
         # Assertions for each project directory
-        pfm0 = get_proj_fp_model(proj_dir_ls[0])
-        configs0 = update_configs(pfm0)
+        pfm0 = Pipeline.get_pfm(proj_dir_ls[0])
+        configs0 = Pipeline.update_configs(pfm0)
         atlas_dir0 = configs0.atlas_dir
         ref_v0 = configs0.ref_version
         annot_v0 = configs0.annot_version
@@ -59,8 +58,8 @@ class BatchCombineFuncs:
         for proj_dir in proj_dir_ls:
             # Getting project info
             name = os.path.basename(proj_dir)
-            pfm = get_proj_fp_model(proj_dir)
-            configs = update_configs(pfm)
+            pfm = Pipeline.get_pfm(proj_dir)
+            configs = Pipeline.update_configs(pfm)
             atlas_dir = configs.atlas_dir
             ref_v = configs.ref_version
             annot_v = configs.annot_version
@@ -89,9 +88,9 @@ class BatchCombineFuncs:
 
         # Making combined_agg_df
         # Starting with annot_df (asserted all the same so using first)
-        total_df = annot_dict2df(read_json(pfm0.map))
+        total_df = MapFuncs.annot_dict2df(read_json(pfm0.map))
         # Adding parent columns to annot_df
-        total_df = annot_df_get_parents(total_df)
+        total_df = MapFuncs.annot_df_get_parents(total_df)
         # Adding special rows (e.g. "universe")
         # TODO: is neither clean nor modular
         total_df.loc[-1] = pd.Series(
@@ -119,7 +118,7 @@ class BatchCombineFuncs:
             name = os.path.basename(proj_dir)
             cls.logger.info(f"Running: {name}")
             # Filenames
-            pfm = get_proj_fp_model(proj_dir)
+            pfm = Pipeline.get_pfm(proj_dir)
             # CELL_AGG_DF
             # Reading experiment's cells_agg dataframe
             cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
@@ -174,7 +173,7 @@ class BatchCombineFuncs:
         proj_dir_ls = []
         for exp in natsorted(os.listdir(root_dir)):
             proj_dir = os.path.join(root_dir, exp)
-            pfm = get_proj_fp_model(proj_dir)
+            pfm = Pipeline.get_pfm(proj_dir)
             try:
                 # If proj has config_params file, then add to list of projs to combine
                 ConfigParamsModel.model_validate(read_json(pfm.config_params))

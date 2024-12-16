@@ -3,9 +3,9 @@ import os
 import streamlit as st
 from natsort import natsorted
 
-from microscopy_proc.funcs.batch_combine_funcs import combine_ls_pipeline
+from microscopy_proc.funcs.batch_combine_funcs import BatchCombineFuncs
 from microscopy_proc.gui.page1_init import INPUT_M as PDIR_INPUT_M
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
+from microscopy_proc.pipeline.pipeline import Pipeline
 
 from .gui_funcs import ProjDirStatus, init_var, page_decorator
 
@@ -57,7 +57,7 @@ def input_root_func():
     for i in natsorted(os.listdir(st.session_state[INPUT_ROOT])):
         # Checking project has configs_params, cells_agg, and mask df files
         pdir_i = os.path.join(st.session_state[INPUT_ROOT], i)
-        pfm_i = get_proj_fp_model(pdir_i)
+        pfm_i = Pipeline.get_pfm(pdir_i)
         if (
             os.path.exists(pfm_i.config_params)
             and os.path.exists(pfm_i.cells_agg_df)
@@ -187,7 +187,7 @@ def page6_combine():
             os.path.join(st.session_state[INPUT_ROOT], i) for i in proj_dir_ls
         ]
         # Running combine func
-        combine_ls_pipeline(
+        BatchCombineFuncs.combine_ls_pipeline(
             proj_dir_ls=proj_dir_ls,
             out_dir=st.session_state[INPUT_OUT],
             overwrite=st.session_state[OVERWRITE],

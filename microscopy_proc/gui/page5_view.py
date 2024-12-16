@@ -10,10 +10,10 @@ from microscopy_proc.constants import Coords
 from microscopy_proc.funcs.viewer_funcs import CMAP as CMAP_D
 from microscopy_proc.funcs.viewer_funcs import IMGS as IMGS_D
 from microscopy_proc.funcs.viewer_funcs import VRANGE as VRANGE_D
-from microscopy_proc.funcs.viewer_funcs import view_arrs_mp
+from microscopy_proc.funcs.viewer_funcs import ViewerFuncs
 from microscopy_proc.gui.gui_funcs import PROJ_DIR, init_var, page_decorator
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.misc_utils import enum2list
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 # NOTE: could plt.colourmaps() work?
 VIEW = "viewer"
@@ -54,7 +54,7 @@ def page5_view():
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
 
     st.write("## Visualiser")
     # Checking the max dimensions for trimmer sliders
@@ -161,7 +161,7 @@ def page5_view():
                 f"    - colourmap: {img_v[CMAP]}\n"
             )
         # Running visualiser
-        view_arrs_mp(
+        ViewerFuncs.view_arrs_mp(
             fp_ls=tuple(getattr(pfm, i[NAME]) for i in imgs_to_run_ls),
             trimmer=tuple(st.session_state[TRIMMER][coord] for coord in Coords),
             name=tuple(i[NAME] for i in imgs_to_run_ls),

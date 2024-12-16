@@ -1,7 +1,6 @@
 import streamlit as st
 
 from microscopy_proc.pipeline.pipeline import Pipeline
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 from .gui_funcs import PROJ_DIR, init_var, page_decorator
 
@@ -9,6 +8,7 @@ PIPELINE = "pipeline"
 CHECKBOXES = f"{PIPELINE}_checkboxes"
 OVERWRITE = f"{PIPELINE}_overwrite"
 RUN = f"{PIPELINE}_run"
+IS_TUNING = f"{PIPELINE}_is_tuning"
 
 
 @page_decorator()
@@ -64,10 +64,11 @@ def page4_pipeline():
         },
     )
     init_var(OVERWRITE, False)
+    init_var(IS_TUNING, False)
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
 
     st.write("## Pipeline")
     # Overwrite box
@@ -76,6 +77,15 @@ def page4_pipeline():
         value=st.session_state[OVERWRITE],
         key=OVERWRITE,
     )
+    # Is processing box
+    st.toggle(
+        label="Switch to tuning mode",
+        value=st.session_state[IS_TUNING],
+        key=IS_TUNING,
+    )
+    if st.session_state[IS_TUNING]:
+        st.write("Tuning mode ON")
+        pfm = pfm.copy().convert_to_tuning()
     # Making pipeline checkboxes
     pipeline_checkboxes = st.session_state[CHECKBOXES]
     for func in pipeline_checkboxes:

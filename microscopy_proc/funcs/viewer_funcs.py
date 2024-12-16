@@ -1,4 +1,3 @@
-import functools
 import re
 from enum import Enum
 from multiprocessing import Process
@@ -124,7 +123,6 @@ class ViewerFuncs:
         napari.run()
 
     @classmethod
-    @functools.wraps(view_arrs)
     def view_arrs_mp(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         cls.logger.info("Starting napari viewer")
         # Making napari viewer multiprocess

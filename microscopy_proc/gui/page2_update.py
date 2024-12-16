@@ -14,10 +14,10 @@ from microscopy_proc.gui.gui_funcs import (
     load_configs,
     page_decorator,
 )
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import write_json
 from microscopy_proc.utils.misc_utils import const2list, dictlists2listdicts, enum2list
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 UPDATE = "update"
 VALUE = f"{UPDATE}_value"
@@ -371,7 +371,7 @@ def configs_save_func():
     """
     configs: ConfigParamsModel = st.session_state[CONFIGS]
     proj_dir = st.session_state[PROJ_DIR]
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
     fp = pfm.config_params
     write_json(fp, configs.model_dump())
 

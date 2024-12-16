@@ -9,7 +9,6 @@ from microscopy_proc.gui.gui_funcs import (
     page_decorator,
 )
 from microscopy_proc.pipeline.pipeline import Pipeline
-from microscopy_proc.utils.proj_org_utils import get_proj_fp_model
 
 IMPORT = "import"
 OVERWRITE = f"{IMPORT}_overwrite"
@@ -46,7 +45,7 @@ def page3_import():
 
     # Recalling session state variables
     proj_dir = st.session_state[PROJ_DIR]
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
 
     st.write("## Import Image")
     st.write("Imports image into project directory as a zarr chunked file.")

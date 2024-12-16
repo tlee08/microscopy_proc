@@ -4,11 +4,9 @@ from typing import Any
 
 import streamlit as st
 
+from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.io_utils import read_json
-from microscopy_proc.utils.proj_org_utils import (
-    get_proj_fp_model,
-)
 
 PROJ_DIR = "proj_dir"
 PROJ_DIR_STATUS = "proj_dir_status"
@@ -48,7 +46,7 @@ def load_configs():
     NOTE: does not catch errors
     """
     proj_dir = st.session_state[PROJ_DIR]
-    pfm = get_proj_fp_model(proj_dir)
+    pfm = Pipeline.get_pfm(proj_dir)
     fp = pfm.config_params
     st.session_state[CONFIGS] = ConfigParamsModel.model_validate(read_json(fp))
 
