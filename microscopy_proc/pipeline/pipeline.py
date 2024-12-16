@@ -140,7 +140,7 @@ class Pipeline:
         if kwargs != {}:
             cls.logger.debug(f"kwargs are given: {kwargs}")
             configs = configs.model_validate(configs.model_copy(update=kwargs))
-            cls.logger.debug("Updating the configs")
+            cls.logger.debug("Updating the configs file")
             write_json(pfm.config_params, configs.model_dump())
         cls.logger.debug("Returning the configs file")
         return configs
