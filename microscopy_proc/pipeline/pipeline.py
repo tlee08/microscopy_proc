@@ -634,7 +634,7 @@ class Pipeline:
             # Reading input images
             overlap_arr = da.from_zarr(pfm.overlap)
             threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
-            cls.logger.debug(f"arr max 1: {overlap_arr.max()}")
+            cls.logger.debug(f"arr max 1: {overlap_arr.max().compute()}")
             cls.logger.debug(f"arr type 1: {overlap_arr.dtype}")
             # Declaring processing instructions
             maxima_arr = da.map_blocks(
