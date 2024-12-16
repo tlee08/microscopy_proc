@@ -278,9 +278,13 @@ class ConfigsUpdater:
         **kwargs,
     ):
         """
-        Builds a streamlit widget for a pydantic field.
+        Builds a streamlit value updater widget for a given pydantic field.
 
-        The output is saved to the pydantic_instance.
+        The output is saved to the pydantic_instance object AND the session state.
+        Session state values are saved as:
+            - f"{DEFAULT}_{label}"
+            - f"{VALUE}_{label}" or f"{VALUE}_{label}_{sublabel}" (for tuple)
+            - f"{IS_NONE}_{label}" or f"{IS_NONE}_{label}_{sublabel}" (for tuple)
         """
         # Getting field value and info
         curr = getattr(pydantic_instance, field_name)
@@ -410,13 +414,13 @@ def page2_configs():
     st.write("# Edit Configs")
     with st.expander("Reference"):
         ConfigsUpdater.field2updater_mapped(configs, "atlas_dir")
-        ConfigsUpdater.field2updater_mapped(configs, "ref_v")
-        ConfigsUpdater.field2updater_mapped(configs, "annot_v")
-        ConfigsUpdater.field2updater_mapped(configs, "map_v")
+        ConfigsUpdater.field2updater_mapped(configs, "ref_version")
+        ConfigsUpdater.field2updater_mapped(configs, "annot_version")
+        ConfigsUpdater.field2updater_mapped(configs, "map_version")
     with st.expander("Raw"):
-        ConfigsUpdater.field2updater_mapped(configs, "chunksize")
+        ConfigsUpdater.field2updater_mapped(configs, "zarr_chunksize")
     with st.expander("Registration"):
-        # TODO: numerical is unintuitive for selecting axes in ref_orienf_ls
+        # TODO: numerical it is unintuitive for selecting axes in ref_orienf_ls
         ConfigsUpdater.field2updater_mapped(configs, "ref_orient_ls")
         ConfigsUpdater.field2updater_mapped(configs, "ref_z_trim")
         ConfigsUpdater.field2updater_mapped(configs, "ref_y_trim")
@@ -434,7 +438,7 @@ def page2_configs():
         ConfigsUpdater.field2updater_mapped(configs, "mask_gaus_blur")
         ConfigsUpdater.field2updater_mapped(configs, "mask_thresh")
     with st.expander("Overlap"):
-        ConfigsUpdater.field2updater_mapped(configs, "depth")
+        ConfigsUpdater.field2updater_mapped(configs, "overlap_depth")
     with st.expander("Cell Counting"):
         ConfigsUpdater.field2updater_mapped(configs, "tophat_sigma")
         ConfigsUpdater.field2updater_mapped(configs, "dog_sigma1")
