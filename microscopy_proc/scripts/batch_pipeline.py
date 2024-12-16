@@ -32,7 +32,7 @@ if __name__ == "__main__":
             proj_dir = os.path.join(root_dir, exp)
             pfm = Pipeline.get_pfm(proj_dir)
             # Can change cell counting to tuning mode here
-            pfm = pfm.copy().convert_to_tuning()
+            pfm = Pipeline.get_pfm_tuning(proj_dir)
             # Updating project pipeline configs
             Pipeline.update_configs(
                 pfm,
@@ -90,6 +90,8 @@ if __name__ == "__main__":
             Pipeline.elastix_registration(pfm, overwrite=overwrite)
             # Running mask pipeline
             Pipeline.make_mask(pfm, overwrite=overwrite)
+            # Making trimmed image for cell count tuning
+            Pipeline.make_tuning_arr(pfm, overwrite=overwrite)
             # Making overlap chunks in preparation for cell counting
             Pipeline.img_overlap(pfm, overwrite=overwrite)
             # Counting cells

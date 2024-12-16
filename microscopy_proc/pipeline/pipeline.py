@@ -42,7 +42,6 @@ from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
     RefFpModel,
-    make_proj_dirs,
 )
 
 # Optional dependency: gpu
@@ -97,7 +96,15 @@ class Pipeline:
         """
         Returns a ProjFpModel object created from the project directory.
         """
-        return ProjFpModel.get_proj_fp_model(proj_dir)
+        return ProjFpModel.init_model_production(proj_dir)
+
+    @classmethod
+    @log_func_decorator(logger)
+    def get_pfm_tuning(cls, proj_dir: str) -> ProjFpModel:
+        """
+        Returns a ProjFpModel object created from the project directory.
+        """
+        return ProjFpModel.init_model_tuning(proj_dir)
 
     ###################################################################################################
     # UPDATE CONFIGS
@@ -118,7 +125,7 @@ class Pipeline:
         Finally, returns the ConfigParamsModel object.
         """
         cls.logger.debug("Making all the project sub-directories")
-        make_proj_dirs(pfm)
+        pfm.make_subdirs()
         cls.logger.debug("Reading/creating params json")
         try:
             configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
