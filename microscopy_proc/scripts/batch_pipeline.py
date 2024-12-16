@@ -32,7 +32,7 @@ if __name__ == "__main__":
             proj_dir = os.path.join(root_dir, exp)
             pfm = Pipeline.get_pfm(proj_dir)
             # Can change cell counting to tuning mode here
-            pfm = Pipeline.get_pfm_tuning(proj_dir)
+            pfm_tuning = Pipeline.get_pfm_tuning(proj_dir)
             # Updating project pipeline configs
             Pipeline.update_configs(
                 pfm,
