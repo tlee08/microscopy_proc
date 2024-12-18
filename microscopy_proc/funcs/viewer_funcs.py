@@ -50,9 +50,9 @@ IMGS = {
     },
     "Cell Counting (overlapped)": {
         "overlap": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "bgrm": {VRANGE: (0, 2000), CMAP: Colormaps.GREEN.value},
-        "dog": {VRANGE: (0, 500), CMAP: Colormaps.RED.value},
-        "adaptv": {VRANGE: (0, 500), CMAP: Colormaps.RED.value},
+        "bgrm": {VRANGE: (0, 2000), CMAP: Colormaps.GRAY.value},
+        "dog": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
+        "adaptv": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
         "threshd": {VRANGE: (0, 5), CMAP: Colormaps.GRAY.value},
         "threshd_volumes": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
         "threshd_filt": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
