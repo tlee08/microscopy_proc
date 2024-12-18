@@ -104,7 +104,7 @@ class ViewerFuncs:
         # Reading arrays
         arr_ls = []
         for i, fp in enumerate(fp_ls):
-            cls.logger.info(f"Loading image # {i} / {len(fp_ls)}")
+            cls.logger.info(f"Loading image # {i+1} / {len(fp_ls)}")
             arr_ls.append(cls.read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
