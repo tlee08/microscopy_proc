@@ -13,6 +13,7 @@ if __name__ == "__main__":
 
     logger = init_logger()
 
+    # For normal pipeline
     pfm = Pipeline.get_pfm(proj_dir)
     # Can change cell counting to tuning mode here
     pfm = Pipeline.get_pfm_tuning(proj_dir)
