@@ -1047,9 +1047,9 @@ class Pipeline:
             fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
             fp_out=pfm.combined_cellc,
             trimmer=(
-                slice(*configs.tuning_z_trim),
-                slice(*configs.tuning_y_trim),
-                slice(*configs.tuning_x_trim),
+                slice(*configs.combine_cellc_z_trim),
+                slice(*configs.combine_cellc_y_trim),
+                slice(*configs.combine_cellc_x_trim),
             ),
         )
 
