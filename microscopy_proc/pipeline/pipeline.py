@@ -72,7 +72,6 @@ class Pipeline:
     # CHECK PFM FILE EXISTS
     ###################################################################################################
     @classmethod
-    @log_func_decorator(logger)
     def _check_file_exists(cls, pfm: ProjFpModel, pfm_fp_ls: tuple[str, ...] = tuple()):
         """
         Returns whether the fpm attribute in
