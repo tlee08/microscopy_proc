@@ -436,6 +436,7 @@ class Pipeline:
         """
         cls.logger.debug("Converting/ensuring pfm is production filepaths (copy)")
         pfm = ProjFpModel(pfm.root_dir)
+        pfm_tuning = ProjFpModelTuning(pfm.root_dir)
         cls.logger.debug("Reading config params")
         configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
         cls.logger.debug("Reading raw zarr")
@@ -446,8 +447,6 @@ class Pipeline:
             slice(*configs.tuning_y_trim),
             slice(*configs.tuning_x_trim),
         ]
-        cls.logger.debug("Converting pfm to tuning filepaths (copy)")
-        pfm_tuning = ProjFpModelTuning(pfm.root_dir)
         if not overwrite and cls._check_file_exists(pfm_tuning, ("raw",)):
             cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
             return
@@ -1048,9 +1047,9 @@ class Pipeline:
             fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
             fp_out=pfm.combined_cellc,
             trimmer=(
-                slice(*configs.z_trim),
-                slice(*configs.y_trim),
-                slice(*configs.x_trim),
+                slice(*configs.tuning_z_trim),
+                slice(*configs.tuning_y_trim),
+                slice(*configs.tuning_x_trim),
             ),
         )
 
