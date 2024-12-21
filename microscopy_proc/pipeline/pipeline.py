@@ -54,7 +54,7 @@ if GPU_ENABLED:
 else:
     LocalCUDACluster = LocalCluster
     Gf = Cf
-    logger = init_logger()
+    logger = init_logger(__name__)
     logger.info("Warning GPU functionality not installed.")
     logger.info("Using CPU functionality instead (much slower).")
     logger.info('Can install with `pip install "microscopy_proc[gpu]"`')
@@ -66,7 +66,7 @@ else:
 
 
 class Pipeline:
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     ###################################################################################################
     # CHECK PFM FILE EXISTS

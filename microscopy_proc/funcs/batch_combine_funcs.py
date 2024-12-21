@@ -29,7 +29,7 @@ class CombinedColumns(Enum):
 
 
 class BatchCombineFuncs:
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     @classmethod
     def combine_ls_pipeline(

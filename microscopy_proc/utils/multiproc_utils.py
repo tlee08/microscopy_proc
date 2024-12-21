@@ -10,7 +10,7 @@ from dask.distributed import get_worker
 
 from microscopy_proc.utils.logging_utils import init_logger
 
-logger = init_logger()
+logger = init_logger(__name__)
 
 
 @staticmethod

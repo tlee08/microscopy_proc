@@ -15,7 +15,7 @@ from microscopy_proc.utils.logging_utils import init_logger
 #                     Getting filepaths in order
 #####################################################################
 
-logger = init_logger()
+logger = init_logger(__name__)
 
 
 def get_fps(dir, pattern):

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_fp != proj_dir
 
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     # For normal pipeline
     pfm = Pipeline.get_pfm(proj_dir)

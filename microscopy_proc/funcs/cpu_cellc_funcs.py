@@ -15,7 +15,7 @@ class CpuCellcFuncs:
     xp = np
     xdimage = sc_ndimage
 
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     @classmethod
     def tophat_filt(cls, arr: np.ndarray, sigma: int = 10) -> np.ndarray:

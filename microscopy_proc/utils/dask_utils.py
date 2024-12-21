@@ -14,7 +14,7 @@ from microscopy_proc.constants import DEPTH, Coords
 from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import const2iter
 
-logger = init_logger()
+logger = init_logger(__name__)
 
 
 def block2coords(func, *args: Any) -> dd.DataFrame:

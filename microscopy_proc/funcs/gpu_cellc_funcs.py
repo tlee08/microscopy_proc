@@ -17,7 +17,7 @@ class GpuCellcFuncs(CpuCellcFuncs):
     xp = cp
     xdimage = cp_ndimage
 
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     ###################################################################################################
     # GPU HELPER FUNCTIONS

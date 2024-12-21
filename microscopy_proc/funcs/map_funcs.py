@@ -11,7 +11,7 @@ from microscopy_proc.utils.logging_utils import init_logger
 
 
 class MapFuncs:
-    logging = init_logger()
+    logging = init_logger(__name__)
 
     @classmethod
     def annot_dict2df(cls, data_dict: dict) -> pd.DataFrame:

@@ -19,7 +19,7 @@ else:
 
 
 class ElastixFuncs:
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     @classmethod
     def registration(

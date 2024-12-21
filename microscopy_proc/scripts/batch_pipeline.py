@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # in_fp_dir and batch_proj_dir cannot be the same
     assert in_root_dir != root_dir
 
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     # Get all experiments
     exp_ls = [

@@ -75,7 +75,7 @@ IMGS = {
 
 
 class ViewerFuncs:
-    logger = init_logger()
+    logger = init_logger(__name__)
 
     @classmethod
     def read_img(cls, fp, trimmer: None | tuple[slice, ...] = None):

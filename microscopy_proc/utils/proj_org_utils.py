@@ -7,7 +7,7 @@ from microscopy_proc.utils.logging_utils import init_logger
 # TODO: add 10_adaptv_f.zarr and move the xxx_f.zarr files to a new folder (e.g. "cellcount_final")
 # NOTE: this allows "cellcount" to be removed to save space when pipeline is completed and output checked
 
-logger = init_logger()
+logger = init_logger(__name__)
 
 
 class ProjSubdirs(Enum):
@@ -57,6 +57,7 @@ class RefFpModel:
         self.ref_version = ref_version
         self.annot_version = annot_version
         self.map_version = map_version
+        logger.debug(f"Getting Atlas RefFpModel for {atlas_dir}")
 
     @property
     def ref(self):
@@ -138,6 +139,7 @@ class ProjFpModelBase:
     def __init__(self, root_dir: str, subdirs):
         self.root_dir = root_dir
         self.subdirs = subdirs
+        logger.debug(f"Getting ProjFpModel for {root_dir}, with subdirs {subdirs}")
 
     @property
     def config_params(self) -> str:
