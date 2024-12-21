@@ -28,7 +28,6 @@ class CpuCellcFuncs:
         """
         arr = cls.xp.asarray(arr).astype(cls.xp.float32)
         cls.logger.debug("Perform white top-hat filter")
-        cls.logger.debug(f"TYPE: {arr.dtype} {type(arr)}")
         res = cls.xdimage.white_tophat(arr, sigma)
         cls.logger.debug("ReLu")
         res = cls.xp.maximum(res, 0)  # type: ignore
