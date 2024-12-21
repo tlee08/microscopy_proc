@@ -756,7 +756,7 @@ class Pipeline:
             raw_arr = da.from_zarr(pfm.raw)
             overlap_arr = da.from_zarr(pfm.overlap)
             maxima_arr = da.from_zarr(pfm.maxima)
-            wshed_filt_arr = da.from_zarr(pfm.wshed_filt)
+            threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
             # Declaring processing instructions
             # Getting maxima coords and cell measures in table
             cells_df = block2coords(
@@ -764,7 +764,7 @@ class Pipeline:
                 raw_arr,
                 overlap_arr,
                 maxima_arr,
-                wshed_filt_arr,
+                threshd_filt_arr,
                 configs.overlap_depth,
             )
             # Converting from dask to pandas
