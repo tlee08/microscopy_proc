@@ -682,7 +682,7 @@ class Pipeline:
         """
         Cell counting pipeline - Step 9
 
-        Filter out large watershed objects (again likely outlines, not cells).
+        Filter out large watershed objects (again cell areas, not cells).
         """
         if not overwrite and cls._check_file_exists(pfm, ("wshed_filt",)):
             return
@@ -740,7 +740,11 @@ class Pipeline:
         """
         Cell counting pipeline - Step 11
 
-        From maxima and watershed, save the cells.
+        Calculate the maxima and watershed, save the cells.
+
+        Basically a repeat of cellc8 and cellc9 but needs to be done to
+        get the cell volumes in a table. Hence, don't run cellc8 and cellc9 if
+        you don't want to view the cells visually (good for pipeline, not for tuning).
         """
         if not overwrite and cls._check_file_exists(pfm, ("cells_raw_df",)):
             return
