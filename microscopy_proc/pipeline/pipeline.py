@@ -132,7 +132,7 @@ class Pipeline:
         cls.logger.debug("Making all the project sub-directories")
         cls.logger.debug("Reading/creating params json")
         try:
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             cls.logger.debug("The configs file exists")
         except FileNotFoundError:
             cls.logger.debug("The configs file does NOT exists")
@@ -176,7 +176,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("raw",)):
             return
         cls.logger.debug("Reading config params")
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         cls.logger.debug("Making zarr from tiff file(s)")
         with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
             if os.path.isdir(in_fp):
@@ -218,7 +218,7 @@ class Pipeline:
         ):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         # Making ref_fp_model of original atlas images filepaths
         rfm = RefFpModel(
             configs.atlas_dir,
@@ -255,7 +255,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("downsmpl1",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         with cluster_proc_contxt(LocalCluster()):
             # Reading
             raw_arr = da.from_zarr(pfm.raw)
@@ -274,7 +274,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("downsmpl2",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         # Reading
         downsmpl1_arr = tifffile.imread(pfm.downsmpl1)
         # Fine downsample
@@ -290,7 +290,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("trimmed",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         # Reading
         downsmpl2_arr = tifffile.imread(pfm.downsmpl2)
         # Trim
@@ -333,7 +333,7 @@ class Pipeline:
         ):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         # Reading annot (proj oriented and trimmed) and trimmed imgs
         annot_arr = tifffile.imread(pfm.annot)
         trimmed_arr = tifffile.imread(pfm.trimmed)
@@ -437,7 +437,7 @@ class Pipeline:
         pfm = ProjFpModel(pfm.root_dir)
         pfm_tuning = ProjFpModelTuning(pfm.root_dir)
         cls.logger.debug("Reading config params")
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         cls.logger.debug("Reading raw zarr")
         raw_arr = da.from_zarr(pfm.raw)
         cls.logger.debug("Cropping raw zarr")
@@ -462,7 +462,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("overlap",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         # Making overlap image
         with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
             raw_arr = da.from_zarr(pfm.raw, chunks=configs.zarr_chunksize)
@@ -482,7 +482,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             overlap_arr = da.from_zarr(pfm.overlap)
             # Declaring processing instructions
@@ -507,7 +507,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             bgrm_arr = da.from_zarr(pfm.bgrm)
             # Declaring processing instructions
@@ -533,7 +533,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             dog_arr = da.from_zarr(pfm.dog)
             # Declaring processing instructions
@@ -559,7 +559,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # # Visually inspect sd offset
             # t_p =adaptv_arr.sum() / (np.prod(adaptv_arr.shape) - (adaptv_arr == 0).sum())
             # t_p = t_p.compute()
@@ -609,7 +609,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             threshd_volumes_arr = da.from_zarr(pfm.threshd_volumes)
             # Declaring processing instructions
@@ -635,7 +635,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             overlap_arr = da.from_zarr(pfm.overlap)
             threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
@@ -689,7 +689,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes)
             # Declaring processing instructions
@@ -720,7 +720,7 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             maxima_arr = da.from_zarr(pfm.maxima)
             threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
@@ -747,7 +747,7 @@ class Pipeline:
         with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
             # n_workers=2
             # Getting configs
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             # Reading input images
             raw_arr = da.from_zarr(pfm.raw)
             overlap_arr = da.from_zarr(pfm.overlap)
@@ -812,7 +812,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("cells_trfm_df",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
             # Setting output key (in the form "<maxima/region>_trfm_df")
             # Getting cell coords
@@ -987,7 +987,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("heatmap_raw",)):
             return
         with cluster_proc_contxt(LocalCluster()):
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             VisualCheckFuncsDask.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_raw_df),
                 shape=da.from_zarr(pfm.raw).shape,
@@ -1013,7 +1013,7 @@ class Pipeline:
         if not overwrite and cls._check_file_exists(pfm, ("heatmap_trfm",)):
             return
         with cluster_proc_contxt(LocalCluster()):
-            configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+            configs = ConfigParamsModel.read_fp(pfm.config_params)
             VisualCheckFuncsTiff.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_trfm_df),
                 shape=tifffile.imread(pfm.ref).shape,
@@ -1041,7 +1041,7 @@ class Pipeline:
     def combine_cellc(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_file_exists(pfm, ("combined_cellc",)):
             return
-        configs = ConfigParamsModel.model_validate(read_json(pfm.config_params))
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
             fp_out=pfm.combined_cellc,

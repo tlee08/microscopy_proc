@@ -9,6 +9,9 @@ from microscopy_proc.constants import (
     RESOURCES_DIR,
 )
 from microscopy_proc.utils.io_utils import read_json, write_json
+from microscopy_proc.utils.logging_utils import init_logger
+
+logger = init_logger(__name__)
 
 
 class RefVersions(Enum):
@@ -89,7 +92,7 @@ class ConfigParamsModel(BaseModel):
     combine_cellc_x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
 
     @model_validator(mode="after")
-    def validate_trims(self):
+    def _validate_trims(self):
         # Orient validation
         vect = np.array(self.ref_orient_ls)
         vect_abs = np.abs(vect)
@@ -98,6 +101,12 @@ class ConfigParamsModel(BaseModel):
         # TODO: Size validation
         # TODO: Trim validation
         return self
+
+    @classmethod
+    def read_fp(cls, fp: str):
+        model = cls.model_validate(read_json(fp))
+        logger.info(f'Loaded in model from filepath, "{fp}"')
+        return model
 
     def update(self, **kwargs):
         return self.model_validate(self.model_copy(update=kwargs))

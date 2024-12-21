@@ -139,7 +139,7 @@ class ProjFpModelBase:
     def __init__(self, root_dir: str, subdirs):
         self.root_dir = root_dir
         self.subdirs = subdirs
-        logger.debug(f"Getting ProjFpModel for {root_dir}, with subdirs {subdirs}")
+        logger.debug(f'Getting ProjFpModel for "{root_dir}", with subdirs {subdirs}')
 
     @property
     def config_params(self) -> str:
