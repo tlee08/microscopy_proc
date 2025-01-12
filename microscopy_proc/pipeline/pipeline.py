@@ -1032,23 +1032,23 @@ class Pipeline:
     @classmethod
     @log_func_decorator(logger)
     def combine_reg(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        if not overwrite and cls._check_file_exists(pfm, ("combined_reg",)):
+        if not overwrite and cls._check_file_exists(pfm, ("comb_reg",)):
             return
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
             # 2nd regresult means the combining works in ImageJ
-            fp_out=pfm.combined_reg,
+            fp_out=pfm.comb_reg,
         )
 
     @classmethod
     @log_func_decorator(logger)
     def combine_cellc(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        if not overwrite and cls._check_file_exists(pfm, ("combined_cellc",)):
+        if not overwrite and cls._check_file_exists(pfm, ("comb_cellc",)):
             return
         configs = ConfigParamsModel.read_fp(pfm.config_params)
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
-            fp_out=pfm.combined_cellc,
+            fp_out=pfm.comb_cellc,
             trimmer=(
                 slice(*configs.combine_cellc_z_trim),
                 slice(*configs.combine_cellc_y_trim),
@@ -1059,12 +1059,12 @@ class Pipeline:
     @classmethod
     @log_func_decorator(logger)
     def combine_points(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        if not overwrite and cls._check_file_exists(pfm, ("combined_points",)):
+        if not overwrite and cls._check_file_exists(pfm, ("comb_points",)):
             return
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
             # 2nd regresult means the combining works in ImageJ
-            fp_out=pfm.combined_points,
+            fp_out=pfm.comb_points,
         )
 
     ###################################################################################################

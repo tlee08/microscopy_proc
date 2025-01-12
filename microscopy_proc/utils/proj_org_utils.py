@@ -10,26 +10,6 @@ from microscopy_proc.utils.logging_utils import init_logger
 logger = init_logger(__name__)
 
 
-class ProjSubdirs(Enum):
-    RAW = "raw"
-    REGISTRATION = "registration"
-    MASK = "mask"
-    CELLCOUNT = "cellcount"
-    ANALYSIS = "analysis"
-    VISUALISATION = "visualisation"
-    COMBINED = "combined"
-
-
-class ProjSubdirsTuning(Enum):
-    RAW = "raw_tuning"
-    REGISTRATION = "registration"
-    MASK = "mask"
-    CELLCOUNT = "cellcount_tuning"
-    ANALYSIS = "analysis_tuning"
-    VISUALISATION = "visualisation"
-    COMBINED = "combined"
-
-
 class RefFolders(Enum):
     REFERENCE = "reference"
     ANNOTATION = "annotation"
@@ -128,13 +108,13 @@ class ProjFpModelBase:
     _cells_df: tuple[str | None, str] = ("ANALYSIS", "3_cells.parquet")
     _cells_agg_df: tuple[str | None, str] = ("ANALYSIS", "4_cells_agg.parquet")
     _cells_agg_csv: tuple[str | None, str] = ("ANALYSIS", "5_cells_agg.csv")
-    _points_raw: tuple[str | None, str] = ("VISUALISATION", "points_raw.zarr")
-    _heatmap_raw: tuple[str | None, str] = ("VISUALISATION", "heatmap_raw.zarr")
-    _points_trfm: tuple[str | None, str] = ("VISUALISATION", "points_trfm.tif")
-    _heatmap_trfm: tuple[str | None, str] = ("VISUALISATION", "heatmap_trfm.tif")
-    _combined_reg: tuple[str | None, str] = ("COMBINED", "combined_reg.tif")
-    _combined_cellc: tuple[str | None, str] = ("COMBINED", "combined_cellc.tif")
-    _combined_points: tuple[str | None, str] = ("COMBINED", "combined_points.tif")
+    _points_raw: tuple[str | None, str] = ("VISUAL", "points_raw.zarr")
+    _heatmap_raw: tuple[str | None, str] = ("VISUAL", "heatmap_raw.zarr")
+    _points_trfm: tuple[str | None, str] = ("VISUAL", "points_trfm.tif")
+    _heatmap_trfm: tuple[str | None, str] = ("VISUAL", "heatmap_trfm.tif")
+    _comb_reg: tuple[str | None, str] = ("VISUAL_COMB", "comb_reg.tif")
+    _comb_cellc: tuple[str | None, str] = ("VISUAL_COMB", "comb_cellc.tif")
+    _comb_points: tuple[str | None, str] = ("VISUAL_COMB", "comb_points.tif")
 
     def __init__(self, root_dir: str, subdirs):
         self.root_dir = root_dir
@@ -337,19 +317,36 @@ class ProjFpModelBase:
         return ""
 
     @property
-    def combined_reg(self) -> str:
-        self._raise_not_set("combined_reg")
+    def comb_reg(self) -> str:
+        self._raise_not_set("comb_reg")
         return ""
 
     @property
-    def combined_cellc(self) -> str:
-        self._raise_not_set("combined_cellc")
+    def comb_cellc(self) -> str:
+        self._raise_not_set("comb_cellc")
         return ""
 
     @property
-    def combined_points(self) -> str:
-        self._raise_not_set("combined_points")
+    def comb_points(self) -> str:
+        self._raise_not_set("comb_points")
         return ""
+
+    def assert_subdirs_exist(self):
+        """
+        Assert that all subdirectory values are set in the enum.
+        """
+        for attr in [
+            "RAW",
+            "REGISTRATION",
+            "MASK",
+            "CELLCOUNT",
+            "ANALYSIS",
+            "VISUAL",
+            "VISUAL_COMB",
+        ]:
+            assert hasattr(
+                self.subdirs, attr
+            ), f"Subdirectory '{attr}' not set in subdirs enum attribute."
 
     def copy(self):
         return self.__init__(self.root_dir, self.subdirs)
@@ -384,6 +381,16 @@ class ProjFpModelBase:
             return os.path.join(self.root_dir, basename)
         else:
             return os.path.join(self.root_dir, self.subdirs[subdir].value, basename)
+
+
+class ProjSubdirs(Enum):
+    RAW = "raw"
+    REGISTRATION = "registration"
+    MASK = "mask"
+    CELLCOUNT = "cellcount"
+    ANALYSIS = "analysis"
+    VISUAL = "visual"
+    VISUAL_COMB = "VISUAL_COMB"
 
 
 class ProjFpModel(ProjFpModelBase):
@@ -434,15 +441,25 @@ class ProjFpModel(ProjFpModelBase):
             "heatmap_raw",
             "points_trfm",
             "heatmap_trfm",
-            "combined_reg",
-            "combined_cellc",
-            "combined_points",
+            "comb_reg",
+            "comb_cellc",
+            "comb_points",
         ]:
             setattr(
                 self.__class__,
                 attr,
                 property(lambda self, attr=attr: self._set_attribute(attr)),
             )
+
+
+class ProjSubdirsTuning(Enum):
+    RAW = "raw_tuning"
+    REGISTRATION = "registration"
+    MASK = "mask"
+    CELLCOUNT = "cellcount_tuning"
+    ANALYSIS = "analysis_tuning"
+    VISUAL = "visual"
+    VISUAL_COMB = "VISUAL_COMB"
 
 
 class ProjFpModelTuning(ProjFpModelBase):
