@@ -119,6 +119,7 @@ class ProjFpModelBase:
     def __init__(self, root_dir: str, subdirs):
         self.root_dir = root_dir
         self.subdirs = subdirs
+        self.assert_subdirs_exist()
         logger.debug(f'Getting ProjFpModel for "{root_dir}", with subdirs {subdirs}')
 
     @property
@@ -347,6 +348,7 @@ class ProjFpModelBase:
             assert hasattr(
                 self.subdirs, attr
             ), f"Subdirectory '{attr}' not set in subdirs enum attribute."
+        logger.debug("Asserted that all relevant subdirs exist in subdirs attr.")
 
     def copy(self):
         return self.__init__(self.root_dir, self.subdirs)
@@ -390,7 +392,7 @@ class ProjSubdirs(Enum):
     CELLCOUNT = "cellcount"
     ANALYSIS = "analysis"
     VISUAL = "visual"
-    VISUAL_COMB = "VISUAL_COMB"
+    VISUAL_COMB = "visual_comb"
 
 
 class ProjFpModel(ProjFpModelBase):
@@ -459,7 +461,7 @@ class ProjSubdirsTuning(Enum):
     CELLCOUNT = "cellcount_tuning"
     ANALYSIS = "analysis_tuning"
     VISUAL = "visual"
-    VISUAL_COMB = "VISUAL_COMB"
+    VISUAL_COMB = "visual_comb"
 
 
 class ProjFpModelTuning(ProjFpModelBase):
