@@ -35,6 +35,8 @@ if __name__ == "__main__":
         # z_trim=(None, None, None),
         # y_trim=(None, None, None),
         # x_trim=(None, None, None),
+        # lower_bound=(500, 0),
+        # upper_bound=(5000, 5000),
         # # MASK
         # # CELL COUNT TUNING CROP
         tuning_z_trim=(700, 800, None),
@@ -69,6 +71,7 @@ if __name__ == "__main__":
     Pipeline.reg_img_rough(pfm, overwrite=overwrite)
     Pipeline.reg_img_fine(pfm, overwrite=overwrite)
     Pipeline.reg_img_trim(pfm, overwrite=overwrite)
+    Pipeline.reg_img_bound(pfm, overwrite=overwrite)
     # Running Elastix registration
     Pipeline.reg_elastix(pfm, overwrite=overwrite)
     # Running mask pipeline

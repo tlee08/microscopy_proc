@@ -311,6 +311,19 @@ class Pipeline:
             return
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params)
+        # Asserting that lower bound is less than upper bound
+        assert configs.lower_bound[0] < configs.upper_bound[0], (
+            "Error in configL parameters: "
+            "lower bound condition must be less than upper bound condition."
+        )
+        assert configs.lower_bound[1] <= configs.lower_bound[0], (
+            "Error in configL parameters: "
+            "lower bound final value must be less than or equal to lower bound condition."
+        )
+        assert configs.upper_bound[1] >= configs.upper_bound[0], (
+            "Error in configL parameters: "
+            "upper bound final value must be greater than or equal to upper bound condition."
+        )
         # Reading
         trimmed_arr = tifffile.imread(pfm.trimmed)
         bounded_arr = trimmed_arr
@@ -1056,6 +1069,7 @@ class Pipeline:
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
             # 2nd regresult means the combining works in ImageJ
+            # TODO: maybe use a blank img instead of regresult
             fp_out=pfm.comb_reg,
         )
 
@@ -1102,6 +1116,7 @@ class Pipeline:
         Pipeline.reg_img_rough(pfm, overwrite=overwrite)
         Pipeline.reg_img_fine(pfm, overwrite=overwrite)
         Pipeline.reg_img_trim(pfm, overwrite=overwrite)
+        Pipeline.reg_img_bound(pfm, overwrite=overwrite)
         Pipeline.reg_elastix(pfm, overwrite=overwrite)
         Pipeline.make_mask(pfm, overwrite=overwrite)
         Pipeline.img_overlap(pfm, overwrite=overwrite)

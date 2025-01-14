@@ -170,7 +170,6 @@ class ProjFpModelBase:
     @property
     def regresult(self) -> str:
         self._raise_not_set("regresult")
-        return ""
 
     @property
     def premask_blur(self) -> str:
