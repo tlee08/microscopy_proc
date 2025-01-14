@@ -42,6 +42,14 @@ elastix = ["simpleitk-simpleelastix"]
 [tool.poetry.scripts]
 microscopy_proc_gui = "microscopy_proc.gui.main:run_script"
 
+[tool.ruff]
+# Allow lines to be as long as 120.
+line-length = 120
+
+[tool.ruff.format]
+# Enable reformatting of code snippets in docstrings.
+docstring-code-format = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

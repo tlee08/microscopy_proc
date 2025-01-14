@@ -1,3 +1,4 @@
+import inspect
 from enum import EnumType
 from typing import Any, Iterable
 
@@ -53,3 +54,23 @@ def listdicts2dictlists(my_list):
         assert i.keys() == keys
     # Making dict of lists
     return {k: [v[k] for v in my_list] for k in keys}
+
+
+def get_current_function_name() -> str:
+    """
+    Returns the name of the function that called this function.
+    This is useful for debugging and dynamically changing function behavior
+    (e.g. getting attributes according to the functions name).
+
+    Note
+    ----
+    If this function is called from the main script (i.e. no function),
+    it will return an empty string.
+    """
+    # Getting the current frame
+    c_frame = inspect.currentframe()
+    # If this function is called from the main script, return empty string
+    if c_frame.f_back is None:
+        return ""
+    # Returning the name of the function that called this function
+    return c_frame.f_back.f_code.co_name
