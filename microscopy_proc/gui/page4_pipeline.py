@@ -39,11 +39,11 @@ def page4_pipeline():
         CHECKBOXES,
         # TODO: dynamically generate this dictionary
         {
-            Pipeline.ref_prepare: False,
-            Pipeline.img_rough: False,
-            Pipeline.img_fine: False,
-            Pipeline.img_trim: False,
-            Pipeline.elastix_registration: False,
+            Pipeline.reg_ref_prepare: False,
+            Pipeline.reg_img_rough: False,
+            Pipeline.reg_img_fine: False,
+            Pipeline.reg_img_trim: False,
+            Pipeline.reg_elastix: False,
             Pipeline.make_mask: False,
             Pipeline.img_overlap: False,
             Pipeline.cellc1: False,

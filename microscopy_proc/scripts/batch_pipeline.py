@@ -81,13 +81,13 @@ if __name__ == "__main__":
             # Making zarr from tiff file(s)
             Pipeline.tiff2zarr(pfm, in_fp, overwrite=overwrite)
             # Preparing reference images
-            Pipeline.ref_prepare(pfm, overwrite=overwrite)
+            Pipeline.reg_ref_prepare(pfm, overwrite=overwrite)
             # Preparing image itself
-            Pipeline.img_rough(pfm, overwrite=overwrite)
-            Pipeline.img_fine(pfm, overwrite=overwrite)
-            Pipeline.img_trim(pfm, overwrite=overwrite)
+            Pipeline.reg_img_rough(pfm, overwrite=overwrite)
+            Pipeline.reg_img_fine(pfm, overwrite=overwrite)
+            Pipeline.reg_img_trim(pfm, overwrite=overwrite)
             # Running Elastix registration
-            Pipeline.elastix_registration(pfm, overwrite=overwrite)
+            Pipeline.reg_elastix(pfm, overwrite=overwrite)
             # Running mask pipeline
             Pipeline.make_mask(pfm, overwrite=overwrite)
             # Making trimmed image for cell count tuning

@@ -83,7 +83,8 @@ class ProjFpModelBase:
     _downsmpl1: tuple[str | None, str] = ("REGISTRATION", "1_downsmpl1.tif")
     _downsmpl2: tuple[str | None, str] = ("REGISTRATION", "2_downsmpl2.tif")
     _trimmed: tuple[str | None, str] = ("REGISTRATION", "3_trimmed.tif")
-    _regresult: tuple[str | None, str] = ("REGISTRATION", "4_regresult.tif")
+    _bounded: tuple[str | None, str] = ("REGISTRATION", "4_bounded.tif")
+    _regresult: tuple[str | None, str] = ("REGISTRATION", "5_regresult.tif")
     _premask_blur: tuple[str | None, str] = ("MASK", "1_premask_blur.tif")
     _mask: tuple[str | None, str] = ("MASK", "2_mask_trimmed.tif")
     _outline: tuple[str | None, str] = ("MASK", "3_outline_reg.tif")
@@ -125,52 +126,46 @@ class ProjFpModelBase:
     @property
     def config_params(self) -> str:
         self._raise_not_set("config_params")
-        return ""
 
     @property
     def raw(self) -> str:
         self._raise_not_set("raw")
-        return ""
 
     @property
     def ref(self) -> str:
         self._raise_not_set("ref")
-        return ""
 
     @property
     def annot(self) -> str:
         self._raise_not_set("annot")
-        return ""
 
     @property
     def map(self) -> str:
         self._raise_not_set("map")
-        return ""
 
     @property
     def affine(self) -> str:
         self._raise_not_set("affine")
-        return ""
 
     @property
     def bspline(self) -> str:
         self._raise_not_set("bspline")
-        return ""
 
     @property
     def downsmpl1(self) -> str:
         self._raise_not_set("downsmpl1")
-        return ""
 
     @property
     def downsmpl2(self) -> str:
         self._raise_not_set("downsmpl2")
-        return ""
 
     @property
     def trimmed(self) -> str:
         self._raise_not_set("trimmed")
-        return ""
+
+    @property
+    def bounded(self) -> str:
+        self._raise_not_set("bounded")
 
     @property
     def regresult(self) -> str:
@@ -180,157 +175,126 @@ class ProjFpModelBase:
     @property
     def premask_blur(self) -> str:
         self._raise_not_set("premask_blur")
-        return ""
 
     @property
     def mask(self) -> str:
         self._raise_not_set("mask")
-        return ""
 
     @property
     def outline(self) -> str:
         self._raise_not_set("outline")
-        return ""
 
     @property
     def mask_reg(self) -> str:
         self._raise_not_set("mask_reg")
-        return ""
 
     @property
     def mask_df(self) -> str:
         self._raise_not_set("mask_df")
-        return ""
 
     @property
     def overlap(self) -> str:
         self._raise_not_set("overlap")
-        return ""
 
     @property
     def bgrm(self) -> str:
         self._raise_not_set("bgrm")
-        return ""
 
     @property
     def dog(self) -> str:
         self._raise_not_set("dog")
-        return ""
 
     @property
     def adaptv(self) -> str:
         self._raise_not_set("adaptv")
-        return ""
 
     @property
     def threshd(self) -> str:
         self._raise_not_set("threshd")
-        return ""
 
     @property
     def threshd_volumes(self) -> str:
         self._raise_not_set("threshd_volumes")
-        return ""
 
     @property
     def threshd_filt(self) -> str:
         self._raise_not_set("threshd_filt")
-        return ""
 
     @property
     def maxima(self) -> str:
         self._raise_not_set("maxima")
-        return ""
 
     @property
     def wshed_volumes(self) -> str:
         self._raise_not_set("wshed_volumes")
-        return ""
 
     @property
     def wshed_filt(self) -> str:
         self._raise_not_set("wshed_filt")
-        return ""
 
     @property
     def threshd_final(self) -> str:
         self._raise_not_set("threshd_final")
-        return ""
 
     @property
     def maxima_final(self) -> str:
         self._raise_not_set("maxima_final")
-        return ""
 
     @property
     def wshed_final(self) -> str:
         self._raise_not_set("wshed_final")
-        return ""
 
     @property
     def maxima_df(self) -> str:
         self._raise_not_set("maxima_df")
-        return ""
 
     @property
     def cells_raw_df(self) -> str:
         self._raise_not_set("cells_raw_df")
-        return ""
 
     @property
     def cells_trfm_df(self) -> str:
         self._raise_not_set("cells_trfm_df")
-        return ""
 
     @property
     def cells_df(self) -> str:
         self._raise_not_set("cells_df")
-        return ""
 
     @property
     def cells_agg_df(self) -> str:
         self._raise_not_set("cells_agg_df")
-        return ""
 
     @property
     def cells_agg_csv(self) -> str:
         self._raise_not_set("cells_agg_csv")
-        return ""
 
     @property
     def points_raw(self) -> str:
         self._raise_not_set("points_raw")
-        return ""
 
     @property
     def heatmap_raw(self) -> str:
         self._raise_not_set("heatmap_raw")
-        return ""
 
     @property
     def points_trfm(self) -> str:
         self._raise_not_set("points_trfm")
-        return ""
 
     @property
     def heatmap_trfm(self) -> str:
         self._raise_not_set("heatmap_trfm")
-        return ""
 
     @property
     def comb_reg(self) -> str:
         self._raise_not_set("comb_reg")
-        return ""
 
     @property
     def comb_cellc(self) -> str:
         self._raise_not_set("comb_cellc")
-        return ""
 
     @property
     def comb_points(self) -> str:
         self._raise_not_set("comb_points")
-        return ""
 
     def assert_subdirs_exist(self):
         """
@@ -362,17 +326,19 @@ class ProjFpModelBase:
 
     def _raise_not_set(self, attr):
         raise NotImplementedError(
-            f"The property '{attr}' is not implemented in the model '{type(self)}'."
+            f"The filepath '{attr}' is not implemented in the model '{type(self)}'.\n"
+            "Use a different model (recommended)"
+            "or explicitly edit this model."
         )
 
     def _set_attribute(self, attr: str):
         """
-        Refer to the attribute (NOT the property. i.e. attribute has "_<name>")
-        and return the file path.
+        Refer to the underlying attribute (NOT the property. i.e. attribute has name "_<attr>")
+        and build & return the file path.
         The attribute is in the format:
 
         ```
-        _<name> = (subdir, basename)
+        _<attr> = (subdir, basename)
 
         subdir -> refers to attribute in self.subdir Enum
         basename -> basename string
@@ -414,6 +380,7 @@ class ProjFpModel(ProjFpModelBase):
             "downsmpl1",
             "downsmpl2",
             "trimmed",
+            "bounded",
             "regresult",
             "premask_blur",
             "mask",

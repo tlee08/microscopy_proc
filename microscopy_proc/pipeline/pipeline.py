@@ -115,6 +115,8 @@ class Pipeline:
     # UPDATE CONFIGS
     ###################################################################################################
 
+    # TODO: change ProjFpModel to ProjFpModelBase
+
     @classmethod
     @log_func_decorator(logger)
     def update_configs(cls, pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
@@ -212,7 +214,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def ref_prepare(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_ref_prepare(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(
             pfm, ("ref", "annot", "map", "affine", "bspline")
         ):
@@ -251,7 +253,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def img_rough(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_rough(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("downsmpl1",)):
             return
         # Getting configs
@@ -270,7 +272,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def img_fine(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_fine(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("downsmpl2",)):
             return
         # Getting configs
@@ -286,7 +288,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def img_trim(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_trim(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("trimmed",)):
             return
         # Getting configs
@@ -304,12 +306,29 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def elastix_registration(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_bound(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_files_exist(pfm, ("bounded",)):
+            return
+        # Getting configs
+        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        # Reading
+        trimmed_arr = tifffile.imread(pfm.trimmed)
+        bounded_arr = trimmed_arr
+        # Bounding lower
+        bounded_arr[bounded_arr < configs.lower_bound[0]] = configs.lower_bound[1]
+        # Bounding upper
+        bounded_arr[bounded_arr > configs.upper_bound[0]] = configs.upper_bound[1]
+        # Saving
+        tifffile.imwrite(pfm.bounded, bounded_arr)
+
+    @classmethod
+    @log_func_decorator(logger)
+    def reg_elastix(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("regresult",)):
             return
         # Running Elastix registration
         ElastixFuncs.registration(
-            fixed_img_fp=pfm.trimmed,
+            fixed_img_fp=pfm.bounded,
             moving_img_fp=pfm.ref,
             output_img_fp=pfm.regresult,
             affine_fp=pfm.affine,
@@ -1079,11 +1098,11 @@ class Pipeline:
         """
         # Running all pipelines in order
         Pipeline.tiff2zarr(pfm, in_fp, overwrite=overwrite)
-        Pipeline.ref_prepare(pfm, overwrite=overwrite)
-        Pipeline.img_rough(pfm, overwrite=overwrite)
-        Pipeline.img_fine(pfm, overwrite=overwrite)
-        Pipeline.img_trim(pfm, overwrite=overwrite)
-        Pipeline.elastix_registration(pfm, overwrite=overwrite)
+        Pipeline.reg_ref_prepare(pfm, overwrite=overwrite)
+        Pipeline.reg_img_rough(pfm, overwrite=overwrite)
+        Pipeline.reg_img_fine(pfm, overwrite=overwrite)
+        Pipeline.reg_img_trim(pfm, overwrite=overwrite)
+        Pipeline.reg_elastix(pfm, overwrite=overwrite)
         Pipeline.make_mask(pfm, overwrite=overwrite)
         Pipeline.img_overlap(pfm, overwrite=overwrite)
         Pipeline.cellc1(pfm, overwrite=overwrite)
