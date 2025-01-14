@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Type
 
 from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.misc_utils import enum2list
 
 # TODO: add 10_adaptv_f.zarr and move the xxx_f.zarr files to a new folder (e.g. "cellcount_final")
 # NOTE: this allows "cellcount" to be removed to save space when pipeline is completed and output checked
@@ -121,7 +122,9 @@ class ProjFpModelBase:
         self.root_dir = root_dir
         self.subdirs = subdirs
         self.assert_subdirs_exist()
-        logger.debug(f'Getting ProjFpModel for "{root_dir}", with subdirs {subdirs}')
+        logger.debug(
+            f'Getting ProjFpModel for "{root_dir}", with subdirs, {enum2list(subdirs)}'
+        )
 
     @property
     def config_params(self) -> str:
