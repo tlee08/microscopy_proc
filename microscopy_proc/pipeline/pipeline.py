@@ -366,13 +366,13 @@ class Pipeline:
             return
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params)
-        # Reading annot (proj oriented and trimmed) and trimmed imgs
+        # Reading annot img (proj oriented and trimmed) and bounded img
         annot_arr = tifffile.imread(pfm.annot)
-        trimmed_arr = tifffile.imread(pfm.trimmed)
+        bounded_arr = tifffile.imread(pfm.bounded)
         # Storing annot_arr shape
         s = annot_arr.shape
         # Making mask
-        blur_arr = Gf.gauss_blur_filt(trimmed_arr, configs.mask_gaus_blur)
+        blur_arr = Gf.gauss_blur_filt(bounded_arr, configs.mask_gaus_blur)
         tifffile.imwrite(pfm.premask_blur, blur_arr)
         mask_arr = Gf.manual_thresh(blur_arr, configs.mask_thresh)
         tifffile.imwrite(pfm.mask, mask_arr)
@@ -818,9 +818,9 @@ class Pipeline:
         """
         if not overwrite and cls._check_files_exist(pfm, ("maxima_df",)):
             return
-        # Reading filtered and maxima images (trimmed - orig space)
+        # Reading filtered and maxima images (trimmed to orig space)
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
-            # Read filtered and maxima images (trimmed - orig space)
+            # Read filtered and maxima images (trimmed to orig space)
             maxima_final_arr = da.from_zarr(pfm.maxima_final)
             # Declaring processing instructions
             # Storing coords of each maxima in df
@@ -1067,7 +1067,7 @@ class Pipeline:
         if not overwrite and cls._check_files_exist(pfm, ("comb_reg",)):
             return
         ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.trimmed, pfm.regresult, pfm.regresult),
+            fp_in_ls=(pfm.bounded, pfm.regresult, pfm.regresult),
             # 2nd regresult means the combining works in ImageJ
             # TODO: maybe use a blank img instead of regresult
             fp_out=pfm.comb_reg,
