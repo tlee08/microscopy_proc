@@ -5,7 +5,7 @@ import pandas as pd
 import tifffile
 
 from microscopy_proc.constants import CACHE_DIR, AnnotColumns, Coords
-from microscopy_proc.utils.io_utils import silentremove
+from microscopy_proc.utils.io_utils import silent_remove
 
 #####################################################################
 #             Converting coordinates to spatial
@@ -77,7 +77,7 @@ class VisualCheckFuncsTiff:
         # Saving the subsampled array
         tifffile.imwrite(out_fp, arr)
         # Removing temporary memmap
-        silentremove(temp_fp)
+        silent_remove(temp_fp)
 
     @classmethod
     def coords2heatmap(
@@ -127,7 +127,7 @@ class VisualCheckFuncsTiff:
         # Saving the subsampled array
         tifffile.imwrite(out_fp, arr)
         # Removing temporary memmap
-        silentremove(temp_fp)
+        silent_remove(temp_fp)
 
     @classmethod
     def coords2regions(cls, coords, shape, out_fp):
@@ -167,4 +167,4 @@ class VisualCheckFuncsTiff:
         # Saving the subsampled array
         tifffile.imwrite(out_fp, arr)
         # Removing temporary memmap
-        silentremove(temp_fp)
+        silent_remove(temp_fp)

@@ -7,7 +7,7 @@ import zarr
 
 # from prefect import task
 from microscopy_proc.constants import PROC_CHUNKS
-from microscopy_proc.utils.io_utils import silentremove
+from microscopy_proc.utils.io_utils import silent_remove
 
 
 class Tiff2ZarrFuncs:
@@ -34,7 +34,7 @@ class Tiff2ZarrFuncs:
         zarr_arr = da.from_zarr(f"{out_fp}_tmp.zarr")
         zarr_arr.to_zarr(out_fp, overwrite=True)
         # Remove intermediate
-        silentremove(f"{out_fp}_tmp.zarr")
+        silent_remove(f"{out_fp}_tmp.zarr")
 
     @classmethod
     def tiffs2zarr(

@@ -7,7 +7,7 @@ import tifffile
 
 from microscopy_proc import ELASTIX_ENABLED
 from microscopy_proc.constants import CACHE_DIR, Coords
-from microscopy_proc.utils.io_utils import silentremove
+from microscopy_proc.utils.io_utils import silent_remove
 from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import import_extra_error_func
 
@@ -72,7 +72,7 @@ class ElastixFuncs:
         for i in os.listdir(output_img_dir):
             # Removing IterationInfo files
             if re.search(r"^IterationInfo.(\d+).R(\d+).txt$", i):
-                silentremove(os.path.join(output_img_dir, i))
+                silent_remove(os.path.join(output_img_dir, i))
         return sitk.GetArrayFromImage(res_img)
 
     @classmethod
@@ -222,6 +222,6 @@ class ElastixFuncs:
         # # sitk.WriteImage(res_img, output_img_fp)
         # tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
         # Removing temporary and unecessary transformix files
-        silentremove(out_dir)
+        silent_remove(out_dir)
         # return coords_transformed
         return sitk.GetArrayFromImage(res_img)

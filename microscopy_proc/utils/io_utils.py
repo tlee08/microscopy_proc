@@ -118,7 +118,7 @@ def write_json(fp: str, data: dict) -> None:
         json.dump(data, f, indent=4)
 
 
-def silentremove(fp):
+def silent_remove(fp):
     if os.path.isfile(fp):
         try:
             os.remove(fp)
