@@ -29,6 +29,7 @@ if __name__ == "__main__":
             pfm = Pipeline.get_pfm(proj_dir)
             # Can change cell counting to tuning mode here
             pfm_tuning = Pipeline.get_pfm_tuning(proj_dir)
+
             # Updating project pipeline configs
             Pipeline.update_configs(
                 pfm,
@@ -78,6 +79,7 @@ if __name__ == "__main__":
 
             # Making zarr from tiff file(s)
             Pipeline.tiff2zarr(pfm, in_fp, overwrite=overwrite)
+
             # Preparing reference images
             Pipeline.reg_ref_prepare(pfm, overwrite=overwrite)
             # Preparing image itself
@@ -85,10 +87,11 @@ if __name__ == "__main__":
             Pipeline.reg_img_fine(pfm, overwrite=overwrite)
             Pipeline.reg_img_trim(pfm, overwrite=overwrite)
             Pipeline.reg_img_bound(pfm, overwrite=overwrite)
-            # Running Elastix registration
             Pipeline.reg_elastix(pfm, overwrite=overwrite)
+
             # Running mask pipeline
             Pipeline.make_mask(pfm, overwrite=overwrite)
+
             # Making trimmed image for cell count tuning
             Pipeline.make_tuning_arr(pfm, overwrite=overwrite)
 
@@ -120,10 +123,12 @@ if __name__ == "__main__":
             Pipeline.group_cells(pfm, overwrite=overwrite)
             # Exporting cells_agg parquet as csv
             Pipeline.cells2csv(pfm, overwrite=overwrite)
+
             # Making points and heatmap images
             Pipeline.coords2points_raw(pfm, overwrite=overwrite)
             Pipeline.coords2points_trfm(pfm, overwrite=overwrite)
             Pipeline.coords2heatmap_trfm(pfm, overwrite=overwrite)
+
             # Combining arrays
             Pipeline.combine_reg(pfm, overwrite=overwrite)
             Pipeline.combine_cellc(pfm, overwrite=overwrite)
