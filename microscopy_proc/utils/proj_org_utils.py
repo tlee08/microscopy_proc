@@ -74,12 +74,12 @@ class ProjFpAttr:
 
     def get(self):
         if self.get_callable:
-            return self.get_callable()
+            self.get_callable()
         return self.val
 
     def set(self, val):
         if self.set_callable:
-            self.val = self.set_callable()
+            self.set_callable()
         self.val = val
 
 
@@ -147,20 +147,20 @@ class ProjFpModelBase:
         visual_comb: str,
     ):
         # Storing base attributes
-        self.root_dir: str = ProjFpAttr(root_dir, set_callable=self.init_filepath_attributes)
-        self.raw: str = ProjFpAttr(raw, set_callable=self.init_filepath_attributes)
-        self.registration: str = ProjFpAttr(registration, set_callable=self.init_filepath_attributes)
-        self.mask: str = ProjFpAttr(mask, set_callable=self.init_filepath_attributes)
-        self.cellcount: str = ProjFpAttr(cellcount, set_callable=self.init_filepath_attributes)
-        self.analysis: str = ProjFpAttr(analysis, set_callable=self.init_filepath_attributes)
-        self.visual: str = ProjFpAttr(visual, set_callable=self.init_filepath_attributes)
-        self.visual_comb: str = ProjFpAttr(visual_comb, set_callable=self.init_filepath_attributes)
+        self.root_dir = ProjFpAttr(root_dir, set_callable=self.init_filepath_attributes)
+        self.raw = ProjFpAttr(raw, set_callable=self.init_filepath_attributes)
+        self.registration = ProjFpAttr(registration, set_callable=self.init_filepath_attributes)
+        self.mask = ProjFpAttr(mask, set_callable=self.init_filepath_attributes)
+        self.cellcount = ProjFpAttr(cellcount, set_callable=self.init_filepath_attributes)
+        self.analysis = ProjFpAttr(analysis, set_callable=self.init_filepath_attributes)
+        self.visual = ProjFpAttr(visual, set_callable=self.init_filepath_attributes)
+        self.visual_comb = ProjFpAttr(visual_comb, set_callable=self.init_filepath_attributes)
         # Setting filepath attributes
         self.init_filepath_attributes()
 
     def init_filepath_attributes(self):
         # Making subdirs list
-        self.subdirs_ls = [
+        self.subdirs_ls: list[ProjFpAttr] = [
             self.raw,
             self.registration,
             self.mask,
@@ -170,60 +170,60 @@ class ProjFpModelBase:
             self.visual_comb,
         ]
         # Filepath attributes are in the format: _<attr> = (implemented, [subdirs, ..., basename])
-        self.config_params: ProjFpPath = ProjFpPath(self.root_dir, ["config_params.json"])
-        self.raw: ProjFpPath = ProjFpPath(self.root_dir, [self.raw, "raw.zarr"])
-        self.ref: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "0a_reference.tif"])
-        self.annot: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "0b_annotation.tif"])
-        self.map: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "0c_mapping.json"])
-        self.affine: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "0d_align_affine.txt"])
-        self.bspline: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "0e_align_bspline.txt"])
-        self.downsmpl1: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "1_downsmpl1.tif"])
-        self.downsmpl2: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "2_downsmpl2.tif"])
-        self.trimmed: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "3_trimmed.tif"])
-        self.bounded: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "4_bounded.tif"])
-        self.regresult: ProjFpPath = ProjFpPath(self.root_dir, [self.registration, "5_regresult.tif"])
-        self.premask_blur: ProjFpPath = ProjFpPath(self.root_dir, [self.mask, "1_premask_blur.tif"])
-        self.mask: ProjFpPath = ProjFpPath(self.root_dir, [self.mask, "2_mask_trimmed.tif"])
-        self.outline: ProjFpPath = ProjFpPath(self.root_dir, [self.mask, "3_outline_reg.tif"])
-        self.mask_reg: ProjFpPath = ProjFpPath(self.root_dir, [self.mask, "4_mask_reg.tif"])
-        self.mask_df: ProjFpPath = ProjFpPath(self.root_dir, [self.mask, "5_mask.parquet"])
-        self.overlap: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "0_overlap.zarr"])
-        self.bgrm: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "1_bgrm.zarr"])
-        self.dog: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "2_dog.zarr"])
-        self.adaptv: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "3_adaptv.zarr"])
-        self.threshd: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "4_threshd.zarr"])
-        self.threshd_volumes: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "5_threshd_volumes.zarr"])
-        self.threshd_filt: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "6_threshd_filt.zarr"])
-        self.maxima: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "7_maxima.zarr"])
-        self.wshed_volumes: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "8_wshed_volumes.zarr"])
-        self.wshed_filt: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "9_wshed_filt.zarr"])
-        self.threshd_final: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "10_threshd_f.zarr"])
-        self.maxima_final: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "10_maxima_f.zarr"])
-        self.wshed_final: ProjFpPath = ProjFpPath(self.root_dir, [self.cellcount, "10_wshed_f.zarr"])
-        self.maxima_df: ProjFpPath = ProjFpPath(self.root_dir, [self.analysis, "1_maxima.parquet"])
-        self.cells_raw_df: ProjFpPath = ProjFpPath(self.root_dir, [self.analysis, "1_cells_raw.parquet"])
-        self.cells_trfm_df: ProjFpPath = ProjFpPath(self.root_dir, [self.analysis, "2_cells_trfm.parquet"])
-        self.cells_df: ProjFpPath = ProjFpPath(self.root_dir, [self.analysis, "3_cells.parquet"])
-        self.cells_agg_df: ProjFpPath = ProjFpPath(self.root_dir, [self.analysis, "4_cells_agg.parquet"])
-        self.cells_agg_csv: ProjFpPath = ProjFpPath(self.root_dir, [self.analysis, "5_cells_agg.csv"])
-        self.points_raw: ProjFpPath = ProjFpPath(self.root_dir, [self.visual, "points_raw.zarr"])
-        self.heatmap_raw: ProjFpPath = ProjFpPath(self.root_dir, [self.visual, "heatmap_raw.zarr"])
-        self.points_trfm: ProjFpPath = ProjFpPath(self.root_dir, [self.visual, "points_trfm.tif"])
-        self.heatmap_trfm: ProjFpPath = ProjFpPath(self.root_dir, [self.visual, "heatmap_trfm.tif"])
-        self.comb_reg: ProjFpPath = ProjFpPath(self.root_dir, [self.visual_comb, "comb_reg.tif"])
-        self.comb_cellc: ProjFpPath = ProjFpPath(self.root_dir, [self.visual_comb, "comb_cellc.tif"])
-        self.comb_points: ProjFpPath = ProjFpPath(self.root_dir, [self.visual_comb, "comb_points.tif"])
+        self.config_params = ProjFpPath(self.root_dir.get(), ["config_params.json"])
+        self.raw = ProjFpPath(self.root_dir.get(), [self.raw.get(), "raw.zarr"])
+        self.ref = ProjFpPath(self.root_dir.get(), [self.registration.get(), "0a_reference.tif"])
+        self.annot = ProjFpPath(self.root_dir.get(), [self.registration.get(), "0b_annotation.tif"])
+        self.map = ProjFpPath(self.root_dir.get(), [self.registration.get(), "0c_mapping.json"])
+        self.affine = ProjFpPath(self.root_dir.get(), [self.registration.get(), "0d_align_affine.txt"])
+        self.bspline = ProjFpPath(self.root_dir.get(), [self.registration.get(), "0e_align_bspline.txt"])
+        self.downsmpl1 = ProjFpPath(self.root_dir.get(), [self.registration.get(), "1_downsmpl1.tif"])
+        self.downsmpl2 = ProjFpPath(self.root_dir.get(), [self.registration.get(), "2_downsmpl2.tif"])
+        self.trimmed = ProjFpPath(self.root_dir.get(), [self.registration.get(), "3_trimmed.tif"])
+        self.bounded = ProjFpPath(self.root_dir.get(), [self.registration.get(), "4_bounded.tif"])
+        self.regresult = ProjFpPath(self.root_dir.get(), [self.registration.get(), "5_regresult.tif"])
+        self.premask_blur = ProjFpPath(self.root_dir.get(), [self.mask.get(), "1_premask_blur.tif"])
+        self.mask = ProjFpPath(self.root_dir.get(), [self.mask.get(), "2_mask_trimmed.tif"])
+        self.outline = ProjFpPath(self.root_dir.get(), [self.mask.get(), "3_outline_reg.tif"])
+        self.mask_reg = ProjFpPath(self.root_dir.get(), [self.mask.get(), "4_mask_reg.tif"])
+        self.mask_df = ProjFpPath(self.root_dir.get(), [self.mask.get(), "5_mask.parquet"])
+        self.overlap = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "0_overlap.zarr"])
+        self.bgrm = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "1_bgrm.zarr"])
+        self.dog = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "2_dog.zarr"])
+        self.adaptv = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "3_adaptv.zarr"])
+        self.threshd = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "4_threshd.zarr"])
+        self.threshd_volumes = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "5_threshd_volumes.zarr"])
+        self.threshd_filt = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "6_threshd_filt.zarr"])
+        self.maxima = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "7_maxima.zarr"])
+        self.wshed_volumes = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "8_wshed_volumes.zarr"])
+        self.wshed_filt = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "9_wshed_filt.zarr"])
+        self.threshd_final = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "10_threshd_f.zarr"])
+        self.maxima_final = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "10_maxima_f.zarr"])
+        self.wshed_final = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "10_wshed_f.zarr"])
+        self.maxima_df = ProjFpPath(self.root_dir.get(), [self.analysis.get(), "1_maxima.parquet"])
+        self.cells_raw_df = ProjFpPath(self.root_dir.get(), [self.analysis.get(), "1_cells_raw.parquet"])
+        self.cells_trfm_df = ProjFpPath(self.root_dir.get(), [self.analysis.get(), "2_cells_trfm.parquet"])
+        self.cells_df = ProjFpPath(self.root_dir.get(), [self.analysis.get(), "3_cells.parquet"])
+        self.cells_agg_df = ProjFpPath(self.root_dir.get(), [self.analysis.get(), "4_cells_agg.parquet"])
+        self.cells_agg_csv = ProjFpPath(self.root_dir.get(), [self.analysis.get(), "5_cells_agg.csv"])
+        self.points_raw = ProjFpPath(self.root_dir.get(), [self.visual.get(), "points_raw.zarr"])
+        self.heatmap_raw = ProjFpPath(self.root_dir.get(), [self.visual.get(), "heatmap_raw.zarr"])
+        self.points_trfm = ProjFpPath(self.root_dir.get(), [self.visual.get(), "points_trfm.tif"])
+        self.heatmap_trfm = ProjFpPath(self.root_dir.get(), [self.visual.get(), "heatmap_trfm.tif"])
+        self.comb_reg = ProjFpPath(self.root_dir.get(), [self.visual_comb.get(), "comb_reg.tif"])
+        self.comb_cellc = ProjFpPath(self.root_dir.get(), [self.visual_comb.get(), "comb_cellc.tif"])
+        self.comb_points = ProjFpPath(self.root_dir.get(), [self.visual_comb.get(), "comb_points.tif"])
 
     def copy(self):
         return self.__init__(
-            root_dir=self.root_dir,
-            raw=self.raw,
-            registration=self.registration,
-            mask=self.mask,
-            cellcount=self.cellcount,
-            analysis=self.analysis,
-            visual=self.visual,
-            visual_comb=self.visual_comb,
+            root_dir=self.root_dir.get(),
+            raw=self.raw.get(),
+            registration=self.registration.get(),
+            mask=self.mask.get(),
+            cellcount=self.cellcount.get(),
+            analysis=self.analysis.get(),
+            visual=self.visual.get(),
+            visual_comb=self.visual_comb.get(),
         )
 
     def make_subdirs(self):
@@ -231,53 +231,53 @@ class ProjFpModelBase:
         Make project directories.
         """
         for subdir in self.subdirs_ls:
-            os.makedirs(os.path.join(self.root_dir, subdir), exist_ok=True)
+            os.makedirs(os.path.join(self.root_dir.get(), subdir.get()), exist_ok=True)
 
     def export2dict(self) -> dict:
         return {
-            "config_params": self.config_params.value,
-            "raw": self.raw.value,
-            "ref": self.ref.value,
-            "annot": self.annot.value,
-            "map": self.map.value,
-            "affine": self.affine.value,
-            "bspline": self.bspline.value,
-            "downsmpl1": self.downsmpl1.value,
-            "downsmpl2": self.downsmpl2.value,
-            "trimmed": self.trimmed.value,
-            "bounded": self.bounded.value,
-            "regresult": self.regresult.value,
-            "premask_blur": self.premask_blur.value,
-            "mask": self.mask.value,
-            "outline": self.outline.value,
-            "mask_reg": self.mask_reg.value,
-            "mask_df": self.mask_df.value,
-            "overlap": self.overlap.value,
-            "bgrm": self.bgrm.value,
-            "dog": self.dog.value,
-            "adaptv": self.adaptv.value,
-            "threshd": self.threshd.value,
-            "threshd_volumes": self.threshd_volumes.value,
-            "threshd_filt": self.threshd_filt.value,
-            "maxima": self.maxima.value,
-            "wshed_volumes": self.wshed_volumes.value,
-            "wshed_filt": self.wshed_filt.value,
-            "threshd_final": self.threshd_final.value,
-            "maxima_final": self.maxima_final.value,
-            "wshed_final": self.wshed_final.value,
-            "maxima_df": self.maxima_df.value,
-            "cells_raw_df": self.cells_raw_df.value,
-            "cells_trfm_df": self.cells_trfm_df.value,
-            "cells_df": self.cells_df.value,
-            "cells_agg_df": self.cells_agg_df.value,
-            "cells_agg_csv": self.cells_agg_csv.value,
-            "points_raw": self.points_raw.value,
-            "heatmap_raw": self.heatmap_raw.value,
-            "points_trfm": self.points_trfm.value,
-            "heatmap_trfm": self.heatmap_trfm.value,
-            "comb_reg": self.comb_reg.value,
-            "comb_cellc": self.comb_cellc.value,
-            "comb_points": self.comb_points.value,
+            "config_params": self.config_params.val,
+            "raw": self.raw.val,
+            "ref": self.ref.val,
+            "annot": self.annot.val,
+            "map": self.map.val,
+            "affine": self.affine.val,
+            "bspline": self.bspline.val,
+            "downsmpl1": self.downsmpl1.val,
+            "downsmpl2": self.downsmpl2.val,
+            "trimmed": self.trimmed.val,
+            "bounded": self.bounded.val,
+            "regresult": self.regresult.val,
+            "premask_blur": self.premask_blur.val,
+            "mask": self.mask.val,
+            "outline": self.outline.val,
+            "mask_reg": self.mask_reg.val,
+            "mask_df": self.mask_df.val,
+            "overlap": self.overlap.val,
+            "bgrm": self.bgrm.val,
+            "dog": self.dog.val,
+            "adaptv": self.adaptv.val,
+            "threshd": self.threshd.val,
+            "threshd_volumes": self.threshd_volumes.val,
+            "threshd_filt": self.threshd_filt.val,
+            "maxima": self.maxima.val,
+            "wshed_volumes": self.wshed_volumes.val,
+            "wshed_filt": self.wshed_filt.val,
+            "threshd_final": self.threshd_final.val,
+            "maxima_final": self.maxima_final.val,
+            "wshed_final": self.wshed_final.val,
+            "maxima_df": self.maxima_df.val,
+            "cells_raw_df": self.cells_raw_df.val,
+            "cells_trfm_df": self.cells_trfm_df.val,
+            "cells_df": self.cells_df.val,
+            "cells_agg_df": self.cells_agg_df.val,
+            "cells_agg_csv": self.cells_agg_csv.val,
+            "points_raw": self.points_raw.val,
+            "heatmap_raw": self.heatmap_raw.val,
+            "points_trfm": self.points_trfm.val,
+            "heatmap_trfm": self.heatmap_trfm.val,
+            "comb_reg": self.comb_reg.val,
+            "comb_cellc": self.comb_cellc.val,
+            "comb_points": self.comb_points.val,
         }
 
 
