@@ -439,8 +439,9 @@ class Pipeline:
         Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
         """
         cls.logger.debug("Converting/ensuring pfm is production filepaths (copy)")
-        pfm = ProjFpModel(pfm.root_dir)
-        pfm_tuning = ProjFpModelTuning(pfm.root_dir)
+        root_dir = pfm.root_dir.val
+        pfm = ProjFpModel(root_dir)
+        pfm_tuning = ProjFpModelTuning(root_dir)
         cls.logger.debug("Reading config params")
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         cls.logger.debug("Reading raw zarr")
@@ -455,7 +456,7 @@ class Pipeline:
             cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
             return
         cls.logger.debug("Saving cropped raw zarr")
-        raw_arr = disk_cache(raw_arr, pfm_tuning.raw)
+        raw_arr = disk_cache(raw_arr, pfm_tuning.raw.val)
 
     ###################################################################################################
     # CELL COUNTING PIPELINE FUNCS
