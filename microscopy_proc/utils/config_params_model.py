@@ -69,9 +69,9 @@ class ConfigParamsModel(BaseModel):
     mask_gaus_blur: int = 1
     mask_thresh: int = 300
     # CELL COUNT TUNING CROP
-    tuning_z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
-    tuning_y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
-    tuning_x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
+    tuning_z_trim: tuple[int | None, int | None, int | None] = (0, 100, None)
+    tuning_y_trim: tuple[int | None, int | None, int | None] = (0, 2000, None)
+    tuning_x_trim: tuple[int | None, int | None, int | None] = (0, 2000, None)
     # OVERLAP
     overlap_depth: int = DEPTH
     # CELL COUNTING
