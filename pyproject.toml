@@ -8,6 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+jinja2 = "^3.1.5"
 streamlit = "^1.39.0"
 tifffile = "^2024.8.10"
 numpy = "^1.26.4"                                       # "^2.0.0"
@@ -40,7 +41,8 @@ gpu = ["dask-cuda"]
 elastix = ["simpleitk-simpleelastix"]
 
 [tool.poetry.scripts]
-microscopy_proc_gui = "microscopy_proc.gui.main:run_script"
+microscopy_project_gui = "microscopy_proc.scripts.project_gui:run_script"
+microscopy_make_project = "microscopy_proc.scripts.make_project:main"
 
 [tool.ruff]
 # Allow lines to be as long as 120.

@@ -2,8 +2,10 @@ import json
 import os
 import re
 import shutil
+from typing import Any
 
 import numpy as np
+from jinja2 import Environment, PackageLoader
 from natsort import natsorted
 
 from microscopy_proc.utils.logging_utils import init_logger
@@ -18,7 +20,7 @@ from microscopy_proc.utils.logging_utils import init_logger
 logger = init_logger(__name__)
 
 
-def get_fps(dir, pattern):
+def get_filepaths(dir, pattern):
     """
     Looks in dir for filepaths with the pattern.
     The pattern follows the regex search syntax:
@@ -34,7 +36,7 @@ def get_fps(dir, pattern):
     return fps
 
 
-def rename_slices_fps(dir, pattern):
+def rename_slices_filepaths(dir, pattern):
     """
     TODO: make pattern modular, instead of current (pref)(to_change)(suffix) setup
     Currently just converts slices filenames to <Z,4>.
@@ -118,6 +120,18 @@ def write_json(fp: str, data: dict) -> None:
         json.dump(data, f, indent=4)
 
 
+def clear_dir_junk(my_dir: str) -> None:
+    """
+    Removes all hidden junk files in given directory.
+    Hidden files begin with ".".
+    """
+    for i in os.listdir(dir):
+        path = os.path.join(my_dir, i)
+        # If the file has a "." at the start, remove it
+        if re.search(r"^\.", i):
+            silent_remove(path)
+
+
 def silent_remove(fp):
     if os.path.isfile(fp):
         try:
@@ -139,3 +153,39 @@ def sanitise_smb_df(df):
     if "smb-share:server" in df.columns:
         df = df.drop(columns="smb-share:server")
     return df
+
+
+def render_template(
+    tmpl_name: str,
+    pkg_name: str,
+    pkg_subdir: str,
+    **kwargs: Any,
+) -> str:
+    """
+    Renders the given template with the given arguments.
+    """
+    # Loading the Jinja2 environment
+    env = Environment(loader=PackageLoader(pkg_name, pkg_subdir))
+    # Getting the template
+    template = env.get_template(tmpl_name)
+    # Rendering the template
+    return template.render(**kwargs)
+
+
+def save_template(
+    tmpl_name: str,
+    pkg_name: str,
+    pkg_subdir: str,
+    dst_fp: str,
+    **kwargs: Any,
+) -> None:
+    """
+    Renders the given template with the given arguments and saves it to the out_fp.
+    """
+    # Rendering the template
+    rendered = render_template(tmpl_name, pkg_name, pkg_subdir, **kwargs)
+    # Making the directory if it doesn't exist
+    os.makedirs(os.path.dirname(dst_fp), exist_ok=True)
+    # Saving the rendered template
+    with open(dst_fp, "w") as f:
+        f.write(rendered)

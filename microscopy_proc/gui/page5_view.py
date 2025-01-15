@@ -8,9 +8,9 @@ import streamlit as st
 
 from microscopy_proc.constants import Coords
 from microscopy_proc.funcs.viewer_funcs import CMAP as CMAP_D
-from microscopy_proc.funcs.viewer_funcs import IMGS as IMGS_D
 from microscopy_proc.funcs.viewer_funcs import VRANGE as VRANGE_D
 from microscopy_proc.funcs.viewer_funcs import ViewerFuncs
+from microscopy_proc.funcs.viewer_funcs import imgs_view_params as IMGS_D
 from microscopy_proc.gui.gui_funcs import PROJ_DIR, init_var, page_decorator
 from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.misc_utils import enum2list
@@ -197,11 +197,7 @@ def page5_view():
         byte_size = (
             len(imgs_to_run_ls)
             * np.prod(
-                [
-                    st.session_state[TRIMMER][coord].stop
-                    - st.session_state[TRIMMER][coord].start
-                    for coord in Coords
-                ]
+                [st.session_state[TRIMMER][coord].stop - st.session_state[TRIMMER][coord].start for coord in Coords]
             )
             * 16
         )
@@ -209,7 +205,4 @@ def page5_view():
         st.write(f"Trim dimensions are {byte_size_gb} GB")
     else:
         # Otherwise outputting warning that trim dimensions are unknown
-        st.warning(
-            "Trim dimensions are unknown, "
-            "because overlap and raw arr do not exist in the project"
-        )
+        st.warning("Trim dimensions are unknown, " "because overlap and raw arr do not exist in the project")

@@ -1,4 +1,4 @@
-from microscopy_proc.funcs.viewer_funcs import CMAP, IMGS, VRANGE, ViewerFuncs
+from microscopy_proc.funcs.viewer_funcs import CMAP, VRANGE, ViewerFuncs, imgs_view_params
 from microscopy_proc.pipeline.pipeline import Pipeline
 
 if __name__ == "__main__":
@@ -27,6 +27,7 @@ if __name__ == "__main__":
             "downsmpl1",
             "downsmpl2",
             "trimmed",
+            "bounded",
             "regresult",
         ],
         "Mask": [
@@ -70,8 +71,8 @@ if __name__ == "__main__":
         for img_i in group_v:
             fp_ls.append(getattr(pfm, img_i))
             name.append(img_i)
-            contrast_limits.append(IMGS[group_k][img_i][VRANGE])
-            colormap.append(IMGS[group_k][img_i][CMAP])
+            contrast_limits.append(imgs_view_params[group_k][img_i][VRANGE])
+            colormap.append(imgs_view_params[group_k][img_i][CMAP])
     # Running the Napari viewer
     ViewerFuncs.view_arrs(
         fp_ls=tuple(fp_ls),

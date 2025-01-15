@@ -28,7 +28,7 @@ class Colormaps(Enum):
     SET1 = "Set1"
 
 
-IMGS = {
+imgs_view_params = {
     "Atlas": {
         "ref": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
         "annot": {VRANGE: (0, 10000), CMAP: Colormaps.SET1.value},
@@ -40,6 +40,7 @@ IMGS = {
         "downsmpl1": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
         "downsmpl2": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
         "trimmed": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+        "bounded": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
         "regresult": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
     },
     "Mask": {
@@ -126,9 +127,7 @@ class ViewerFuncs:
     def view_arrs_mp(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         cls.logger.info("Starting napari viewer")
         # Making napari viewer multiprocess
-        napari_proc = Process(
-            target=cls.view_arrs, args=(fp_ls, trimmer), kwargs=kwargs
-        )
+        napari_proc = Process(target=cls.view_arrs, args=(fp_ls, trimmer), kwargs=kwargs)
         napari_proc.start()
         # napari_proc.join()
 
