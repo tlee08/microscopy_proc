@@ -183,8 +183,8 @@ class ProjFpModelBase:
         self.bounded = ProjFpPath(self.root_dir.get(), [self.registration.get(), "4_bounded.tif"])
         self.regresult = ProjFpPath(self.root_dir.get(), [self.registration.get(), "5_regresult.tif"])
         self.premask_blur = ProjFpPath(self.root_dir.get(), [self.mask.get(), "1_premask_blur.tif"])
-        self.mask = ProjFpPath(self.root_dir.get(), [self.mask.get(), "2_mask_trimmed.tif"])
-        self.outline = ProjFpPath(self.root_dir.get(), [self.mask.get(), "3_outline_reg.tif"])
+        self.mask_fill = ProjFpPath(self.root_dir.get(), [self.mask.get(), "2_mask_trimmed.tif"])
+        self.mask_outline = ProjFpPath(self.root_dir.get(), [self.mask.get(), "3_outline_reg.tif"])
         self.mask_reg = ProjFpPath(self.root_dir.get(), [self.mask.get(), "4_mask_reg.tif"])
         self.mask_df = ProjFpPath(self.root_dir.get(), [self.mask.get(), "5_mask.parquet"])
         self.overlap = ProjFpPath(self.root_dir.get(), [self.cellcount.get(), "0_overlap.zarr"])
@@ -248,8 +248,8 @@ class ProjFpModelBase:
             "bounded": self.bounded.val,
             "regresult": self.regresult.val,
             "premask_blur": self.premask_blur.val,
-            "mask": self.mask.val,
-            "outline": self.outline.val,
+            "mask": self.mask_fill.val,
+            "outline": self.mask_outline.val,
             "mask_reg": self.mask_reg.val,
             "mask_df": self.mask_df.val,
             "overlap": self.overlap.val,
@@ -311,8 +311,8 @@ class ProjFpModel(ProjFpModelBase):
         self.bounded.set_implement()
         self.regresult.set_implement()
         self.premask_blur.set_implement()
-        self.mask.set_implement()
-        self.outline.set_implement()
+        self.mask_fill.set_implement()
+        self.mask_outline.set_implement()
         self.mask_reg.set_implement()
         self.mask_df.set_implement()
         self.overlap.set_implement()

@@ -359,7 +359,7 @@ class Pipeline:
         blur_arr = Gf.gauss_blur_filt(bounded_arr, configs.mask_gaus_blur)
         tifffile.imwrite(pfm.premask_blur.val, blur_arr)
         mask_arr = Gf.manual_thresh(blur_arr, configs.mask_thresh)
-        tifffile.imwrite(pfm.mask.val, mask_arr)
+        tifffile.imwrite(pfm.mask_fill.val, mask_arr)
 
         # Make outline
         outline_df = MaskFuncs.make_outline(mask_arr)
@@ -382,11 +382,11 @@ class Pipeline:
 
         # Make outline img (1 for in, 2 for out)
         # TODO: convert to return np.array and save out-of-function
-        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 1], s, pfm.outline.val)
-        in_arr = tifffile.imread(pfm.outline.val)
-        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 0], s, pfm.outline.val)
-        out_arr = tifffile.imread(pfm.outline.val)
-        tifffile.imwrite(pfm.outline.val, in_arr + out_arr * 2)
+        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 1], s, pfm.mask_outline.val)
+        in_arr = tifffile.imread(pfm.mask_outline.val)
+        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 0], s, pfm.mask_outline.val)
+        out_arr = tifffile.imread(pfm.mask_outline.val)
+        tifffile.imwrite(pfm.mask_outline.val, in_arr + out_arr * 2)
 
         # Fill in outline to recreate mask (not perfect)
         mask_reg_arr = MaskFuncs.fill_outline(outline_df, s)
