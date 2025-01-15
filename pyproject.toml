@@ -45,11 +45,9 @@ microscopy_project_gui = "microscopy_proc.scripts.project_gui:run_script"
 microscopy_make_project = "microscopy_proc.scripts.make_project:main"
 
 [tool.ruff]
-# Allow lines to be as long as 120.
 line-length = 120
 
 [tool.ruff.format]
-# Enable reformatting of code snippets in docstrings.
 docstring-code-format = true
 
 [build-system]
