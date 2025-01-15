@@ -146,7 +146,7 @@ class Pipeline:
             configs_new = configs.model_validate(configs.model_copy(update=kwargs))
             if configs_new != configs:
                 cls.logger.debug("New configs are different from old configs. Overwriting to file.")
-                write_json(pfm.config_params.val, configs.model_dump())
+                write_json(pfm.config_params.val, configs_new.model_dump())
         cls.logger.debug("Returning the configs file")
         return configs
 
