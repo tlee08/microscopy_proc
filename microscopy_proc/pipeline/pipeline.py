@@ -72,7 +72,7 @@ class Pipeline:
     # CHECK PFM FILE EXISTS
     ###################################################################################################
     @classmethod
-    def _check_files_exist(cls, pfm: ProjFpModel, pfm_fp_ls: tuple[str, ...] = tuple()):
+    def _check_files_exist(cls, pfm: ProjFpModelBase, pfm_fp_ls: tuple[str, ...] = tuple()):
         """
         Returns whether the fpm attribute in
         `pfm_fp_ls` is a filepath that already exsits.
@@ -119,7 +119,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def update_configs(cls, pfm: ProjFpModel, **kwargs) -> ConfigParamsModel:
+    def update_configs(cls, pfm: ProjFpModelBase, **kwargs) -> ConfigParamsModel:
         """
         If config_params file does not exist, makes a new one.
 
@@ -134,20 +134,19 @@ class Pipeline:
         cls.logger.debug("Making all the project sub-directories")
         cls.logger.debug("Reading/creating params json")
         try:
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
-            cls.logger.debug("The configs file exists")
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
+            cls.logger.debug("The configs file exists so using this file.")
         except FileNotFoundError:
-            cls.logger.debug("The configs file does NOT exists")
-            cls.logger.debug("Creating new configs file")
+            cls.logger.debug("The configs file does NOT exists.")
             configs = ConfigParamsModel()
-            cls.logger.debug("Saving newly created configs file")
-            write_json(pfm.config_params, configs.model_dump())
-        cls.logger.debug("Updating and saving configs if kwargs is not empty")
+            cls.logger.debug("Saving newly created configs file.")
+            write_json(pfm.config_params.val, configs.model_dump())
         if kwargs != {}:
-            cls.logger.debug(f"kwargs are given: {kwargs}")
-            configs = configs.model_validate(configs.model_copy(update=kwargs))
-            cls.logger.debug("Updating the configs file")
-            write_json(pfm.config_params, configs.model_dump())
+            cls.logger.debug(f"kwargs is not empty. They are: {kwargs}")
+            configs_new = configs.model_validate(configs.model_copy(update=kwargs))
+            if configs_new != configs:
+                cls.logger.debug("New configs are different from old configs. Overwriting to file.")
+                write_json(pfm.config_params.val, configs.model_dump())
         cls.logger.debug("Returning the configs file")
         return configs
 
@@ -157,7 +156,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def tiff2zarr(cls, pfm: ProjFpModel, in_fp: str, overwrite: bool = False) -> None:
+    def tiff2zarr(cls, pfm: ProjFpModelBase, in_fp: str, overwrite: bool = False) -> None:
         """
         _summary_
 
@@ -178,7 +177,7 @@ class Pipeline:
         if not overwrite and cls._check_files_exist(pfm, ("raw",)):
             return
         cls.logger.debug("Reading config params")
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         cls.logger.debug("Making zarr from tiff file(s)")
         with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
             if os.path.isdir(in_fp):
@@ -186,15 +185,9 @@ class Pipeline:
                 cls.logger.debug("Making zarr from tiff file stack in directory")
                 Tiff2ZarrFuncs.tiffs2zarr(
                     in_fp_ls=tuple(
-                        natsorted(
-                            (
-                                os.path.join(in_fp, i)
-                                for i in os.listdir(in_fp)
-                                if re.search(r".tif$", i)
-                            )
-                        )
+                        natsorted((os.path.join(in_fp, i) for i in os.listdir(in_fp) if re.search(r".tif$", i)))
                     ),
-                    out_fp=pfm.raw,
+                    out_fp=pfm.raw.val,
                     chunks=configs.zarr_chunksize,
                 )
             elif os.path.isfile(in_fp):
@@ -202,7 +195,7 @@ class Pipeline:
                 cls.logger.debug("Making zarr from big-tiff file")
                 Tiff2ZarrFuncs.btiff2zarr(
                     in_fp=in_fp,
-                    out_fp=pfm.raw,
+                    out_fp=pfm.raw.val,
                     chunks=configs.zarr_chunksize,
                 )
             else:
@@ -214,13 +207,11 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def reg_ref_prepare(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
-        if not overwrite and cls._check_files_exist(
-            pfm, ("ref", "annot", "map", "affine", "bspline")
-        ):
+    def reg_ref_prepare(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
+        if not overwrite and cls._check_files_exist(pfm, ("ref", "annot", "map", "affine", "bspline")):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Making ref_fp_model of original atlas images filepaths
         rfm = RefFpModel(
             configs.atlas_dir,
@@ -230,8 +221,8 @@ class Pipeline:
         )
         # Making atlas images
         for fp_i, fp_o in [
-            (rfm.ref, pfm.ref),
-            (rfm.annot, pfm.annot),
+            (rfm.ref, pfm.ref.val),
+            (rfm.annot, pfm.annot.val),
         ]:
             # Reading
             arr = tifffile.imread(fp_i)
@@ -246,55 +237,51 @@ class Pipeline:
             # Saving
             tifffile.imwrite(fp_o, arr)
         # Copying region mapping json to project folder
-        shutil.copyfile(rfm.map, pfm.map)
+        shutil.copyfile(rfm.map, pfm.map.val)
         # Copying transformation files
-        shutil.copyfile(rfm.affine, pfm.affine)
-        shutil.copyfile(rfm.bspline, pfm.bspline)
+        shutil.copyfile(rfm.affine, pfm.affine.val)
+        shutil.copyfile(rfm.bspline, pfm.bspline.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def reg_img_rough(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_rough(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("downsmpl1",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         with cluster_proc_contxt(LocalCluster()):
             # Reading
-            raw_arr = da.from_zarr(pfm.raw)
+            raw_arr = da.from_zarr(pfm.raw.val)
             # Rough downsample
-            downsmpl1_arr = RegFuncs.downsmpl_rough(
-                raw_arr, configs.z_rough, configs.y_rough, configs.x_rough
-            )
+            downsmpl1_arr = RegFuncs.downsmpl_rough(raw_arr, configs.z_rough, configs.y_rough, configs.x_rough)
             # Computing (from dask array)
             downsmpl1_arr = downsmpl1_arr.compute()
             # Saving
-            tifffile.imwrite(pfm.downsmpl1, downsmpl1_arr)
+            tifffile.imwrite(pfm.downsmpl1.val, downsmpl1_arr)
 
     @classmethod
     @log_func_decorator(logger)
-    def reg_img_fine(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_fine(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("downsmpl2",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Reading
-        downsmpl1_arr = tifffile.imread(pfm.downsmpl1)
+        downsmpl1_arr = tifffile.imread(pfm.downsmpl1.val)
         # Fine downsample
-        downsmpl2_arr = RegFuncs.downsmpl_fine(
-            downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine
-        )
+        downsmpl2_arr = RegFuncs.downsmpl_fine(downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine)
         # Saving
-        tifffile.imwrite(pfm.downsmpl2, downsmpl2_arr)
+        tifffile.imwrite(pfm.downsmpl2.val, downsmpl2_arr)
 
     @classmethod
     @log_func_decorator(logger)
-    def reg_img_trim(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_trim(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("trimmed",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Reading
-        downsmpl2_arr = tifffile.imread(pfm.downsmpl2)
+        downsmpl2_arr = tifffile.imread(pfm.downsmpl2.val)
         # Trim
         trimmed_arr = downsmpl2_arr[
             slice(*configs.z_trim),
@@ -302,19 +289,18 @@ class Pipeline:
             slice(*configs.x_trim),
         ]
         # Saving
-        tifffile.imwrite(pfm.trimmed, trimmed_arr)
+        tifffile.imwrite(pfm.trimmed.val, trimmed_arr)
 
     @classmethod
     @log_func_decorator(logger)
-    def reg_img_bound(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_img_bound(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("bounded",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Asserting that lower bound is less than upper bound
         assert configs.lower_bound[0] < configs.upper_bound[0], (
-            "Error in configL parameters: "
-            "lower bound condition must be less than upper bound condition."
+            "Error in configL parameters: " "lower bound condition must be less than upper bound condition."
         )
         assert configs.lower_bound[1] <= configs.lower_bound[0], (
             "Error in configL parameters: "
@@ -325,27 +311,27 @@ class Pipeline:
             "upper bound final value must be greater than or equal to upper bound condition."
         )
         # Reading
-        trimmed_arr = tifffile.imread(pfm.trimmed)
+        trimmed_arr = tifffile.imread(pfm.trimmed.val)
         bounded_arr = trimmed_arr
         # Bounding lower
         bounded_arr[bounded_arr < configs.lower_bound[0]] = configs.lower_bound[1]
         # Bounding upper
         bounded_arr[bounded_arr > configs.upper_bound[0]] = configs.upper_bound[1]
         # Saving
-        tifffile.imwrite(pfm.bounded, bounded_arr)
+        tifffile.imwrite(pfm.bounded.val, bounded_arr)
 
     @classmethod
     @log_func_decorator(logger)
-    def reg_elastix(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def reg_elastix(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("regresult",)):
             return
         # Running Elastix registration
         ElastixFuncs.registration(
-            fixed_img_fp=pfm.bounded,
-            moving_img_fp=pfm.ref,
-            output_img_fp=pfm.regresult,
-            affine_fp=pfm.affine,
-            bspline_fp=pfm.bspline,
+            fixed_img_fp=pfm.bounded.val,
+            moving_img_fp=pfm.ref.val,
+            output_img_fp=pfm.regresult.val,
+            affine_fp=pfm.affine.val,
+            bspline_fp=pfm.bspline.val,
         )
 
     ###################################################################################################
@@ -354,28 +340,26 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def make_mask(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def make_mask(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Makes mask of actual image in reference space.
         Also stores # and proportion of existent voxels
         for each region.
         """
-        if not overwrite and cls._check_files_exist(
-            pfm, ("mask", "outline", "mask_reg", "mask_df")
-        ):
+        if not overwrite and cls._check_files_exist(pfm, ("mask", "outline", "mask_reg", "mask_df")):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Reading annot img (proj oriented and trimmed) and bounded img
-        annot_arr = tifffile.imread(pfm.annot)
-        bounded_arr = tifffile.imread(pfm.bounded)
+        annot_arr = tifffile.imread(pfm.annot.val)
+        bounded_arr = tifffile.imread(pfm.bounded.val)
         # Storing annot_arr shape
         s = annot_arr.shape
         # Making mask
         blur_arr = Gf.gauss_blur_filt(bounded_arr, configs.mask_gaus_blur)
-        tifffile.imwrite(pfm.premask_blur, blur_arr)
+        tifffile.imwrite(pfm.premask_blur.val, blur_arr)
         mask_arr = Gf.manual_thresh(blur_arr, configs.mask_thresh)
-        tifffile.imwrite(pfm.mask, mask_arr)
+        tifffile.imwrite(pfm.mask.val, mask_arr)
 
         # Make outline
         outline_df = MaskFuncs.make_outline(mask_arr)
@@ -383,8 +367,8 @@ class Pipeline:
         outline_df[[Coords.Z.value, Coords.Y.value, Coords.X.value]] = (
             ElastixFuncs.transformation_coords(
                 outline_df,
-                pfm.ref,
-                pfm.regresult,
+                pfm.ref.val,
+                pfm.regresult.val,
             )[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
             .round(0)
             .astype(np.int32)
@@ -398,27 +382,19 @@ class Pipeline:
 
         # Make outline img (1 for in, 2 for out)
         # TODO: convert to return np.array and save out-of-function
-        VisualCheckFuncsTiff.coords2points(
-            outline_df[outline_df.is_in == 1], s, pfm.outline
-        )
-        in_arr = tifffile.imread(pfm.outline)
-        VisualCheckFuncsTiff.coords2points(
-            outline_df[outline_df.is_in == 0], s, pfm.outline
-        )
-        out_arr = tifffile.imread(pfm.outline)
-        tifffile.imwrite(pfm.outline, in_arr + out_arr * 2)
+        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 1], s, pfm.outline.val)
+        in_arr = tifffile.imread(pfm.outline.val)
+        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 0], s, pfm.outline.val)
+        out_arr = tifffile.imread(pfm.outline.val)
+        tifffile.imwrite(pfm.outline.val, in_arr + out_arr * 2)
 
         # Fill in outline to recreate mask (not perfect)
         mask_reg_arr = MaskFuncs.fill_outline(outline_df, s)
         # Opening (removes FP) and closing (fills FN)
-        mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(
-            np.uint8
-        )
-        mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(
-            np.uint8
-        )
+        mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(np.uint8)
+        mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(np.uint8)
         # Saving
-        tifffile.imwrite(pfm.mask_reg, mask_reg_arr)
+        tifffile.imwrite(pfm.mask_reg.val, mask_reg_arr)
 
         # Counting mask voxels in each region
         # Getting original annot fp by making ref_fp_model
@@ -432,9 +408,7 @@ class Pipeline:
         annot_orig_arr = tifffile.imread(rfm.annot)
         # Getting the annotation name for every cell (zyx coord)
         mask_df = pd.merge(
-            left=MaskFuncs.mask2region_counts(
-                np.full(annot_orig_arr.shape, 1), annot_orig_arr
-            ),
+            left=MaskFuncs.mask2region_counts(np.full(annot_orig_arr.shape, 1), annot_orig_arr),
             right=MaskFuncs.mask2region_counts(mask_reg_arr, annot_arr),
             how="left",
             left_index=True,
@@ -442,18 +416,17 @@ class Pipeline:
             suffixes=("_annot", "_mask"),
         ).fillna(0)
         # Reading annotation mappings json
-        annot_df = MapFuncs.annot_dict2df(read_json(pfm.map))
+        annot_df = MapFuncs.annot_dict2df(read_json(pfm.map.val))
         # Combining (summing) the mask_df volumes for parent regions using the annot_df
         mask_df = MapFuncs.combine_nested_regions(mask_df, annot_df)
         # Calculating proportion of mask volume in each region
         mask_df[MaskColumns.VOLUME_PROP.value] = (
-            mask_df[MaskColumns.VOLUME_MASK.value]
-            / mask_df[MaskColumns.VOLUME_ANNOT.value]
+            mask_df[MaskColumns.VOLUME_MASK.value] / mask_df[MaskColumns.VOLUME_ANNOT.value]
         )
         # Selecting and ordering relevant columns
         mask_df = mask_df[[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]]
         # Saving
-        mask_df.to_parquet(pfm.mask_df)
+        mask_df.to_parquet(pfm.mask_df.val)
 
     ###################################################################################################
     # CROP RAW ZARR TO MAKE TUNING ZARR
@@ -461,7 +434,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def make_tuning_arr(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def make_tuning_arr(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
         """
@@ -469,9 +442,9 @@ class Pipeline:
         pfm = ProjFpModel(pfm.root_dir)
         pfm_tuning = ProjFpModelTuning(pfm.root_dir)
         cls.logger.debug("Reading config params")
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         cls.logger.debug("Reading raw zarr")
-        raw_arr = da.from_zarr(pfm.raw)
+        raw_arr = da.from_zarr(pfm.raw.val)
         cls.logger.debug("Cropping raw zarr")
         raw_arr = raw_arr[
             slice(*configs.tuning_z_trim),
@@ -490,20 +463,20 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def img_overlap(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def img_overlap(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("overlap",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Making overlap image
         with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
-            raw_arr = da.from_zarr(pfm.raw, chunks=configs.zarr_chunksize)
+            raw_arr = da.from_zarr(pfm.raw.val, chunks=configs.zarr_chunksize)
             overlap_arr = da_overlap(raw_arr, d=configs.overlap_depth)
-            overlap_arr = disk_cache(overlap_arr, pfm.overlap)
+            overlap_arr = disk_cache(overlap_arr, pfm.overlap.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc1(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc1(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 1
 
@@ -514,9 +487,9 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            overlap_arr = da.from_zarr(pfm.overlap)
+            overlap_arr = da.from_zarr(pfm.overlap.val)
             # Declaring processing instructions
             bgrm_arr = da.map_blocks(
                 Gf.tophat_filt,
@@ -524,11 +497,11 @@ class Pipeline:
                 configs.tophat_sigma,
             )
             # Computing and saving
-            bgrm_arr = disk_cache(bgrm_arr, pfm.bgrm)
+            bgrm_arr = disk_cache(bgrm_arr, pfm.bgrm.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc2(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc2(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 2
 
@@ -539,9 +512,9 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            bgrm_arr = da.from_zarr(pfm.bgrm)
+            bgrm_arr = da.from_zarr(pfm.bgrm.val)
             # Declaring processing instructions
             dog_arr = da.map_blocks(
                 Gf.dog_filt,
@@ -550,11 +523,11 @@ class Pipeline:
                 configs.dog_sigma2,
             )
             # Computing and saving
-            dog_arr = disk_cache(dog_arr, pfm.dog)
+            dog_arr = disk_cache(dog_arr, pfm.dog.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc3(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc3(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 3
 
@@ -565,9 +538,9 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            dog_arr = da.from_zarr(pfm.dog)
+            dog_arr = da.from_zarr(pfm.dog.val)
             # Declaring processing instructions
             adaptv_arr = da.map_blocks(
                 Gf.gauss_subt_filt,
@@ -575,11 +548,11 @@ class Pipeline:
                 configs.large_gauss_sigma,
             )
             # Computing and saving
-            adaptv_arr = disk_cache(adaptv_arr, pfm.adaptv)
+            adaptv_arr = disk_cache(adaptv_arr, pfm.adaptv.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc4(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc4(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 4
 
@@ -591,12 +564,12 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # # Visually inspect sd offset
             # t_p =adaptv_arr.sum() / (np.prod(adaptv_arr.shape) - (adaptv_arr == 0).sum())
             # t_p = t_p.compute()
             # Reading input images
-            adaptv_arr = da.from_zarr(pfm.adaptv)
+            adaptv_arr = da.from_zarr(pfm.adaptv.val)
             # Declaring processing instructions
             threshd_arr = da.map_blocks(
                 Cf.manual_thresh,
@@ -604,11 +577,11 @@ class Pipeline:
                 configs.threshd_value,
             )
             # Computing and saving
-            threshd_arr = disk_cache(threshd_arr, pfm.threshd)
+            threshd_arr = disk_cache(threshd_arr, pfm.threshd.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc5(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc5(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 5
 
@@ -619,18 +592,18 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Reading input images
-            threshd_arr = da.from_zarr(pfm.threshd)
+            threshd_arr = da.from_zarr(pfm.threshd.val)
             # Declaring processing instructions
             threshd_volumes_arr = da.map_blocks(
                 Cf.label_with_volumes,
                 threshd_arr,
             )
             # Computing and saving
-            threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes)
+            threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc6(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc6(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 6
 
@@ -641,9 +614,9 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            threshd_volumes_arr = da.from_zarr(pfm.threshd_volumes)
+            threshd_volumes_arr = da.from_zarr(pfm.threshd_volumes.val)
             # Declaring processing instructions
             threshd_filt_arr = da.map_blocks(
                 Cf.volume_filter,
@@ -652,11 +625,11 @@ class Pipeline:
                 configs.max_threshd_size,
             )
             # Computing and saving
-            threshd_filt_arr = disk_cache(threshd_filt_arr, pfm.threshd_filt)
+            threshd_filt_arr = disk_cache(threshd_filt_arr, pfm.threshd_filt.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc7(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc7(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 7
 
@@ -667,10 +640,10 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            overlap_arr = da.from_zarr(pfm.overlap)
-            threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
+            overlap_arr = da.from_zarr(pfm.overlap.val)
+            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
             # Declaring processing instructions
             maxima_arr = da.map_blocks(
                 Gf.get_local_maxima,
@@ -679,11 +652,11 @@ class Pipeline:
                 threshd_filt_arr,
             )
             # Computing and saving
-            maxima_arr = disk_cache(maxima_arr, pfm.maxima)
+            maxima_arr = disk_cache(maxima_arr, pfm.maxima.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc8(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc8(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 8
 
@@ -695,9 +668,9 @@ class Pipeline:
         with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
             # n_workers=2
             # Reading input images
-            overlap_arr = da.from_zarr(pfm.overlap)
-            maxima_arr = da.from_zarr(pfm.maxima)
-            threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
+            overlap_arr = da.from_zarr(pfm.overlap.val)
+            maxima_arr = da.from_zarr(pfm.maxima.val)
+            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
             # Declaring processing instructions
             wshed_volumes_arr = da.map_blocks(
                 Cf.wshed_segm_volumes,
@@ -706,11 +679,11 @@ class Pipeline:
                 threshd_filt_arr,
             )
             # Computing and saving
-            wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes)
+            wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc9(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc9(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 9
 
@@ -721,9 +694,9 @@ class Pipeline:
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes)
+            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes.val)
             # Declaring processing instructions
             wshed_filt_arr = da.map_blocks(
                 Cf.volume_filter,
@@ -732,11 +705,11 @@ class Pipeline:
                 configs.max_wshed_size,
             )
             # Computing and saving
-            wshed_filt_arr = disk_cache(wshed_filt_arr, pfm.wshed_filt)
+            wshed_filt_arr = disk_cache(wshed_filt_arr, pfm.wshed_filt.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc10(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc10(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 10
 
@@ -745,30 +718,28 @@ class Pipeline:
         - Trimmed threshold image
         - Trimmed watershed image
         """
-        if not overwrite and cls._check_files_exist(
-            pfm, ("maxima_final", "threshd_final", "wshed_final")
-        ):
+        if not overwrite and cls._check_files_exist(pfm, ("maxima_final", "threshd_final", "wshed_final")):
             return
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster()):
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            maxima_arr = da.from_zarr(pfm.maxima)
-            threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
-            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes)
+            maxima_arr = da.from_zarr(pfm.maxima.val)
+            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
+            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes.val)
             # Declaring processing instructions
             maxima_final_arr = da_trim(maxima_arr, d=configs.overlap_depth)
             threshd_final_arr = da_trim(threshd_filt_arr, d=configs.overlap_depth)
             wshed_final_arr = da_trim(wshed_volumes_arr, d=configs.overlap_depth)
             # Computing and saving
-            maxima_final_arr = disk_cache(maxima_final_arr, pfm.maxima_final)
-            threshd_final_arr = disk_cache(threshd_final_arr, pfm.threshd_final)
-            wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final)
+            maxima_final_arr = disk_cache(maxima_final_arr, pfm.maxima_final.val)
+            threshd_final_arr = disk_cache(threshd_final_arr, pfm.threshd_final.val)
+            wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc11(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc11(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 11
 
@@ -783,12 +754,12 @@ class Pipeline:
         with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
             # n_workers=2
             # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            raw_arr = da.from_zarr(pfm.raw)
-            overlap_arr = da.from_zarr(pfm.overlap)
-            maxima_arr = da.from_zarr(pfm.maxima)
-            threshd_filt_arr = da.from_zarr(pfm.threshd_filt)
+            raw_arr = da.from_zarr(pfm.raw.val)
+            overlap_arr = da.from_zarr(pfm.overlap.val)
+            maxima_arr = da.from_zarr(pfm.maxima.val)
+            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
             # Declaring processing instructions
             # Getting maxima coords and cell measures in table
             cells_df = block2coords(
@@ -807,11 +778,11 @@ class Pipeline:
                 f"({CellColumns.VOLUME.value} <= {configs.max_wshed_size})"
             )
             # Computing and saving as parquet
-            cells_df.to_parquet(pfm.cells_raw_df)
+            cells_df.to_parquet(pfm.cells_raw_df.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc_coords_only(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cellc_coords_only(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Get maxima coords.
         Very basic but faster version of cellc11_pipeline get_cells.
@@ -821,7 +792,7 @@ class Pipeline:
         # Reading filtered and maxima images (trimmed to orig space)
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Read filtered and maxima images (trimmed to orig space)
-            maxima_final_arr = da.from_zarr(pfm.maxima_final)
+            maxima_final_arr = da.from_zarr(pfm.maxima_final.val)
             # Declaring processing instructions
             # Storing coords of each maxima in df
             coords_df = block2coords(
@@ -831,7 +802,7 @@ class Pipeline:
             # Converting from dask to pandas
             coords_df = coords_df.compute()
             # Computing and saving as parquet
-            coords_df.to_parquet(pfm.maxima_df)
+            coords_df.to_parquet(pfm.maxima_df.val)
 
     ###################################################################################################
     # CELL COUNT REALIGNMENT TO REFERENCE AND AGGREGATION PIPELINE FUNCS
@@ -839,7 +810,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def transform_coords(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def transform_coords(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         `in_id` and `out_id` are either maxima or region
 
@@ -848,34 +819,26 @@ class Pipeline:
         if not overwrite and cls._check_files_exist(pfm, ("cells_trfm_df",)):
             return
         # Getting configs
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
             # Setting output key (in the form "<maxima/region>_trfm_df")
             # Getting cell coords
-            cells_df = pd.read_parquet(pfm.cells_raw_df)
+            cells_df = pd.read_parquet(pfm.cells_raw_df.val)
             # Sanitising (removing smb columns)
             cells_df = sanitise_smb_df(cells_df)
             # Taking only Coords.Z.value, Coords.Y.value, Coords.X.value coord columns
             cells_df = cells_df[enum2list(Coords)]
             # Scaling to resampled rough space
             # NOTE: this downsampling uses slicing so must be computed differently
-            cells_df = cells_df / np.array(
-                (configs.z_rough, configs.y_rough, configs.x_rough)
-            )
+            cells_df = cells_df / np.array((configs.z_rough, configs.y_rough, configs.x_rough))
             # Scaling to resampled space
-            cells_df = cells_df * np.array(
-                (configs.z_fine, configs.y_fine, configs.x_fine)
-            )
+            cells_df = cells_df * np.array((configs.z_fine, configs.y_fine, configs.x_fine))
             # Trimming/offsetting to sliced space
-            cells_df = cells_df - np.array(
-                [s[0] or 0 for s in (configs.z_trim, configs.y_trim, configs.x_trim)]
-            )
+            cells_df = cells_df - np.array([s[0] or 0 for s in (configs.z_trim, configs.y_trim, configs.x_trim)])
             # Converting back to DataFrame
             cells_df = pd.DataFrame(cells_df, columns=enum2list(Coords))
 
-            cells_trfm_df = ElastixFuncs.transformation_coords(
-                cells_df, pfm.ref, pfm.regresult
-            )
+            cells_trfm_df = ElastixFuncs.transformation_coords(cells_df, pfm.ref.val, pfm.regresult.val)
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_df = dd.from_pandas(cells_df, npartitions=1)
             # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
@@ -883,13 +846,13 @@ class Pipeline:
             #     npartitions=int(np.ceil(cells_df.shape[0].compute() / ROWSPPART))
             # )
             # cells_df = cells_df.map_partitions(
-            #     ElastixFuncs.transformation_coords, pfm.ref, pfm.regresult
+            #     ElastixFuncs.transformation_coords, pfm.ref.val, pfm.regresult.val
             # )
-            cells_trfm_df.to_parquet(pfm.cells_trfm_df)
+            cells_trfm_df.to_parquet(pfm.cells_trfm_df.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cell_mapping(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cell_mapping(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Using the transformed cell coordinates, get the region ID and name for each cell
         corresponding to the reference atlas.
@@ -901,8 +864,8 @@ class Pipeline:
         # Getting region for each detected cell (i.e. row) in cells_df
         with cluster_proc_contxt(LocalCluster()):
             # Reading cells_raw and cells_trfm dataframes
-            cells_df = pd.read_parquet(pfm.cells_raw_df)
-            coords_trfm = pd.read_parquet(pfm.cells_trfm_df)
+            cells_df = pd.read_parquet(pfm.cells_raw_df.val)
+            coords_trfm = pd.read_parquet(pfm.cells_trfm_df.val)
             # Sanitising (removing smb columns)
             cells_df = sanitise_smb_df(cells_df)
             coords_trfm = sanitise_smb_df(coords_trfm)
@@ -914,7 +877,7 @@ class Pipeline:
             cells_df[f"{Coords.X.value}_{TRFM}"] = coords_trfm[Coords.X.value].values
 
             # Reading annotation image
-            annot_arr = tifffile.imread(pfm.annot)
+            annot_arr = tifffile.imread(pfm.annot.val)
             # Getting the annotation ID for every cell (zyx coord)
             # Getting transformed coords (that are within tbe bounds_arr, and their corresponding idx)
             s = annot_arr.shape
@@ -943,17 +906,17 @@ class Pipeline:
             ).fillna(-1)
 
             # Reading annotation mappings dataframe
-            annot_df = MapFuncs.annot_dict2df(read_json(pfm.map))
+            annot_df = MapFuncs.annot_dict2df(read_json(pfm.map.val))
             # Getting the annotation name for every cell (zyx coord)
             cells_df = MapFuncs.df_map_ids(cells_df, annot_df)
             # Saving to disk
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_df = dd.from_pandas(cells_df)
-            cells_df.to_parquet(pfm.cells_df)
+            cells_df.to_parquet(pfm.cells_df.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def group_cells(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def group_cells(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Grouping cells by region name and aggregating total cell volume
         and cell count for each region.
@@ -965,95 +928,92 @@ class Pipeline:
         # Making cells_agg_df
         with cluster_proc_contxt(LocalCluster()):
             # Reading cells dataframe
-            cells_df = pd.read_parquet(pfm.cells_df)
+            cells_df = pd.read_parquet(pfm.cells_df.val)
             # Sanitising (removing smb columns)
             cells_df = sanitise_smb_df(cells_df)
             # Grouping cells by region name and aggregating on given mappings
-            cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(
-                CELL_AGG_MAPPINGS
-            )
+            cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPINGS)
             cells_agg_df.columns = list(CELL_AGG_MAPPINGS.keys())
             # Reading annotation mappings dataframe
             # Making df of region names and their parent region names
-            annot_df = MapFuncs.annot_dict2df(read_json(pfm.map))
+            annot_df = MapFuncs.annot_dict2df(read_json(pfm.map.val))
             # Combining (summing) the cells_agg_df values for parent regions using the annot_df
             cells_agg_df = MapFuncs.combine_nested_regions(cells_agg_df, annot_df)
             # Calculating integrated average intensity (sum_intensity / volume)
             cells_agg_df[CellColumns.IOV.value] = (
-                cells_agg_df[CellColumns.SUM_INTENSITY.value]
-                / cells_agg_df[CellColumns.VOLUME.value]
+                cells_agg_df[CellColumns.SUM_INTENSITY.value] / cells_agg_df[CellColumns.VOLUME.value]
             )
             # Selecting and ordering relevant columns
             cells_agg_df = cells_agg_df[[*ANNOT_COLUMNS_FINAL, *enum2list(CellColumns)]]
             # Saving to disk
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_agg = dd.from_pandas(cells_agg)
-            cells_agg_df.to_parquet(pfm.cells_agg_df)
+            cells_agg_df.to_parquet(pfm.cells_agg_df.val)
 
     @classmethod
     @log_func_decorator(logger)
-    def cells2csv(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def cells2csv(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("cells_agg_csv",)):
             return
         # Reading cells dataframe
-        cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
+        cells_agg_df = pd.read_parquet(pfm.cells_agg_df.val)
         # Sanitising (removing smb columns)
         cells_agg_df = sanitise_smb_df(cells_agg_df)
         # Saving to csv
-        cells_agg_df.to_csv(pfm.cells_agg_csv)
+        cells_agg_df.to_csv(pfm.cells_agg_csv.val)
 
     ###################################################################################################
     # VISUAL CHECK
     ###################################################################################################
     @classmethod
     @log_func_decorator(logger)
-    def coords2points_raw(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def coords2points_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("points_raw",)):
             return
         with cluster_proc_contxt(LocalCluster()):
             VisualCheckFuncsDask.coords2points(
-                coords=pd.read_parquet(pfm.cells_raw_df),
-                shape=da.from_zarr(pfm.raw).shape,
-                out_fp=pfm.points_raw,
+                coords=pd.read_parquet(pfm.cells_raw_df.val),
+                shape=da.from_zarr(pfm.raw.val).shape,
+                out_fp=pfm.points_raw.val,
             )
 
     @classmethod
     @log_func_decorator(logger)
-    def coords2heatmap_raw(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def coords2heatmap_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("heatmap_raw",)):
             return
         with cluster_proc_contxt(LocalCluster()):
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsDask.coords2heatmap(
-                coords=pd.read_parquet(pfm.cells_raw_df),
-                shape=da.from_zarr(pfm.raw).shape,
-                out_fp=pfm.heatmap_raw,
+                coords=pd.read_parquet(pfm.cells_raw_df.val),
+                shape=da.from_zarr(pfm.raw.val).shape,
+                out_fp=pfm.heatmap_raw.val,
                 radius=configs.heatmap_raw_radius,
             )
 
     @classmethod
     @log_func_decorator(logger)
-    def coords2points_trfm(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def coords2points_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("points_trfm",)):
             return
         with cluster_proc_contxt(LocalCluster()):
             VisualCheckFuncsTiff.coords2points(
-                coords=pd.read_parquet(pfm.cells_trfm_df),
-                shape=tifffile.imread(pfm.ref).shape,
-                out_fp=pfm.points_trfm,
+                coords=pd.read_parquet(pfm.cells_trfm_df.val),
+                shape=tifffile.imread(pfm.ref.val).shape,
+                out_fp=pfm.points_trfm.val,
             )
 
     @classmethod
     @log_func_decorator(logger)
-    def coords2heatmap_trfm(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def coords2heatmap_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("heatmap_trfm",)):
             return
         with cluster_proc_contxt(LocalCluster()):
-            configs = ConfigParamsModel.read_fp(pfm.config_params)
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsTiff.coords2heatmap(
-                coords=pd.read_parquet(pfm.cells_trfm_df),
-                shape=tifffile.imread(pfm.ref).shape,
-                out_fp=pfm.heatmap_trfm,
+                coords=pd.read_parquet(pfm.cells_trfm_df.val),
+                shape=tifffile.imread(pfm.ref.val).shape,
+                out_fp=pfm.heatmap_trfm.val,
                 radius=configs.heatmap_trfm_radius,
             )
 
@@ -1063,25 +1023,25 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def combine_reg(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def combine_reg(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("comb_reg",)):
             return
         ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.bounded, pfm.regresult, pfm.regresult),
+            fp_in_ls=(pfm.bounded.val, pfm.regresult.val, pfm.regresult.val),
             # 2nd regresult means the combining works in ImageJ
             # TODO: maybe use a blank img instead of regresult
-            fp_out=pfm.comb_reg,
+            fp_out=pfm.comb_reg.val,
         )
 
     @classmethod
     @log_func_decorator(logger)
-    def combine_cellc(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def combine_cellc(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("comb_cellc",)):
             return
-        configs = ConfigParamsModel.read_fp(pfm.config_params)
+        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.raw, pfm.threshd_final, pfm.wshed_final),
-            fp_out=pfm.comb_cellc,
+            fp_in_ls=(pfm.raw.val, pfm.threshd_final.val, pfm.wshed_final.val),
+            fp_out=pfm.comb_cellc.val,
             trimmer=(
                 slice(*configs.combine_cellc_z_trim),
                 slice(*configs.combine_cellc_y_trim),
@@ -1091,13 +1051,13 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def combine_points(cls, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def combine_points(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and cls._check_files_exist(pfm, ("comb_points",)):
             return
         ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.ref, pfm.annot, pfm.heatmap_trfm),
+            fp_in_ls=(pfm.ref.val, pfm.annot.val, pfm.heatmap_trfm.val),
             # 2nd regresult means the combining works in ImageJ
-            fp_out=pfm.comb_points,
+            fp_out=pfm.comb_points.val,
         )
 
     ###################################################################################################
@@ -1106,7 +1066,7 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def run_all(cls, in_fp: str, pfm: ProjFpModel, overwrite: bool = False) -> None:
+    def run_all(cls, in_fp: str, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Running all pipelines in order.
         """

@@ -1,9 +1,7 @@
 import os
 from enum import Enum
-from typing import Type
 
 from microscopy_proc.utils.logging_utils import init_logger
-from microscopy_proc.utils.misc_utils import enum2list, get_current_function_name
 
 # TODO: add 10_adaptv_f.zarr and move the xxx_f.zarr files to a new folder (e.g. "cellcount_final")
 # NOTE: this allows "cellcount" to be removed to save space when pipeline is completed and output checked
@@ -66,317 +64,25 @@ class RefFpModel:
         return os.path.join(self.atlas_dir, elastix_dir, "align_bspline.txt")
 
 
-class ProjFpModelBase:
-    """
-    Abstract model for project file paths.
-    """
+class ProjFpPath:
+    """ """
 
-    def __init__(self, root_dir: str, subdirs):
-        # Storing base attributes
-        self.root_dir: str = root_dir
-        self.subdirs: Type[Enum] = subdirs
-        # Checking that all subdirs are set in the enum
-        self.assert_subdirs_exist()
-        # Shortcut variables of subdirs
-        raw = self.subdirs.RAW
-        registration = self.subdirs.REGISTRATION
-        mask = self.subdirs.MASK
-        cellcount = self.subdirs.CELLCOUNT
-        analysis = self.subdirs.ANALYSIS
-        visual = self.subdirs.VISUAL
-        visual_comb = self.subdirs.VISUAL_COMB
-        # Filepath attributes are in the format: _<attr> = (implemented, [subdirs, ..., basename])
-        self._config_params: tuple[bool, str | None, str] = (False, ["config_params.json"])
-        self._raw: tuple[bool, str | None, str] = (False, [raw, "raw.zarr"])
-        self._ref: tuple[bool, str | None, str] = (False, [registration, "0a_reference.tif"])
-        self._annot: tuple[bool, str | None, str] = (False, [registration, "0b_annotation.tif"])
-        self._map: tuple[bool, str | None, str] = (False, [registration, "0c_mapping.json"])
-        self._affine: tuple[bool, str | None, str] = (False, [registration, "0d_align_affine.txt"])
-        self._bspline: tuple[bool, str | None, str] = (False, [registration, "0e_align_bspline.txt"])
-        self._downsmpl1: tuple[bool, str | None, str] = (False, [registration, "1_downsmpl1.tif"])
-        self._downsmpl2: tuple[bool, str | None, str] = (False, [registration, "2_downsmpl2.tif"])
-        self._trimmed: tuple[bool, str | None, str] = (False, [registration, "3_trimmed.tif"])
-        self._bounded: tuple[bool, str | None, str] = (False, [registration, "4_bounded.tif"])
-        self._regresult: tuple[bool, str | None, str] = (False, [registration, "5_regresult.tif"])
-        self._premask_blur: tuple[bool, str | None, str] = (False, [mask, "1_premask_blur.tif"])
-        self._mask: tuple[bool, str | None, str] = (False, [mask, "2_mask_trimmed.tif"])
-        self._outline: tuple[bool, str | None, str] = (False, [mask, "3_outline_reg.tif"])
-        self._mask_reg: tuple[bool, str | None, str] = (False, [mask, "4_mask_reg.tif"])
-        self._mask_df: tuple[bool, str | None, str] = (False, [mask, "5_mask.parquet"])
-        self._overlap: tuple[bool, str | None, str] = (False, [cellcount, "0_overlap.zarr"])
-        self._bgrm: tuple[bool, str | None, str] = (False, [cellcount, "1_bgrm.zarr"])
-        self._dog: tuple[bool, str | None, str] = (False, [cellcount, "2_dog.zarr"])
-        self._adaptv: tuple[bool, str | None, str] = (False, [cellcount, "3_adaptv.zarr"])
-        self._threshd: tuple[bool, str | None, str] = (False, [cellcount, "4_threshd.zarr"])
-        self._threshd_volumes: tuple[bool, str | None, str] = (False, [cellcount, "5_threshd_volumes.zarr"])
-        self._threshd_filt: tuple[bool, str | None, str] = (False, [cellcount, "6_threshd_filt.zarr"])
-        self._maxima: tuple[bool, str | None, str] = (False, [cellcount, "7_maxima.zarr"])
-        self._wshed_volumes: tuple[bool, str | None, str] = (False, [cellcount, "8_wshed_volumes.zarr"])
-        self._wshed_filt: tuple[bool, str | None, str] = (False, [cellcount, "9_wshed_filt.zarr"])
-        self._threshd_final: tuple[bool, str | None, str] = (False, [cellcount, "10_threshd_f.zarr"])
-        self._maxima_final: tuple[bool, str | None, str] = (False, [cellcount, "10_maxima_f.zarr"])
-        self._wshed_final: tuple[bool, str | None, str] = (False, [cellcount, "10_wshed_f.zarr"])
-        self._maxima_df: tuple[bool, str | None, str] = (False, [analysis, "1_maxima.parquet"])
-        self._cells_raw_df: tuple[bool, str | None, str] = (False, [analysis, "1_cells_raw.parquet"])
-        self._cells_trfm_df: tuple[bool, str | None, str] = (False, [analysis, "2_cells_trfm.parquet"])
-        self._cells_df: tuple[bool, str | None, str] = (False, [analysis, "3_cells.parquet"])
-        self._cells_agg_df: tuple[bool, str | None, str] = (False, [analysis, "4_cells_agg.parquet"])
-        self._cells_agg_csv: tuple[bool, str | None, str] = (False, [analysis, "5_cells_agg.csv"])
-        self._points_raw: tuple[bool, str | None, str] = (False, [visual, "points_raw.zarr"])
-        self._heatmap_raw: tuple[bool, str | None, str] = (False, [visual, "heatmap_raw.zarr"])
-        self._points_trfm: tuple[bool, str | None, str] = (False, [visual, "points_trfm.tif"])
-        self._heatmap_trfm: tuple[bool, str | None, str] = (False, [visual, "heatmap_trfm.tif"])
-        self._comb_reg: tuple[bool, str | None, str] = (False, [visual_comb, "comb_reg.tif"])
-        self._comb_cellc: tuple[bool, str | None, str] = (False, [visual_comb, "comb_cellc.tif"])
-        self._comb_points: tuple[bool, str | None, str] = (False, [visual_comb, "comb_points.tif"])
-        # Setting properties corresponding to each attribute
-        self.config_params = property(lambda: self._get_attribute("config_params"))
-        self.raw = property(lambda: self._get_attribute("raw"))
-        self.ref = property(lambda: self._get_attribute("ref"))
-        self.annot = property(lambda: self._get_attribute("annot"))
-        self.map = property(lambda: self._get_attribute("map"))
-        self.affine = property(lambda: self._get_attribute("affine"))
-        self.bspline = property(lambda: self._get_attribute("bspline"))
-        self.downsmpl1 = property(lambda: self._get_attribute("downsmpl1"))
-        self.downsmpl2 = property(lambda: self._get_attribute("downsmpl2"))
-        self.trimmed = property(lambda: self._get_attribute("trimmed"))
-        self.bounded = property(lambda: self._get_attribute("bounded"))
-        self.regresult = property(lambda: self._get_attribute("regresult"))
-        self.premask_blur = property(lambda: self._get_attribute("premask_blur"))
-        self.mask = property(lambda: self._get_attribute("mask"))
-        self.outline = property(lambda: self._get_attribute("outline"))
-        self.mask_reg = property(lambda: self._get_attribute("mask_reg"))
-        self.mask_df = property(lambda: self._get_attribute("mask_df"))
-        self.overlap = property(lambda: self._get_attribute("overlap"))
-        self.bgrm = property(lambda: self._get_attribute("bgrm"))
-        self.dog = property(lambda: self._get_attribute("dog"))
-        self.adaptv = property(lambda: self._get_attribute("adaptv"))
-        self.threshd = property(lambda: self._get_attribute("threshd"))
-        self.threshd_volumes = property(lambda: self._get_attribute("threshd_volumes"))
-        self.threshd_filt = property(lambda: self._get_attribute("threshd_filt"))
-        self.maxima = property(lambda: self._get_attribute("maxima"))
-        self.wshed_volumes = property(lambda: self._get_attribute("wshed_volumes"))
-        self.wshed_filt = property(lambda: self._get_attribute("wshed_filt"))
-        self.threshd_final = property(lambda: self._get_attribute("threshd_final"))
-        self.maxima_final = property(lambda: self._get_attribute("maxima_final"))
-        self.wshed_final = property(lambda: self._get_attribute("wshed_final"))
-        self.maxima_df = property(lambda: self._get_attribute("maxima_df"))
-        self.cells_raw_df = property(lambda: self._get_attribute("cells_raw_df"))
-        self.cells_trfm_df = property(lambda: self._get_attribute("cells_trfm_df"))
-        self.cells_df = property(lambda: self._get_attribute("cells_df"))
-        self.cells_agg_df = property(lambda: self._get_attribute("cells_agg_df"))
-        self.cells_agg_csv = property(lambda: self._get_attribute("cells_agg_csv"))
-        self.points_raw = property(lambda: self._get_attribute("points_raw"))
-        self.heatmap_raw = property(lambda: self._get_attribute("heatmap_raw"))
-        self.points_trfm = property(lambda: self._get_attribute("points_trfm"))
-        self.heatmap_trfm = property(lambda: self._get_attribute("heatmap_trfm"))
-        self.comb_reg = property(lambda: self._get_attribute("comb_reg"))
-        self.comb_cellc = property(lambda: self._get_attribute("comb_cellc"))
-        self.comb_points = property(lambda: self._get_attribute("comb_points"))
-        # Logging
-        logger.debug(f'Getting ProjFpModel for "{root_dir}", with subdirs, {enum2list(subdirs)}')
+    def __init__(self, root_dir: str, path_dirs_ls: list[str], implemented: bool = False):
+        self.root_dir = root_dir
+        self.path_dirs_ls = path_dirs_ls
+        self.implemented = implemented
 
-    @property
-    def config_params(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def raw(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def ref(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def annot(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def map(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def affine(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def bspline(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def downsmpl1(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def downsmpl2(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def trimmed(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def bounded(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def regresult(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def premask_blur(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def mask(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def outline(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def mask_reg(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def mask_df(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def overlap(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def bgrm(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def dog(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def adaptv(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def threshd(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def threshd_volumes(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def threshd_filt(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def maxima(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def wshed_volumes(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def wshed_filt(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def threshd_final(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def maxima_final(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def wshed_final(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def maxima_df(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def cells_raw_df(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def cells_trfm_df(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def cells_df(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def cells_agg_df(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def cells_agg_csv(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def points_raw(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def heatmap_raw(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def points_trfm(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def heatmap_trfm(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def comb_reg(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def comb_cellc(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    @property
-    def comb_points(self) -> str:
-        self._get_attribute(get_current_function_name())
-
-    def assert_subdirs_exist(self):
+    def set_implement(self, value: bool = True):
         """
-        Assert that all subdirectory values are set in the enum.
+        Set whether an attribute is implemented in the model.
+        Defaults to True.
         """
-        for attr in [
-            "RAW",
-            "REGISTRATION",
-            "MASK",
-            "CELLCOUNT",
-            "ANALYSIS",
-            "VISUAL",
-            "VISUAL_COMB",
-        ]:
-            assert hasattr(self.subdirs, attr), f"Subdirectory '{attr}' not set in subdirs enum attribute."
-        logger.debug("Asserted that all relevant subdirs exist in subdirs attr.")
+        self.implemented = value
 
-    def copy(self):
-        return self.__init__(self.root_dir, self.subdirs)
-
-    def make_subdirs(self):
+    @property
+    def val(self):
         """
-        Make project directories.
-        """
-        for folder in self.subdirs:
-            os.makedirs(os.path.join(self.root_dir, folder.value), exist_ok=True)
-
-    def _get_attribute(self, attr: str) -> str:
-        """
-        This method is used to get a given attribute's file path.
+        Used to get a given attribute's file path.
         It is called within the property getters.
 
         Refer to the underlying attribute (NOT the property. i.e. attribute has name "_<attr>")
@@ -384,39 +90,167 @@ class ProjFpModelBase:
         The attribute is in the format:
 
         ```
-        _<attr> = (implemented, subdir, basename)
+        _<attr> = (implemented, [subdirs, ..., basename])
 
         implemented -> whether the attribute is implemented in the model
-        subdir -> refers to attribute in self.subdir Enum
-        basename -> basename string
+        [subdirs, ..., basename] -> Effectively the split path that is to be joined
         ```
         """
-        # Get attribute values
-        implemented, subdir, basename = getattr(self, f"_{attr}")
+        # return os.path.join(self.root_dir, *self.path_dirs_ls)
+        # Asserting that the path_dirs_ls has at least 1 element (the basename)
+        assert len(self.path_dirs_ls) > 0, "Path directories list is empty."
+        # Assertignt that the last item in path_dirs_ls has an extension
+        assert len(os.splitext(self.path_dirs_ls[-1])[1]) > 0, "The last item in path_dirs_ls must have an extension."
         # If attribute is not implemented, raise error
-        if not implemented:
+        if not self.implemented:
             raise NotImplementedError(
-                f"The filepath '{attr}' is not implemented in the model '{type(self)}'.\n"
-                "Use a different model (recommended)"
+                "This filepath is not implemented.\n"
+                "Activate this by setting the 'implemented' attribute to True."
                 "or explicitly edit this model."
             )
-        # If subdir is None, return filepath is "root_dir/basenane"
-        if subdir is None:
-            return os.path.join(self.root_dir, basename)
-        # Otherwise, return filepath is "root_dir/subdirname/basename"
-        else:
-            subdirname = self.subdirs[subdir].value
-            return os.path.join(self.root_dir, subdirname, basename)
+        # Returning filepath as "root_dir/subdir1/subdir2/.../basename"
+        return os.path.join(self.root_dir, *self.path_dirs_ls)
 
 
-class ProjSubdirs(Enum):
-    RAW = "raw"
-    REGISTRATION = "registration"
-    MASK = "mask"
-    CELLCOUNT = "cellcount"
-    ANALYSIS = "analysis"
-    VISUAL = "visual"
-    VISUAL_COMB = "visual_comb"
+class ProjFpModelBase:
+    """
+    Abstract model for project file paths.
+    """
+
+    def __init__(
+        self,
+        root_dir: str,
+        raw: str,
+        registration: str,
+        mask: str,
+        cellcount: str,
+        analysis: str,
+        visual: str,
+        visual_comb: str,
+    ):
+        # Storing base attributes
+        self.root_dir: str = root_dir
+        self.raw: str = raw
+        self.registration: str = registration
+        self.mask: str = mask
+        self.cellcount: str = cellcount
+        self.analysis: str = analysis
+        self.visual: str = visual
+        self.visual_comb: str = visual_comb
+        # Making subdirs list
+        self.subdirs_ls = [raw, registration, mask, cellcount, analysis, visual, visual_comb]
+        # Filepath attributes are in the format: _<attr> = (implemented, [subdirs, ..., basename])
+        self.config_params: ProjFpPath = ProjFpPath(root_dir, ["config_params.json"])
+        self.raw: ProjFpPath = ProjFpPath(root_dir, [raw, "raw.zarr"])
+        self.ref: ProjFpPath = ProjFpPath(root_dir, [registration, "0a_reference.tif"])
+        self.annot: ProjFpPath = ProjFpPath(root_dir, [registration, "0b_annotation.tif"])
+        self.map: ProjFpPath = ProjFpPath(root_dir, [registration, "0c_mapping.json"])
+        self.affine: ProjFpPath = ProjFpPath(root_dir, [registration, "0d_align_affine.txt"])
+        self.bspline: ProjFpPath = ProjFpPath(root_dir, [registration, "0e_align_bspline.txt"])
+        self.downsmpl1: ProjFpPath = ProjFpPath(root_dir, [registration, "1_downsmpl1.tif"])
+        self.downsmpl2: ProjFpPath = ProjFpPath(root_dir, [registration, "2_downsmpl2.tif"])
+        self.trimmed: ProjFpPath = ProjFpPath(root_dir, [registration, "3_trimmed.tif"])
+        self.bounded: ProjFpPath = ProjFpPath(root_dir, [registration, "4_bounded.tif"])
+        self.regresult: ProjFpPath = ProjFpPath(root_dir, [registration, "5_regresult.tif"])
+        self.premask_blur: ProjFpPath = ProjFpPath(root_dir, [mask, "1_premask_blur.tif"])
+        self.mask: ProjFpPath = ProjFpPath(root_dir, [mask, "2_mask_trimmed.tif"])
+        self.outline: ProjFpPath = ProjFpPath(root_dir, [mask, "3_outline_reg.tif"])
+        self.mask_reg: ProjFpPath = ProjFpPath(root_dir, [mask, "4_mask_reg.tif"])
+        self.mask_df: ProjFpPath = ProjFpPath(root_dir, [mask, "5_mask.parquet"])
+        self.overlap: ProjFpPath = ProjFpPath(root_dir, [cellcount, "0_overlap.zarr"])
+        self.bgrm: ProjFpPath = ProjFpPath(root_dir, [cellcount, "1_bgrm.zarr"])
+        self.dog: ProjFpPath = ProjFpPath(root_dir, [cellcount, "2_dog.zarr"])
+        self.adaptv: ProjFpPath = ProjFpPath(root_dir, [cellcount, "3_adaptv.zarr"])
+        self.threshd: ProjFpPath = ProjFpPath(root_dir, [cellcount, "4_threshd.zarr"])
+        self.threshd_volumes: ProjFpPath = ProjFpPath(root_dir, [cellcount, "5_threshd_volumes.zarr"])
+        self.threshd_filt: ProjFpPath = ProjFpPath(root_dir, [cellcount, "6_threshd_filt.zarr"])
+        self.maxima: ProjFpPath = ProjFpPath(root_dir, [cellcount, "7_maxima.zarr"])
+        self.wshed_volumes: ProjFpPath = ProjFpPath(root_dir, [cellcount, "8_wshed_volumes.zarr"])
+        self.wshed_filt: ProjFpPath = ProjFpPath(root_dir, [cellcount, "9_wshed_filt.zarr"])
+        self.threshd_final: ProjFpPath = ProjFpPath(root_dir, [cellcount, "10_threshd_f.zarr"])
+        self.maxima_final: ProjFpPath = ProjFpPath(root_dir, [cellcount, "10_maxima_f.zarr"])
+        self.wshed_final: ProjFpPath = ProjFpPath(root_dir, [cellcount, "10_wshed_f.zarr"])
+        self.maxima_df: ProjFpPath = ProjFpPath(root_dir, [analysis, "1_maxima.parquet"])
+        self.cells_raw_df: ProjFpPath = ProjFpPath(root_dir, [analysis, "1_cells_raw.parquet"])
+        self.cells_trfm_df: ProjFpPath = ProjFpPath(root_dir, [analysis, "2_cells_trfm.parquet"])
+        self.cells_df: ProjFpPath = ProjFpPath(root_dir, [analysis, "3_cells.parquet"])
+        self.cells_agg_df: ProjFpPath = ProjFpPath(root_dir, [analysis, "4_cells_agg.parquet"])
+        self.cells_agg_csv: ProjFpPath = ProjFpPath(root_dir, [analysis, "5_cells_agg.csv"])
+        self.points_raw: ProjFpPath = ProjFpPath(root_dir, [visual, "points_raw.zarr"])
+        self.heatmap_raw: ProjFpPath = ProjFpPath(root_dir, [visual, "heatmap_raw.zarr"])
+        self.points_trfm: ProjFpPath = ProjFpPath(root_dir, [visual, "points_trfm.tif"])
+        self.heatmap_trfm: ProjFpPath = ProjFpPath(root_dir, [visual, "heatmap_trfm.tif"])
+        self.comb_reg: ProjFpPath = ProjFpPath(root_dir, [visual_comb, "comb_reg.tif"])
+        self.comb_cellc: ProjFpPath = ProjFpPath(root_dir, [visual_comb, "comb_cellc.tif"])
+        self.comb_points: ProjFpPath = ProjFpPath(root_dir, [visual_comb, "comb_points.tif"])
+        # Logging
+        logger.debug(f'Getting ProjFpModel for "{root_dir}"')
+
+    def copy(self):
+        return self.__init__(
+            root_dir=self.root_dir,
+            raw=self.raw,
+            registration=self.registration,
+            mask=self.mask,
+            cellcount=self.cellcount,
+            analysis=self.analysis,
+            visual=self.visual,
+            visual_comb=self.visual_comb,
+        )
+
+    def make_subdirs(self):
+        """
+        Make project directories.
+        """
+        for subdir in self.subdirs_ls:
+            os.makedirs(os.path.join(self.root_dir, subdir), exist_ok=True)
+
+    def export2dict(self) -> dict:
+        return {
+            "config_params": self.config_params.value,
+            "raw": self.raw.value,
+            "ref": self.ref.value,
+            "annot": self.annot.value,
+            "map": self.map.value,
+            "affine": self.affine.value,
+            "bspline": self.bspline.value,
+            "downsmpl1": self.downsmpl1.value,
+            "downsmpl2": self.downsmpl2.value,
+            "trimmed": self.trimmed.value,
+            "bounded": self.bounded.value,
+            "regresult": self.regresult.value,
+            "premask_blur": self.premask_blur.value,
+            "mask": self.mask.value,
+            "outline": self.outline.value,
+            "mask_reg": self.mask_reg.value,
+            "mask_df": self.mask_df.value,
+            "overlap": self.overlap.value,
+            "bgrm": self.bgrm.value,
+            "dog": self.dog.value,
+            "adaptv": self.adaptv.value,
+            "threshd": self.threshd.value,
+            "threshd_volumes": self.threshd_volumes.value,
+            "threshd_filt": self.threshd_filt.value,
+            "maxima": self.maxima.value,
+            "wshed_volumes": self.wshed_volumes.value,
+            "wshed_filt": self.wshed_filt.value,
+            "threshd_final": self.threshd_final.value,
+            "maxima_final": self.maxima_final.value,
+            "wshed_final": self.wshed_final.value,
+            "maxima_df": self.maxima_df.value,
+            "cells_raw_df": self.cells_raw_df.value,
+            "cells_trfm_df": self.cells_trfm_df.value,
+            "cells_df": self.cells_df.value,
+            "cells_agg_df": self.cells_agg_df.value,
+            "cells_agg_csv": self.cells_agg_csv.value,
+            "points_raw": self.points_raw.value,
+            "heatmap_raw": self.heatmap_raw.value,
+            "points_trfm": self.points_trfm.value,
+            "heatmap_trfm": self.heatmap_trfm.value,
+            "comb_reg": self.comb_reg.value,
+            "comb_cellc": self.comb_cellc.value,
+            "comb_points": self.comb_points.value,
+        }
 
 
 class ProjFpModel(ProjFpModelBase):
@@ -425,62 +259,60 @@ class ProjFpModel(ProjFpModelBase):
     """
 
     def __init__(self, root_dir: str):
-        super().__init__(root_dir, ProjSubdirs)
-
+        super().__init__(
+            root_dir=root_dir,
+            raw="raw",
+            registration="registration",
+            mask="mask",
+            cellcount="cellcount",
+            analysis="analysis",
+            visual="visual",
+            visual_comb="visual_comb",
+        )
         # Setting attributes as implemented
-        self._config_params[0] = True
-        self._raw[0] = True
-        self._ref[0] = True
-        self._annot[0] = True
-        self._map[0] = True
-        self._affine[0] = True
-        self._bspline[0] = True
-        self._downsmpl1[0] = True
-        self._downsmpl2[0] = True
-        self._trimmed[0] = True
-        self._bounded[0] = True
-        self._regresult[0] = True
-        self._premask_blur[0] = True
-        self._mask[0] = True
-        self._outline[0] = True
-        self._mask_reg[0] = True
-        self._mask_df[0] = True
-        self._overlap[0] = True
-        self._bgrm[0] = True
-        self._dog[0] = True
-        self._adaptv[0] = True
-        self._threshd[0] = True
-        self._threshd_volumes[0] = True
-        self._threshd_filt[0] = True
-        self._maxima[0] = True
-        self._wshed_volumes[0] = True
-        self._wshed_filt[0] = True
-        self._threshd_final[0] = True
-        self._maxima_final[0] = True
-        self._wshed_final[0] = True
-        self._maxima_df[0] = True
-        self._cells_raw_df[0] = True
-        self._cells_trfm_df[0] = True
-        self._cells_df[0] = True
-        self._cells_agg_df[0] = True
-        self._cells_agg_csv[0] = True
-        self._points_raw[0] = True
-        self._heatmap_raw[0] = True
-        self._points_trfm[0] = True
-        self._heatmap_trfm[0] = True
-        self._comb_reg[0] = True
-        self._comb_cellc[0] = True
-        self._comb_points[0] = True
-
-
-class ProjSubdirsTuning(Enum):
-    RAW = "raw_tuning"
-    REGISTRATION = "registration"
-    MASK = "mask"
-    CELLCOUNT = "cellcount_tuning"
-    ANALYSIS = "analysis_tuning"
-    VISUAL = "visual"
-    VISUAL_COMB = "visual_comb"
+        self.config_params.set_implement()
+        self.raw.set_implement()
+        self.ref.set_implement()
+        self.annot.set_implement()
+        self.map.set_implement()
+        self.affine.set_implement()
+        self.bspline.set_implement()
+        self.downsmpl1.set_implement()
+        self.downsmpl2.set_implement()
+        self.trimmed.set_implement()
+        self.bounded.set_implement()
+        self.regresult.set_implement()
+        self.premask_blur.set_implement()
+        self.mask.set_implement()
+        self.outline.set_implement()
+        self.mask_reg.set_implement()
+        self.mask_df.set_implement()
+        self.overlap.set_implement()
+        self.bgrm.set_implement()
+        self.dog.set_implement()
+        self.adaptv.set_implement()
+        self.threshd.set_implement()
+        self.threshd_volumes.set_implement()
+        self.threshd_filt.set_implement()
+        self.maxima.set_implement()
+        self.wshed_volumes.set_implement()
+        self.wshed_filt.set_implement()
+        self.threshd_final.set_implement()
+        self.maxima_final.set_implement()
+        self.wshed_final.set_implement()
+        self.maxima_df.set_implement()
+        self.cells_raw_df.set_implement()
+        self.cells_trfm_df.set_implement()
+        self.cells_df.set_implement()
+        self.cells_agg_df.set_implement()
+        self.cells_agg_csv.set_implement()
+        self.points_raw.set_implement()
+        self.heatmap_raw.set_implement()
+        self.points_trfm.set_implement()
+        self.heatmap_trfm.set_implement()
+        self.comb_reg.set_implement()
+        self.comb_cellc.set_implement()
+        self.comb_points.set_implement()
 
 
 class ProjFpModelTuning(ProjFpModelBase):
@@ -489,23 +321,31 @@ class ProjFpModelTuning(ProjFpModelBase):
     """
 
     def __init__(self, root_dir: str):
-        super().__init__(root_dir, ProjSubdirsTuning)
-
+        super().__init__(
+            root_dir=root_dir,
+            raw="raw_tuning",
+            registration="registration",
+            mask="mask",
+            cellcount="cellcount_tuning",
+            analysis="analysis_tuning",
+            visual="visual",
+            visual_comb="visual_comb",
+        )
         # Setting attributes as implemented
-        self._config_params[0] = True
-        self._raw[0] = True
-        self._overlap[0] = True
-        self._bgrm[0] = True
-        self._dog[0] = True
-        self._adaptv[0] = True
-        self._threshd[0] = True
-        self._threshd_volumes[0] = True
-        self._threshd_filt[0] = True
-        self._maxima[0] = True
-        self._wshed_volumes[0] = True
-        self._wshed_filt[0] = True
-        self._threshd_final[0] = True
-        self._maxima_final[0] = True
-        self._wshed_final[0] = True
-        self._maxima_df[0] = True
-        self._cells_raw_df[0] = True
+        self.config_params.set_implement()
+        self.raw.set_implement()
+        self.overlap.set_implement()
+        self.bgrm.set_implement()
+        self.dog.set_implement()
+        self.adaptv.set_implement()
+        self.threshd.set_implement()
+        self.threshd_volumes.set_implement()
+        self.threshd_filt.set_implement()
+        self.maxima.set_implement()
+        self.wshed_volumes.set_implement()
+        self.wshed_filt.set_implement()
+        self.threshd_final.set_implement()
+        self.maxima_final.set_implement()
+        self.wshed_final.set_implement()
+        self.maxima_df.set_implement()
+        self.cells_raw_df.set_implement()
