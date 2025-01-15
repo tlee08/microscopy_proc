@@ -444,19 +444,20 @@ class Pipeline:
         pfm_tuning = ProjFpModelTuning(root_dir)
         cls.logger.debug("Reading config params")
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-        cls.logger.debug("Reading raw zarr")
-        raw_arr = da.from_zarr(pfm.raw.val)
-        cls.logger.debug("Cropping raw zarr")
-        raw_arr = raw_arr[
-            slice(*configs.tuning_z_trim),
-            slice(*configs.tuning_y_trim),
-            slice(*configs.tuning_x_trim),
-        ]
-        if not overwrite and cls._check_files_exist(pfm_tuning, ("raw",)):
-            cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
-            return
-        cls.logger.debug("Saving cropped raw zarr")
-        raw_arr = disk_cache(raw_arr, pfm_tuning.raw.val)
+        with cluster_proc_contxt(LocalCluster()):
+            cls.logger.debug("Reading raw zarr")
+            raw_arr = da.from_zarr(pfm.raw.val)
+            cls.logger.debug("Cropping raw zarr")
+            raw_arr = raw_arr[
+                slice(*configs.tuning_z_trim),
+                slice(*configs.tuning_y_trim),
+                slice(*configs.tuning_x_trim),
+            ]
+            if not overwrite and cls._check_files_exist(pfm_tuning, ("raw",)):
+                cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
+                return
+            cls.logger.debug("Saving cropped raw zarr")
+            raw_arr = disk_cache(raw_arr, pfm_tuning.raw.val)
 
     ###################################################################################################
     # CELL COUNTING PIPELINE FUNCS
