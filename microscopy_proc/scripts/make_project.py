@@ -26,8 +26,6 @@ def main(root_dir: str = ".", overwrite: bool = False, dialogue: bool = True) ->
 
     Copies the `run_project.py` script and `default_configs.json` to `root_dir`.
     """
-    # Making the root folder
-    os.makedirs(root_dir, exist_ok=True)
     if dialogue:
         # Dialogue to check if the user wants to make the files
         to_continue = input("Making project in current directory. Continue? [y/N]: ").lower() + " "
@@ -40,6 +38,8 @@ def main(root_dir: str = ".", overwrite: bool = False, dialogue: bool = True) ->
             overwrite = True
         else:
             overwrite = False
+    # Making the root folder
+    os.makedirs(root_dir, exist_ok=True)
     # Copying the Python files to the project folder
     for src_fp in ["batch_pipeline.py", "view_img.py"]:
         import_template(src_fp, os.path.join(root_dir, src_fp), overwrite)
