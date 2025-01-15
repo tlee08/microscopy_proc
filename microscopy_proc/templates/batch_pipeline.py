@@ -19,11 +19,7 @@ if __name__ == "__main__":
     logger = init_logger(__name__)
 
     # Get all experiments
-    exp_ls = [
-        fp
-        for fp in natsorted(os.listdir(in_root_dir))
-        if os.path.isdir(os.path.join(in_root_dir, fp))
-    ]
+    exp_ls = [fp for fp in natsorted(os.listdir(in_root_dir)) if os.path.isdir(os.path.join(in_root_dir, fp))]
     # exp_ls = ["example_img"]
     for exp in exp_ls:
         logger.info(f"Running: {exp}")
@@ -95,20 +91,27 @@ if __name__ == "__main__":
             Pipeline.make_mask(pfm, overwrite=overwrite)
             # Making trimmed image for cell count tuning
             Pipeline.make_tuning_arr(pfm, overwrite=overwrite)
-            # Making overlap chunks in preparation for cell counting
-            Pipeline.img_overlap(pfm, overwrite=overwrite)
-            # Counting cells
-            Pipeline.cellc1(pfm, overwrite=overwrite)
-            Pipeline.cellc2(pfm, overwrite=overwrite)
-            Pipeline.cellc3(pfm, overwrite=overwrite)
-            Pipeline.cellc4(pfm, overwrite=overwrite)
-            Pipeline.cellc5(pfm, overwrite=overwrite)
-            Pipeline.cellc6(pfm, overwrite=overwrite)
-            Pipeline.cellc7(pfm, overwrite=overwrite)
-            Pipeline.cellc8(pfm, overwrite=overwrite)
-            Pipeline.cellc9(pfm, overwrite=overwrite)
-            Pipeline.cellc10(pfm, overwrite=overwrite)
-            Pipeline.cellc11(pfm, overwrite=overwrite)
+
+            # Cell Counting in both tuning and production mode
+            for pfm_i in [
+                pfm_tuning,
+                pfm,
+            ]:
+                # Making overlap chunks in preparation for cell counting
+                Pipeline.img_overlap(pfm_i, overwrite=overwrite)
+                # Counting cells
+                Pipeline.cellc1(pfm_i, overwrite=overwrite)
+                Pipeline.cellc2(pfm_i, overwrite=overwrite)
+                Pipeline.cellc3(pfm_i, overwrite=overwrite)
+                Pipeline.cellc4(pfm_i, overwrite=overwrite)
+                Pipeline.cellc5(pfm_i, overwrite=overwrite)
+                Pipeline.cellc6(pfm_i, overwrite=overwrite)
+                Pipeline.cellc7(pfm_i, overwrite=overwrite)
+                Pipeline.cellc8(pfm_i, overwrite=overwrite)
+                Pipeline.cellc9(pfm_i, overwrite=overwrite)
+                Pipeline.cellc10(pfm_i, overwrite=overwrite)
+                Pipeline.cellc11(pfm_i, overwrite=overwrite)
+
             # Converting maxima from raw space to refernce atlas space
             Pipeline.transform_coords(pfm, overwrite=overwrite)
             # Getting Region ID mappings for each cell
@@ -127,8 +130,5 @@ if __name__ == "__main__":
             Pipeline.combine_points(pfm, overwrite=overwrite)
         except Exception as e:
             logger.info(f"Error in {exp}: {e}")
-            continue
     # Combining all experiment dataframes
-    BatchCombineFuncs.combine_root_pipeline(
-        root_dir, os.path.dirname(root_dir), overwrite=True
-    )
+    BatchCombineFuncs.combine_root_pipeline(root_dir, os.path.dirname(root_dir), overwrite=True)
