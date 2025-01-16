@@ -35,6 +35,7 @@ class ConfigParamsModel(BaseModel):
     Pydantic model for registration parameters.
     """
 
+    # NOTE: can set extra as "forbid" to prevent extra keys
     model_config = ConfigDict(
         extra="ignore",
         # arbitrary_types_allowed=True,

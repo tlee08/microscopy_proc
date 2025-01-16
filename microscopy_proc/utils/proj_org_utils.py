@@ -51,19 +51,11 @@ class FpAttr:
     @property
     def val(self):
         """
-        Used to get a given attribute's file path.
-        It is called within the property getters.
+        Return the joined path_dirs_ls as a filepath.
 
-        Refer to the underlying attribute (NOT the property. i.e. attribute has name "_<attr>")
-        and build & return the file path.
-        The attribute is in the format:
-
-        ```
-        _<attr> = ([subdirs, ..., basename], implemented)
-
-        [subdirs, ..., basename] -> Effectively the split path that is to be joined
-        implemented -> whether the attribute is implemented in the model
-        ```
+        If path_dirs_ls is empty, raise an AssertionError.
+        If the last item in path_dirs_ls does not have an extension, raise an AssertionError.
+        If the attribute is not implemented, raise a NotImplementedError.
         """
         # Asserting that the path_dirs_ls has at least 1 element (the basename)
         assert len(self.path_dirs_ls) > 0, "Path directories list is empty."
@@ -76,7 +68,7 @@ class FpAttr:
                 "Activate this by calling 'set_implement'."
                 "or explicitly edit this model."
             )
-        # Returning filepath as "dir1/dir2/.../basename"
+        # Returning joined filepath
         return os.path.join(*self.path_dirs_ls)
 
 
@@ -156,7 +148,7 @@ class RefFpModel(FpModel):
             self.mapping_sdir,
             self.elastix_sdir,
         ]
-        # Filepath attributes are in the format: _<attr> = (implemented, [subdirs, ..., basename])
+        # Setting filepath attributes
         self.ref = FpAttr([self.root_dir.val, self.reference_sdir.val, f"{self.ref_version.val}.tif"], True)
         self.annot = FpAttr([self.root_dir.val, self.annotation_sdor.val, f"{self.annot_version.val}.tif"], True)
         self.map = FpAttr([self.root_dir.val, self.mapping_sdir.val, f"{self.map_version.val}.json"], True)
@@ -176,6 +168,7 @@ class ProjFpModelBase(FpModel):
         registration_sdir: str,
         mask_sdir: str,
         cellcount_sdir: str,
+        cellcount_final_sdir: str,
         analysis_sdir: str,
         visual_sdir: str,
         visual_comb_sdir: str,
@@ -187,6 +180,7 @@ class ProjFpModelBase(FpModel):
         self.registration_sdir = ObservedAttr(registration_sdir, set_callable=self.set_filepaths)
         self.mask_sdir = ObservedAttr(mask_sdir, set_callable=self.set_filepaths)
         self.cellcount_sdir = ObservedAttr(cellcount_sdir, set_callable=self.set_filepaths)
+        self.cellcount_final_sdir = ObservedAttr(cellcount_final_sdir, set_callable=self.set_filepaths)
         self.analysis_sdir = ObservedAttr(analysis_sdir, set_callable=self.set_filepaths)
         self.visual_sdir = ObservedAttr(visual_sdir, set_callable=self.set_filepaths)
         self.visual_comb_sdir = ObservedAttr(visual_comb_sdir, set_callable=self.set_filepaths)
@@ -201,11 +195,12 @@ class ProjFpModelBase(FpModel):
             self.registration_sdir,
             self.mask_sdir,
             self.cellcount_sdir,
+            self.cellcount_final_sdir,
             self.analysis_sdir,
             self.visual_sdir,
             self.visual_comb_sdir,
         ]
-        # Filepath attributes are in the format: _<attr> = (implemented, [subdirs, ..., basename])
+        # Setting filepath attributes
         self.config_params = FpAttr([self.root_dir.val, "config_params.json"])
         self.raw = FpAttr([self.root_dir.val, self.raw_sdir.val, "raw.zarr"])
         self.ref = FpAttr([self.root_dir.val, self.registration_sdir.val, "0a_reference.tif"])
@@ -233,9 +228,9 @@ class ProjFpModelBase(FpModel):
         self.maxima = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "7_maxima.zarr"])
         self.wshed_volumes = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "8_wshed_volumes.zarr"])
         self.wshed_filt = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "9_wshed_filt.zarr"])
-        self.threshd_final = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "10_threshd_f.zarr"])
-        self.maxima_final = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "10_maxima_f.zarr"])
-        self.wshed_final = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "10_wshed_f.zarr"])
+        self.threshd_final = FpAttr([self.root_dir.val, self.cellcount_final_sdir.val, "threshd.zarr"])
+        self.maxima_final = FpAttr([self.root_dir.val, self.cellcount_final_sdir.val, "maxima.zarr"])
+        self.wshed_final = FpAttr([self.root_dir.val, self.cellcount_final_sdir.val, "wshed.zarr"])
         self.maxima_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "1_maxima.parquet"])
         self.cells_raw_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "1_cells_raw.parquet"])
         self.cells_trfm_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "2_cells_trfm.parquet"])
@@ -263,6 +258,7 @@ class ProjFpModel(ProjFpModelBase):
             registration_sdir="registration",
             mask_sdir="mask",
             cellcount_sdir="cellcount",
+            cellcount_final_sdir="cellcount_final",
             analysis_sdir="analysis",
             visual_sdir="visual",
             visual_comb_sdir="visual_comb",
@@ -328,6 +324,7 @@ class ProjFpModelTuning(ProjFpModelBase):
             registration_sdir="registration",
             mask_sdir="mask",
             cellcount_sdir="cellcount_tuning",
+            cellcount_final_sdir="cellcount_final",
             analysis_sdir="analysis_tuning",
             visual_sdir="visual",
             visual_comb_sdir="visual_comb",
@@ -348,8 +345,5 @@ class ProjFpModelTuning(ProjFpModelBase):
         self.maxima.set_implement()
         self.wshed_volumes.set_implement()
         self.wshed_filt.set_implement()
-        self.threshd_final.set_implement()
-        self.maxima_final.set_implement()
-        self.wshed_final.set_implement()
         self.maxima_df.set_implement()
         self.cells_raw_df.set_implement()

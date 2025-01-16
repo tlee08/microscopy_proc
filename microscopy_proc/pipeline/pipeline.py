@@ -187,7 +187,7 @@ class Pipeline:
                     in_fp_ls=tuple(
                         natsorted((os.path.join(in_fp, i) for i in os.listdir(in_fp) if re.search(r".tif$", i)))
                     ),
-                    out_fp=pfm.raw_sdir.val,
+                    out_fp=pfm.raw.val,
                     chunks=configs.zarr_chunksize,
                 )
             elif os.path.isfile(in_fp):
@@ -195,7 +195,7 @@ class Pipeline:
                 cls.logger.debug("Making zarr from big-tiff file")
                 Tiff2ZarrFuncs.btiff2zarr(
                     in_fp=in_fp,
-                    out_fp=pfm.raw_sdir.val,
+                    out_fp=pfm.raw.val,
                     chunks=configs.zarr_chunksize,
                 )
             else:
@@ -251,7 +251,7 @@ class Pipeline:
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         with cluster_proc_contxt(LocalCluster()):
             # Reading
-            raw_arr = da.from_zarr(pfm.raw_sdir.val)
+            raw_arr = da.from_zarr(pfm.raw.val)
             # Rough downsample
             downsmpl1_arr = RegFuncs.downsmpl_rough(raw_arr, configs.z_rough, configs.y_rough, configs.x_rough)
             # Computing (from dask array)
@@ -446,7 +446,7 @@ class Pipeline:
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         with cluster_proc_contxt(LocalCluster()):
             cls.logger.debug("Reading raw zarr")
-            raw_arr = da.from_zarr(pfm.raw_sdir.val)
+            raw_arr = da.from_zarr(pfm.raw.val)
             cls.logger.debug("Cropping raw zarr")
             raw_arr = raw_arr[
                 slice(*configs.tuning_z_trim),
@@ -472,7 +472,7 @@ class Pipeline:
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Making overlap image
         with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
-            raw_arr = da.from_zarr(pfm.raw_sdir.val, chunks=configs.zarr_chunksize)
+            raw_arr = da.from_zarr(pfm.raw.val, chunks=configs.zarr_chunksize)
             overlap_arr = da_overlap(raw_arr, d=configs.overlap_depth)
             overlap_arr = disk_cache(overlap_arr, pfm.overlap.val)
 
@@ -758,7 +758,7 @@ class Pipeline:
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
-            raw_arr = da.from_zarr(pfm.raw_sdir.val)
+            raw_arr = da.from_zarr(pfm.raw.val)
             overlap_arr = da.from_zarr(pfm.overlap.val)
             maxima_arr = da.from_zarr(pfm.maxima.val)
             threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
@@ -975,7 +975,7 @@ class Pipeline:
         with cluster_proc_contxt(LocalCluster()):
             VisualCheckFuncsDask.coords2points(
                 coords=pd.read_parquet(pfm.cells_raw_df.val),
-                shape=da.from_zarr(pfm.raw_sdir.val).shape,
+                shape=da.from_zarr(pfm.raw.val).shape,
                 out_fp=pfm.points_raw.val,
             )
 
@@ -988,7 +988,7 @@ class Pipeline:
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsDask.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_raw_df.val),
-                shape=da.from_zarr(pfm.raw_sdir.val).shape,
+                shape=da.from_zarr(pfm.raw.val).shape,
                 out_fp=pfm.heatmap_raw.val,
                 radius=configs.heatmap_raw_radius,
             )
@@ -1042,7 +1042,7 @@ class Pipeline:
             return
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.raw_sdir.val, pfm.threshd_final.val, pfm.wshed_final.val),
+            fp_in_ls=(pfm.raw.val, pfm.threshd_final.val, pfm.wshed_final.val),
             fp_out=pfm.comb_cellc.val,
             trimmer=(
                 slice(*configs.combine_cellc_z_trim),
