@@ -457,7 +457,7 @@ class Pipeline:
                 cls.logger.debug("Don't overwrite specified and raw zarr exists. Skipping.")
                 return
             cls.logger.debug("Saving cropped raw zarr")
-            raw_arr = disk_cache(raw_arr, pfm_tuning.raw_sdir.val)
+            raw_arr = disk_cache(raw_arr, pfm_tuning.raw.val)
 
     ###################################################################################################
     # CELL COUNTING PIPELINE FUNCS
