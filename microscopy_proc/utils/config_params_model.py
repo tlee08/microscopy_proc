@@ -36,7 +36,7 @@ class ConfigParamsModel(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="forbid",
+        extra="ignore",
         # arbitrary_types_allowed=True,
         validate_default=True,
         use_enum_values=True,
