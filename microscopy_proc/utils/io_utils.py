@@ -145,6 +145,21 @@ def silent_remove(fp):
             pass
 
 
+def check_files_exist(*args: tuple[str, ...]):
+    """
+    args is dst_fp_ls
+    """
+    logger.debug(f"Checking if the following files exist already: {args}")
+    for dst_fp in args:
+        if os.path.exists(dst_fp):
+            logger.debug(f"{dst_fp} already exists.")
+            logger.debug("Returning True.")
+            return True
+    logger.debug("None of the filepaths exist.")
+    logger.debug("Returning False.")
+    return False
+
+
 def sanitise_smb_df(df):
     """
     Sanitizes the SMB share dataframe.
