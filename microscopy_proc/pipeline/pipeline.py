@@ -1014,7 +1014,7 @@ class Pipeline:
         if not overwrite and check_files_exist(pfm.comb_reg.val):
             return cls.logger.warning(file_exists_msg())
         ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.bounded.val, pfm.regresult.val, pfm.regresult.val),
+            fp_in_ls=(pfm.trimmed.val, pfm.bounded.val, pfm.regresult.val),
             # 2nd regresult means the combining works in ImageJ
             # TODO: maybe use a blank img instead of regresult
             fp_out=pfm.comb_reg.val,

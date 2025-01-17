@@ -1,31 +1,22 @@
-import os
+from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.template_utils import import_static_templates_script
 
-from microscopy_proc.utils.template_utils import import_template
+logger = init_logger(__name__)
 
 
-def main(root_dir: str = ".", overwrite: bool = False, dialogue: bool = True) -> None:
+def main() -> None:
     """
     Makes a script to run a behavysis analysis project.
-
-    Copies the `run_project.py` script and `default_configs.json` to `root_dir`.
     """
-    if dialogue:
-        # Dialogue to check if the user wants to make the files
-        to_continue = input("Making project in current directory. Continue? [y/N]: ").lower() + " "
-        if to_continue[0] != "y":
-            print("Exiting.")
-            return
-        # Dialogue to check if the user wants to overwrite the files
-        to_overwrite = input("Overwrite existing files? [y/N]: ").lower() + " "
-        if to_overwrite[0] == "y":
-            overwrite = True
-        else:
-            overwrite = False
-    # Making the root folder
-    os.makedirs(root_dir, exist_ok=True)
-    # Copying the Python files to the project folder
-    for src_fp in ["batch_pipeline.py", "view_img.py"]:
-        import_template(src_fp, os.path.join(root_dir, src_fp), overwrite)
+    import_static_templates_script(
+        description="Make Microscopy Pipeline Script",
+        templates_ls=["run_pipeline.py", "view_img.py"],
+        pkg_name="microscopy_proc",
+        pkg_subdir="templates",
+        root_dir=".",
+        overwrite=False,
+        dialogue=True,
+    )
     # # Copying default configs file to the project folder
     # write_json(os.path.join(root_dir, "default_configs.json"), ConfigParamsModel().model_dump())
 
