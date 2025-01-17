@@ -44,9 +44,9 @@ def log_func_decorator(logger: logging.Logger):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                logger.info(f"STARTED {func.__name__}")
+                logger.debug(f"STARTED {func.__name__}")
                 output = func(*args, **kwargs)
-                logger.info(f"FINISHED {func.__name__}")
+                logger.debug(f"FINISHED {func.__name__}")
                 return output
             except Exception as e:
                 logger.error(f"Error in {func.__name__}: {e}")

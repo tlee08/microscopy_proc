@@ -56,7 +56,7 @@ imgs_view_params = {
         "adaptv": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
         "threshd": {VRANGE: (0, 5), CMAP: Colormaps.GRAY.value},
         "threshd_volumes": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
-        "threshd_filt": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+        "threshd_filt": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
         "maxima": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
         "wshed_volumes": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
         "wshed_filt": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},

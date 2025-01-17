@@ -9,9 +9,10 @@ dependencies:
   - bioconda::fiji
   # Visualisation
   - python-graphviz
-  # GPU acceleration
+  # GPU acceleration (only CuPy from conda works)
   # - cuda-toolkit
   - cupy
   - pip:
-      # - -e .
+      # - microscopy_proc
+      # - -e "."
       - -e ".[gpu,elastix]"
