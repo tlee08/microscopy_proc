@@ -2,12 +2,22 @@ import importlib.util
 
 
 # Checking if CPU or GPU version
-def is_installed(package_name):
+def package_is_exists(package_name: str) -> bool:
     spec = importlib.util.find_spec(package_name)
     return spec is not None
 
 
-# Checking if gpu extra dependency is installed
-GPU_ENABLED = is_installed("cupy") and is_installed("dask_cuda")
-# Checking if elastix extra dependency is installed
-ELASTIX_ENABLED = is_installed("SimpleITK")
+def package_is_importable(pacakage_name: str) -> bool:
+    try:
+        importlib.import_module(pacakage_name)
+        return True
+    except ImportError:
+        return False
+
+
+# Checking whether gpu extra dependency (CuPy) is installed
+GPU_ENABLED = package_is_importable("cupy")
+# Checking whether dask_cuda works (i.e. is Linux and has CUDA)
+DASK_CUDA_ENABLED = package_is_importable("dask_cuda")
+# Checking whether elastix extra dependency is installed
+ELASTIX_ENABLED = package_is_importable("SimpleITK")

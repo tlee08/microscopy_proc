@@ -10,7 +10,7 @@ from dask.distributed import LocalCluster
 from natsort import natsorted
 from scipy import ndimage
 
-from microscopy_proc import ELASTIX_ENABLED, GPU_ENABLED
+from microscopy_proc import DASK_CUDA_ENABLED, ELASTIX_ENABLED, GPU_ENABLED
 from microscopy_proc.constants import (
     ANNOT_COLUMNS_FINAL,
     CELL_AGG_MAPPINGS,
@@ -49,10 +49,15 @@ from microscopy_proc.utils.proj_org_utils import (
 
 # Optional dependency: gpu
 if GPU_ENABLED:
-    from dask_cuda import LocalCUDACluster
-
+    # System dependency after gpu: dask-cuda
+    if DASK_CUDA_ENABLED:
+        from dask_cuda import LocalCUDACluster
+    else:
+        # Substituting LocalCluster for LocalCUDACluster
+        LocalCUDACluster = lambda: LocalCluster(n_workers=1, threads_per_worker=1)
     from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
 else:
+    # Substituting LocalCluster for LocalCUDACluster
     LocalCUDACluster = LocalCluster
     Gf = Cf
     logger = init_logger(__name__)
