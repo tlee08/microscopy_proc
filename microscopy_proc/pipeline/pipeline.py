@@ -47,6 +47,8 @@ from microscopy_proc.utils.proj_org_utils import (
     RefFpModel,
 )
 
+logger = init_logger(__name__)
+
 # Optional dependency: gpu
 if GPU_ENABLED:
     # System dependency after gpu: dask-cuda
@@ -60,10 +62,9 @@ else:
     # Substituting LocalCluster for LocalCUDACluster
     LocalCUDACluster = LocalCluster
     Gf = Cf
-    logger = init_logger(__name__)
-    logger.info("Warning GPU functionality not installed.")
-    logger.info("Using CPU functionality instead (much slower).")
-    logger.info('Can install with `pip install "microscopy_proc[gpu]"`')
+    logger.warning("Warning GPU functionality not installed.")
+    logger.warning("Using CPU functionality instead (much slower).")
+    logger.warning('Can install with `pip install "microscopy_proc[gpu]"`')
 # Optional dependency: elastix
 if ELASTIX_ENABLED:
     from microscopy_proc.funcs.elastix_funcs import ElastixFuncs
@@ -101,8 +102,6 @@ class Pipeline:
     ###################################################################################################
     # UPDATE CONFIGS
     ###################################################################################################
-
-    # TODO: change ProjFpModel to ProjFpModelBase
 
     @classmethod
     @log_func_decorator(logger)
