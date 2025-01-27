@@ -37,7 +37,12 @@ from microscopy_proc.utils.dask_utils import (
     disk_cache,
 )
 from microscopy_proc.utils.diagnostics_utils import file_exists_msg
-from microscopy_proc.utils.io_utils import check_files_exist, read_json, sanitise_smb_df, write_json
+from microscopy_proc.utils.io_utils import (
+    check_files_exist,
+    read_json,
+    sanitise_smb_df,
+    write_json,
+)
 from microscopy_proc.utils.logging_utils import init_logger, log_func_decorator
 from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
@@ -131,7 +136,9 @@ class Pipeline:
             cls.logger.debug(f"kwargs is not empty. They are: {kwargs}")
             configs_new = configs.model_validate(configs.model_copy(update=kwargs))
             if configs_new != configs:
-                cls.logger.debug("New configs are different from old configs. Overwriting to file.")
+                cls.logger.debug(
+                    "New configs are different from old configs. Overwriting to file."
+                )
                 write_json(pfm.config_params.val, configs_new.model_dump())
         cls.logger.debug("Returning the configs file")
         return configs
@@ -142,7 +149,9 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def tiff2zarr(cls, pfm: ProjFpModelBase, in_fp: str, overwrite: bool = False) -> None:
+    def tiff2zarr(
+        cls, pfm: ProjFpModelBase, in_fp: str, overwrite: bool = False
+    ) -> None:
         """
         _summary_
 
@@ -171,7 +180,13 @@ class Pipeline:
                 cls.logger.debug("Making zarr from tiff file stack in directory")
                 Tiff2ZarrFuncs.tiffs2zarr(
                     in_fp_ls=tuple(
-                        natsorted((os.path.join(in_fp, i) for i in os.listdir(in_fp) if re.search(r".tif$", i)))
+                        natsorted(
+                            (
+                                os.path.join(in_fp, i)
+                                for i in os.listdir(in_fp)
+                                if re.search(r".tif$", i)
+                            )
+                        )
                     ),
                     out_fp=pfm.raw.val,
                     chunks=configs.zarr_chunksize,
@@ -241,7 +256,9 @@ class Pipeline:
             # Reading
             raw_arr = da.from_zarr(pfm.raw.val)
             # Rough downsample
-            downsmpl1_arr = RegFuncs.downsmpl_rough(raw_arr, configs.z_rough, configs.y_rough, configs.x_rough)
+            downsmpl1_arr = RegFuncs.downsmpl_rough(
+                raw_arr, configs.z_rough, configs.y_rough, configs.x_rough
+            )
             # Computing (from dask array)
             downsmpl1_arr = downsmpl1_arr.compute()
             # Saving
@@ -257,7 +274,9 @@ class Pipeline:
         # Reading
         downsmpl1_arr = tifffile.imread(pfm.downsmpl1.val)
         # Fine downsample
-        downsmpl2_arr = RegFuncs.downsmpl_fine(downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine)
+        downsmpl2_arr = RegFuncs.downsmpl_fine(
+            downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine
+        )
         # Saving
         tifffile.imwrite(pfm.downsmpl2.val, downsmpl2_arr)
 
@@ -288,7 +307,8 @@ class Pipeline:
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Asserting that lower bound is less than upper bound
         assert configs.lower_bound[0] < configs.upper_bound[0], (
-            "Error in configL parameters: " "lower bound condition must be less than upper bound condition."
+            "Error in configL parameters: "
+            "lower bound condition must be less than upper bound condition."
         )
         assert configs.lower_bound[1] <= configs.lower_bound[0], (
             "Error in configL parameters: "
@@ -372,17 +392,25 @@ class Pipeline:
 
         # Make outline img (1 for in, 2 for out)
         # TODO: convert to return np.array and save out-of-function
-        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 1], s, pfm.mask_outline.val)
+        VisualCheckFuncsTiff.coords2points(
+            outline_df[outline_df.is_in == 1], s, pfm.mask_outline.val
+        )
         in_arr = tifffile.imread(pfm.mask_outline.val)
-        VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 0], s, pfm.mask_outline.val)
+        VisualCheckFuncsTiff.coords2points(
+            outline_df[outline_df.is_in == 0], s, pfm.mask_outline.val
+        )
         out_arr = tifffile.imread(pfm.mask_outline.val)
         tifffile.imwrite(pfm.mask_outline.val, in_arr + out_arr * 2)
 
         # Fill in outline to recreate mask (not perfect)
         mask_reg_arr = MaskFuncs.fill_outline(outline_df, s)
         # Opening (removes FP) and closing (fills FN)
-        mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(np.uint8)
-        mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(np.uint8)
+        mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(
+            np.uint8
+        )
+        mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(
+            np.uint8
+        )
         # Saving
         tifffile.imwrite(pfm.mask_reg.val, mask_reg_arr)
 
@@ -398,7 +426,9 @@ class Pipeline:
         annot_orig_arr = tifffile.imread(rfm.annot.val)
         # Getting the annotation name for every cell (zyx coord)
         mask_df = pd.merge(
-            left=MaskFuncs.mask2region_counts(np.full(annot_orig_arr.shape, 1), annot_orig_arr),
+            left=MaskFuncs.mask2region_counts(
+                np.full(annot_orig_arr.shape, 1), annot_orig_arr
+            ),
             right=MaskFuncs.mask2region_counts(mask_reg_arr, annot_arr),
             how="left",
             left_index=True,
@@ -411,7 +441,8 @@ class Pipeline:
         mask_df = MapFuncs.combine_nested_regions(mask_df, annot_df)
         # Calculating proportion of mask volume in each region
         mask_df[MaskColumns.VOLUME_PROP.value] = (
-            mask_df[MaskColumns.VOLUME_MASK.value] / mask_df[MaskColumns.VOLUME_ANNOT.value]
+            mask_df[MaskColumns.VOLUME_MASK.value]
+            / mask_df[MaskColumns.VOLUME_ANNOT.value]
         )
         # Selecting and ordering relevant columns
         mask_df = mask_df[[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]]
@@ -553,7 +584,8 @@ class Pipeline:
         if not overwrite and check_files_exist(pfm.threshd.val):
             return cls.logger.warning(file_exists_msg())
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCluster()):
+        # with cluster_proc_contxt(LocalCluster()):
+        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # # Visually inspect sd offset
@@ -590,7 +622,9 @@ class Pipeline:
                 threshd_arr,
             )
             # Computing and saving
-            threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes.val)
+            threshd_volumes_arr = disk_cache(
+                threshd_volumes_arr, pfm.threshd_volumes.val
+            )
 
     @classmethod
     @log_func_decorator(logger)
@@ -603,7 +637,8 @@ class Pipeline:
         if not overwrite and check_files_exist(pfm.threshd_filt.val):
             return cls.logger.warning(file_exists_msg())
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCluster()):
+        # with cluster_proc_contxt(LocalCluster()):
+        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
@@ -683,7 +718,8 @@ class Pipeline:
         if not overwrite and check_files_exist(pfm.wshed_filt.val):
             return cls.logger.warning(file_exists_msg())
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCluster()):
+        # with cluster_proc_contxt(LocalCluster()):
+        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
@@ -709,10 +745,13 @@ class Pipeline:
         - Trimmed threshold image
         - Trimmed watershed image
         """
-        if not overwrite and check_files_exist(pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val):
+        if not overwrite and check_files_exist(
+            pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val
+        ):
             return cls.logger.warning(file_exists_msg())
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCluster()):
+        # with cluster_proc_contxt(LocalCluster()):
+        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
@@ -821,15 +860,23 @@ class Pipeline:
             cells_df = cells_df[enum2list(Coords)]
             # Scaling to resampled rough space
             # NOTE: this downsampling uses slicing so must be computed differently
-            cells_df = cells_df / np.array((configs.z_rough, configs.y_rough, configs.x_rough))
+            cells_df = cells_df / np.array(
+                (configs.z_rough, configs.y_rough, configs.x_rough)
+            )
             # Scaling to resampled space
-            cells_df = cells_df * np.array((configs.z_fine, configs.y_fine, configs.x_fine))
+            cells_df = cells_df * np.array(
+                (configs.z_fine, configs.y_fine, configs.x_fine)
+            )
             # Trimming/offsetting to sliced space
-            cells_df = cells_df - np.array([s[0] or 0 for s in (configs.z_trim, configs.y_trim, configs.x_trim)])
+            cells_df = cells_df - np.array(
+                [s[0] or 0 for s in (configs.z_trim, configs.y_trim, configs.x_trim)]
+            )
             # Converting back to DataFrame
             cells_df = pd.DataFrame(cells_df, columns=enum2list(Coords))
 
-            cells_trfm_df = ElastixFuncs.transformation_coords(cells_df, pfm.ref.val, pfm.regresult.val)
+            cells_trfm_df = ElastixFuncs.transformation_coords(
+                cells_df, pfm.ref.val, pfm.regresult.val
+            )
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_df = dd.from_pandas(cells_df, npartitions=1)
             # Fitting resampled space to atlas image with Transformix (from Elastix registration step)
@@ -923,7 +970,9 @@ class Pipeline:
             # Sanitising (removing smb columns)
             cells_df = sanitise_smb_df(cells_df)
             # Grouping cells by region name and aggregating on given mappings
-            cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(CELL_AGG_MAPPINGS)
+            cells_agg_df = cells_df.groupby(AnnotColumns.ID.value).agg(
+                CELL_AGG_MAPPINGS
+            )
             cells_agg_df.columns = list(CELL_AGG_MAPPINGS.keys())
             # Reading annotation mappings dataframe
             # Making df of region names and their parent region names
@@ -932,7 +981,8 @@ class Pipeline:
             cells_agg_df = MapFuncs.combine_nested_regions(cells_agg_df, annot_df)
             # Calculating integrated average intensity (sum_intensity / volume)
             cells_agg_df[CellColumns.IOV.value] = (
-                cells_agg_df[CellColumns.SUM_INTENSITY.value] / cells_agg_df[CellColumns.VOLUME.value]
+                cells_agg_df[CellColumns.SUM_INTENSITY.value]
+                / cells_agg_df[CellColumns.VOLUME.value]
             )
             # Selecting and ordering relevant columns
             cells_agg_df = cells_agg_df[[*ANNOT_COLUMNS_FINAL, *enum2list(CellColumns)]]
