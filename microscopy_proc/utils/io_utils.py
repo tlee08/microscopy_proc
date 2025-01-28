@@ -118,18 +118,6 @@ def write_json(fp: str, data: dict) -> None:
         json.dump(data, f, indent=4)
 
 
-def clear_dir_junk(my_dir: str) -> None:
-    """
-    Removes all hidden junk files in given directory.
-    Hidden files begin with ".".
-    """
-    for i in os.listdir(dir):
-        path = os.path.join(my_dir, i)
-        # If the file has a "." at the start, remove it
-        if re.search(r"^\.", i):
-            silent_remove(path)
-
-
 def silent_remove(fp):
     if os.path.isfile(fp):
         try:
@@ -143,7 +131,7 @@ def silent_remove(fp):
             pass
 
 
-def check_files_exist(*args: tuple[str, ...]):
+def check_files_exist(*args: str):
     """
     args is dst_fp_ls
     """
