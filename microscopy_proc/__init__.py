@@ -11,13 +11,14 @@ def package_is_importable(pacakage_name: str) -> bool:
     try:
         importlib.import_module(pacakage_name)
         return True
-    except ImportError:
+    except ImportError as e:
+        print("ERROR", e)
         return False
 
 
-# Checking whether gpu extra dependency (CuPy) is installed
-GPU_ENABLED = package_is_importable("cupy")
 # Checking whether dask_cuda works (i.e. is Linux and has CUDA)
 DASK_CUDA_ENABLED = package_is_importable("dask_cuda")
+# Checking whether gpu extra dependency (CuPy) is installed
+GPU_ENABLED = package_is_importable("cupy")
 # Checking whether elastix extra dependency is installed
 ELASTIX_ENABLED = package_is_importable("SimpleITK")

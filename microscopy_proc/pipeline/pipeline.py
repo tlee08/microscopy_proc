@@ -51,21 +51,29 @@ from microscopy_proc.utils.proj_org_utils import (
     ProjFpModelTuning,
     RefFpModel,
 )
+from microscopy_proc import package_is_importable
 
 logger = init_logger(__name__)
 
+print(DASK_CUDA_ENABLED)
+print(GPU_ENABLED)
+print(ELASTIX_ENABLED)
+
+if DASK_CUDA_ENABLED:
+    from dask_cuda import LocalCUDACluster
+else:
+    # Substituting LocalCluster for LocalCUDACluster
+    LocalCUDACluster = lambda: LocalCluster(n_workers=1, threads_per_worker=1)
+    logger.warning("Warning Dask-Cuda functionality not installed.")
+    logger.warning("Using single GPU functionality instead (1 worker)")
+    logger.warning("Dask-Cuda currently only available on Linux")
 # Optional dependency: gpu
-if GPU_ENABLED:
+if package_is_importable("cupy"):
     # System dependency after gpu: dask-cuda
-    if DASK_CUDA_ENABLED:
-        from dask_cuda import LocalCUDACluster
-    else:
-        # Substituting LocalCluster for LocalCUDACluster
-        LocalCUDACluster = lambda: LocalCluster(n_workers=1, threads_per_worker=1)
     from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
 else:
     # Substituting LocalCluster for LocalCUDACluster
-    LocalCUDACluster = LocalCluster
+    LocalCUDACluster = lambda: LocalCluster(n_workers=2, threads_per_worker=1)
     Gf = Cf
     logger.warning("Warning GPU functionality not installed.")
     logger.warning("Using CPU functionality instead (much slower).")
@@ -75,6 +83,8 @@ if ELASTIX_ENABLED:
     from microscopy_proc.funcs.elastix_funcs import ElastixFuncs
 else:
     ElastixFuncs = import_extra_error_func("elastix")
+    logger.warning("Warning Elastix functionality not installed and unavailable.")
+    logger.warning('Can install with `pip install "microscopy_proc[elastix]"`')
 
 
 class Pipeline:
