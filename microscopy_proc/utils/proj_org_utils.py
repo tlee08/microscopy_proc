@@ -60,7 +60,9 @@ class FpAttr:
         # Asserting that the path_dirs_ls has at least 1 element (the basename)
         assert len(self.path_dirs_ls) > 0, "Path directories list is empty."
         # Assertignt that the last item in path_dirs_ls has an extension
-        assert os.path.splitext(self.path_dirs_ls[-1])[1], "Last item in path_dirs_ls must have an extension."
+        assert os.path.splitext(self.path_dirs_ls[-1])[
+            1
+        ], "Last item in path_dirs_ls must have an extension."
         # If attribute is not implemented, raise error
         if not self.implemented:
             raise NotImplementedError(
@@ -120,7 +122,9 @@ class RefFpModel(FpModel):
     Model for reference file paths.
     """
 
-    def __init__(self, root_dir: str, ref_version: str, annot_version: str, map_version: str):
+    def __init__(
+        self, root_dir: str, ref_version: str, annot_version: str, map_version: str
+    ):
         """
         atlas_rsc_dir = "/home/linux1/Desktop/iDISCO/resources/atlas_resources/"
 
@@ -130,13 +134,21 @@ class RefFpModel(FpModel):
         # and wrapping in a FpAttr to reset filepath attributes whenever they are changed
         self.root_dir = ObservedAttr(root_dir, set_callable=self.set_filepaths)
         self.ref_version = ObservedAttr(ref_version, set_callable=self.set_filepaths)
-        self.annot_version = ObservedAttr(annot_version, set_callable=self.set_filepaths)
+        self.annot_version = ObservedAttr(
+            annot_version, set_callable=self.set_filepaths
+        )
         self.map_version = ObservedAttr(map_version, set_callable=self.set_filepaths)
         # Constant subdirectory names
         self.reference_sdir = ObservedAttr("reference", set_callable=self.set_filepaths)
-        self.annotation_sdor = ObservedAttr("annotation", set_callable=self.set_filepaths)
-        self.mapping_sdir = ObservedAttr("region_mapping", set_callable=self.set_filepaths)
-        self.elastix_sdir = ObservedAttr("elastix_params", set_callable=self.set_filepaths)
+        self.annotation_sdor = ObservedAttr(
+            "annotation", set_callable=self.set_filepaths
+        )
+        self.mapping_sdir = ObservedAttr(
+            "region_mapping", set_callable=self.set_filepaths
+        )
+        self.elastix_sdir = ObservedAttr(
+            "elastix_params", set_callable=self.set_filepaths
+        )
         # Setting filepath attributes
         self.subdirs_ls = []
         self.set_filepaths()
@@ -166,8 +178,12 @@ class RefFpModel(FpModel):
             [self.root_dir.val, self.mapping_sdir.val, f"{self.map_version.val}.json"],
             True,
         )
-        self.affine = FpAttr([self.root_dir.val, self.elastix_sdir.val, "align_affine.txt"], True)
-        self.bspline = FpAttr([self.root_dir.val, self.elastix_sdir.val, "align_bspline.txt"], True)
+        self.affine = FpAttr(
+            [self.root_dir.val, self.elastix_sdir.val, "align_affine.txt"], True
+        )
+        self.bspline = FpAttr(
+            [self.root_dir.val, self.elastix_sdir.val, "align_bspline.txt"], True
+        )
 
 
 class ProjFpModelBase(FpModel):
@@ -184,18 +200,22 @@ class ProjFpModelBase(FpModel):
         cellcount_sdir: str,
         analysis_sdir: str,
         visual_sdir: str,
-        visual_comb_sdir: str,
     ):
         # Storing base attributes
         # and wrapping in a FpAttr to reset filepath attributes whenever they are changed
         self.root_dir = ObservedAttr(root_dir, set_callable=self.set_filepaths)
         self.raw_sdir = ObservedAttr(raw_sdir, set_callable=self.set_filepaths)
-        self.registration_sdir = ObservedAttr(registration_sdir, set_callable=self.set_filepaths)
+        self.registration_sdir = ObservedAttr(
+            registration_sdir, set_callable=self.set_filepaths
+        )
         self.mask_sdir = ObservedAttr(mask_sdir, set_callable=self.set_filepaths)
-        self.cellcount_sdir = ObservedAttr(cellcount_sdir, set_callable=self.set_filepaths)
-        self.analysis_sdir = ObservedAttr(analysis_sdir, set_callable=self.set_filepaths)
+        self.cellcount_sdir = ObservedAttr(
+            cellcount_sdir, set_callable=self.set_filepaths
+        )
+        self.analysis_sdir = ObservedAttr(
+            analysis_sdir, set_callable=self.set_filepaths
+        )
         self.visual_sdir = ObservedAttr(visual_sdir, set_callable=self.set_filepaths)
-        self.visual_comb_sdir = ObservedAttr(visual_comb_sdir, set_callable=self.set_filepaths)
         # Setting filepath attributes
         self.subdirs_ls = []
         self.set_filepaths()
@@ -209,52 +229,127 @@ class ProjFpModelBase(FpModel):
             self.cellcount_sdir,
             self.analysis_sdir,
             self.visual_sdir,
-            self.visual_comb_sdir,
         ]
         # Setting filepath attributes
         self.config_params = FpAttr([self.root_dir.val, "config_params.json"])
         self.raw = FpAttr([self.root_dir.val, self.raw_sdir.val, "raw.zarr"])
-        self.ref = FpAttr([self.root_dir.val, self.registration_sdir.val, "0a_reference.tif"])
-        self.annot = FpAttr([self.root_dir.val, self.registration_sdir.val, "0b_annotation.tif"])
-        self.map = FpAttr([self.root_dir.val, self.registration_sdir.val, "0c_mapping.json"])
-        self.affine = FpAttr([self.root_dir.val, self.registration_sdir.val, "0d_align_affine.txt"])
-        self.bspline = FpAttr([self.root_dir.val, self.registration_sdir.val, "0e_align_bspline.txt"])
-        self.downsmpl1 = FpAttr([self.root_dir.val, self.registration_sdir.val, "1_downsmpl1.tif"])
-        self.downsmpl2 = FpAttr([self.root_dir.val, self.registration_sdir.val, "2_downsmpl2.tif"])
-        self.trimmed = FpAttr([self.root_dir.val, self.registration_sdir.val, "3_trimmed.tif"])
-        self.bounded = FpAttr([self.root_dir.val, self.registration_sdir.val, "4_bounded.tif"])
-        self.regresult = FpAttr([self.root_dir.val, self.registration_sdir.val, "5_regresult.tif"])
-        self.premask_blur = FpAttr([self.root_dir.val, self.mask_sdir.val, "1_premask_blur.tif"])
-        self.mask_fill = FpAttr([self.root_dir.val, self.mask_sdir.val, "2_mask_trimmed.tif"])
-        self.mask_outline = FpAttr([self.root_dir.val, self.mask_sdir.val, "3_outline_reg.tif"])
-        self.mask_reg = FpAttr([self.root_dir.val, self.mask_sdir.val, "4_mask_reg.tif"])
+        self.ref = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "0a_reference.tif"]
+        )
+        self.annot = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "0b_annotation.tif"]
+        )
+        self.map = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "0c_mapping.json"]
+        )
+        self.affine = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "0d_align_affine.txt"]
+        )
+        self.bspline = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "0e_align_bspline.txt"]
+        )
+        self.downsmpl1 = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "1_downsmpl1.tif"]
+        )
+        self.downsmpl2 = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "2_downsmpl2.tif"]
+        )
+        self.trimmed = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "3_trimmed.tif"]
+        )
+        self.bounded = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "4_bounded.tif"]
+        )
+        self.regresult = FpAttr(
+            [self.root_dir.val, self.registration_sdir.val, "5_regresult.tif"]
+        )
+        self.premask_blur = FpAttr(
+            [self.root_dir.val, self.mask_sdir.val, "1_premask_blur.tif"]
+        )
+        self.mask_fill = FpAttr(
+            [self.root_dir.val, self.mask_sdir.val, "2_mask_trimmed.tif"]
+        )
+        self.mask_outline = FpAttr(
+            [self.root_dir.val, self.mask_sdir.val, "3_outline_reg.tif"]
+        )
+        self.mask_reg = FpAttr(
+            [self.root_dir.val, self.mask_sdir.val, "4_mask_reg.tif"]
+        )
         self.mask_df = FpAttr([self.root_dir.val, self.mask_sdir.val, "5_mask.parquet"])
-        self.overlap = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "0_overlap.zarr"])
+        self.overlap = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "0_overlap.zarr"]
+        )
         self.bgrm = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "1_bgrm.zarr"])
         self.dog = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "2_dog.zarr"])
-        self.adaptv = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "3_adaptv.zarr"])
-        self.threshd = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "4_threshd.zarr"])
-        self.threshd_volumes = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "5_threshd_volumes.zarr"])
-        self.threshd_filt = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "6_threshd_filt.zarr"])
-        self.maxima = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "7_maxima.zarr"])
-        self.wshed_volumes = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "8_wshed_volumes.zarr"])
-        self.wshed_filt = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "9_wshed_filt.zarr"])
-        self.maxima_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "1_maxima.parquet"])
-        self.cells_raw_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "1_cells_raw.parquet"])
-        self.cells_trfm_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "2_cells_trfm.parquet"])
-        self.cells_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "3_cells.parquet"])
-        self.cells_agg_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "4_cells_agg.parquet"])
-        self.cells_agg_csv = FpAttr([self.root_dir.val, self.analysis_sdir.val, "5_cells_agg.csv"])
-        self.threshd_final = FpAttr([self.root_dir.val, self.visual_sdir.val, "threshd.zarr"])
-        self.maxima_final = FpAttr([self.root_dir.val, self.visual_sdir.val, "maxima.zarr"])
-        self.wshed_final = FpAttr([self.root_dir.val, self.visual_sdir.val, "wshed.zarr"])
-        self.points_raw = FpAttr([self.root_dir.val, self.visual_sdir.val, "points_raw.zarr"])
-        self.heatmap_raw = FpAttr([self.root_dir.val, self.visual_sdir.val, "heatmap_raw.zarr"])
-        self.points_trfm = FpAttr([self.root_dir.val, self.visual_sdir.val, "points_trfm.tif"])
-        self.heatmap_trfm = FpAttr([self.root_dir.val, self.visual_sdir.val, "heatmap_trfm.tif"])
-        self.comb_reg = FpAttr([self.root_dir.val, self.visual_comb_sdir.val, "comb_reg.tif"])
-        self.comb_cellc = FpAttr([self.root_dir.val, self.visual_comb_sdir.val, "comb_cellc.tif"])
-        self.comb_points = FpAttr([self.root_dir.val, self.visual_comb_sdir.val, "comb_points.tif"])
+        self.adaptv = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "3_adaptv.zarr"]
+        )
+        self.threshd = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "4_threshd.zarr"]
+        )
+        self.threshd_volumes = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "5_threshd_volumes.zarr"]
+        )
+        self.threshd_filt = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "6_threshd_filt.zarr"]
+        )
+        self.maxima = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "7_maxima.zarr"]
+        )
+        self.wshed_volumes = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "8_wshed_volumes.zarr"]
+        )
+        self.wshed_filt = FpAttr(
+            [self.root_dir.val, self.cellcount_sdir.val, "9_wshed_filt.zarr"]
+        )
+        self.maxima_df = FpAttr(
+            [self.root_dir.val, self.analysis_sdir.val, "1_maxima.parquet"]
+        )
+        self.cells_raw_df = FpAttr(
+            [self.root_dir.val, self.analysis_sdir.val, "1_cells_raw.parquet"]
+        )
+        self.cells_trfm_df = FpAttr(
+            [self.root_dir.val, self.analysis_sdir.val, "2_cells_trfm.parquet"]
+        )
+        self.cells_df = FpAttr(
+            [self.root_dir.val, self.analysis_sdir.val, "3_cells.parquet"]
+        )
+        self.cells_agg_df = FpAttr(
+            [self.root_dir.val, self.analysis_sdir.val, "4_cells_agg.parquet"]
+        )
+        self.cells_agg_csv = FpAttr(
+            [self.root_dir.val, self.analysis_sdir.val, "5_cells_agg.csv"]
+        )
+        self.threshd_final = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "threshd.zarr"]
+        )
+        self.maxima_final = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "maxima.zarr"]
+        )
+        self.wshed_final = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "wshed.zarr"]
+        )
+        self.points_raw = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "points_raw.zarr"]
+        )
+        self.heatmap_raw = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "heatmap_raw.zarr"]
+        )
+        self.points_trfm = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "points_trfm.tif"]
+        )
+        self.heatmap_trfm = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "heatmap_trfm.tif"]
+        )
+        self.comb_reg = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "comb_reg.tif"]
+        )
+        self.comb_cellc = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "comb_cellc.tif"]
+        )
+        self.comb_points = FpAttr(
+            [self.root_dir.val, self.visual_sdir.val, "comb_points.tif"]
+        )
 
 
 class ProjFpModel(ProjFpModelBase):
@@ -271,7 +366,6 @@ class ProjFpModel(ProjFpModelBase):
             cellcount_sdir="cellcount",
             analysis_sdir="analysis",
             visual_sdir="visual",
-            visual_comb_sdir="visual_comb",
         )
 
     def set_filepaths(self):
@@ -336,7 +430,6 @@ class ProjFpModelTuning(ProjFpModelBase):
             cellcount_sdir="cellcount_tuning",
             analysis_sdir="analysis_tuning",
             visual_sdir="visual",
-            visual_comb_sdir="visual_comb",
         )
 
     def set_filepaths(self):
