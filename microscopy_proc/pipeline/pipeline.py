@@ -55,10 +55,6 @@ from microscopy_proc import package_is_importable
 
 logger = init_logger(__name__)
 
-print(DASK_CUDA_ENABLED)
-print(GPU_ENABLED)
-print(ELASTIX_ENABLED)
-
 if DASK_CUDA_ENABLED:
     from dask_cuda import LocalCUDACluster
 else:

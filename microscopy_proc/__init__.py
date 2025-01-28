@@ -12,7 +12,6 @@ def package_is_importable(pacakage_name: str) -> bool:
         importlib.import_module(pacakage_name)
         return True
     except ImportError as e:
-        print("ERROR", e)
         return False
 
 
