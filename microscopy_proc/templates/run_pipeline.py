@@ -113,7 +113,6 @@ if __name__ == "__main__":
                 Pipeline.cellc8(pfm_i, overwrite=overwrite)
                 Pipeline.cellc9(pfm_i, overwrite=overwrite)
                 Pipeline.cellc10(pfm_i, overwrite=overwrite)
-                Pipeline.cellc11(pfm_i, overwrite=overwrite)
 
             # Converting maxima from raw space to refernce atlas space
             Pipeline.transform_coords(pfm, overwrite=overwrite)

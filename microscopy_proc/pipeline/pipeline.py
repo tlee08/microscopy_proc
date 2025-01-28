@@ -1070,13 +1070,15 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def run_all(cls, in_fp: str, proj_dir: str, overwrite: bool = False) -> None:
+    def run_pipeline(cls, in_fp: str, proj_dir: str, overwrite: bool = False, **kwargs) -> None:
         """
         Running all pipelines in order.
         """
         # Getting pfm's
         pfm = cls.get_pfm(proj_dir)
         pfm_tuning = cls.get_pfm_tuning(proj_dir)
+        # Updating project configs
+        cls.update_configs(pfm, **kwargs)
         # Running all pipelines in order
         # tiff to zarr
         cls.tiff2zarr(pfm, in_fp, overwrite=overwrite)
@@ -1106,12 +1108,19 @@ class Pipeline:
             cls.cellc8(pfm_i, overwrite=overwrite)
             cls.cellc9(pfm_i, overwrite=overwrite)
             cls.cellc10(pfm_i, overwrite=overwrite)
-        cls.cellc_coords_only(pfm, overwrite=overwrite)
         # Cell mapping
         cls.transform_coords(pfm, overwrite=overwrite)
         cls.cell_mapping(pfm, overwrite=overwrite)
         cls.group_cells(pfm, overwrite=overwrite)
         cls.cells2csv(pfm, overwrite=overwrite)
+
+    @classmethod
+    def run_make_visual_checks(cls, proj_dir: str, overwrite: bool = False) -> None:
+        """
+        Running all visual check pipelines in order.
+        """
+        # Getting pfm's
+        pfm = cls.get_pfm(proj_dir)
         # Visual check - heatmaps and points
         cls.cellc_trim_to_final(pfm, overwrite=overwrite)
         cls.coords2points_raw(pfm, overwrite=overwrite)
