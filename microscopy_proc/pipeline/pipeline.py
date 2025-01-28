@@ -756,37 +756,6 @@ class Pipeline:
 
     @classmethod
     @log_func_decorator(logger)
-    def cellc_trim_to_final(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        """
-        Cell counting pipeline - Step 10
-
-        Trimming filtered regions overlaps to make:
-        - Trimmed maxima image
-        - Trimmed threshold image
-        - Trimmed watershed image
-        """
-        if not overwrite and check_files_exist(pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val):
-            return cls.logger.warning(file_exists_msg())
-        # Making Dask cluster
-        # with cluster_proc_contxt(LocalCluster()):
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
-            # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-            # Reading input images
-            maxima_arr = da.from_zarr(pfm.maxima.val)
-            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
-            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes.val)
-            # Declaring processing instructions
-            maxima_final_arr = da_trim(maxima_arr, d=configs.overlap_depth)
-            threshd_final_arr = da_trim(threshd_filt_arr, d=configs.overlap_depth)
-            wshed_final_arr = da_trim(wshed_volumes_arr, d=configs.overlap_depth)
-            # Computing and saving
-            maxima_final_arr = disk_cache(maxima_final_arr, pfm.maxima_final.val)
-            threshd_final_arr = disk_cache(threshd_final_arr, pfm.threshd_final.val)
-            wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final.val)
-
-    @classmethod
-    @log_func_decorator(logger)
     def cellc_coords_only(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Get maxima coords.
@@ -970,6 +939,38 @@ class Pipeline:
     ###################################################################################################
     # VISUAL CHECK
     ###################################################################################################
+
+    @classmethod
+    @log_func_decorator(logger)
+    def cellc_trim_to_final(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
+        """
+        Cell counting pipeline - Step 10
+
+        Trimming filtered regions overlaps to make:
+        - Trimmed maxima image
+        - Trimmed threshold image
+        - Trimmed watershed image
+        """
+        if not overwrite and check_files_exist(pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val):
+            return cls.logger.warning(file_exists_msg())
+        # Making Dask cluster
+        # with cluster_proc_contxt(LocalCluster()):
+        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+            # Getting configs
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
+            # Reading input images
+            maxima_arr = da.from_zarr(pfm.maxima.val)
+            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
+            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes.val)
+            # Declaring processing instructions
+            maxima_final_arr = da_trim(maxima_arr, d=configs.overlap_depth)
+            threshd_final_arr = da_trim(threshd_filt_arr, d=configs.overlap_depth)
+            wshed_final_arr = da_trim(wshed_volumes_arr, d=configs.overlap_depth)
+            # Computing and saving
+            maxima_final_arr = disk_cache(maxima_final_arr, pfm.maxima_final.val)
+            threshd_final_arr = disk_cache(threshd_final_arr, pfm.threshd_final.val)
+            wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final.val)
+
     @classmethod
     @log_func_decorator(logger)
     def coords2points_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -1105,7 +1106,6 @@ class Pipeline:
             cls.cellc8(pfm_i, overwrite=overwrite)
             cls.cellc9(pfm_i, overwrite=overwrite)
             cls.cellc10(pfm_i, overwrite=overwrite)
-        cls.cellc_trim_to_final(pfm, overwrite=overwrite)
         cls.cellc_coords_only(pfm, overwrite=overwrite)
         # Cell mapping
         cls.transform_coords(pfm, overwrite=overwrite)
@@ -1113,6 +1113,7 @@ class Pipeline:
         cls.group_cells(pfm, overwrite=overwrite)
         cls.cells2csv(pfm, overwrite=overwrite)
         # Visual check - heatmaps and points
+        cls.cellc_trim_to_final(pfm, overwrite=overwrite)
         cls.coords2points_raw(pfm, overwrite=overwrite)
         cls.coords2heatmap_raw(pfm, overwrite=overwrite)
         cls.coords2points_trfm(pfm, overwrite=overwrite)
