@@ -43,7 +43,7 @@ from microscopy_proc.utils.io_utils import (
     sanitise_smb_df,
     write_json,
 )
-from microscopy_proc.utils.logging_utils import init_logger, log_func_decorator
+from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
 from microscopy_proc.utils.proj_org_utils import (
     ProjFpModel,
@@ -90,7 +90,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def get_pfm(cls, proj_dir: str) -> ProjFpModelBase:
         """
         Returns a ProjFpModel object created from the project directory.
@@ -100,7 +99,6 @@ class Pipeline:
         return pfm
 
     @classmethod
-    @log_func_decorator(logger)
     def get_pfm_tuning(cls, proj_dir: str) -> ProjFpModelBase:
         """
         Returns a ProjFpModel object created from the project directory.
@@ -114,7 +112,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def update_configs(cls, pfm: ProjFpModelBase, **kwargs) -> ConfigParamsModel:
         """
         If config_params file does not exist, makes a new one.
@@ -151,7 +148,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def tiff2zarr(cls, pfm: ProjFpModelBase, in_fp: str, overwrite: bool = False) -> None:
         """
         _summary_
@@ -202,7 +198,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def reg_ref_prepare(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(
             pfm.ref.val, pfm.annot.val, pfm.map.val, pfm.affine.val, pfm.bspline.val
@@ -241,7 +236,6 @@ class Pipeline:
         shutil.copyfile(rfm.bspline.val, pfm.bspline.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def reg_img_rough(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.downsmpl1.val):
             return cls.logger.warning(file_exists_msg())
@@ -258,7 +252,6 @@ class Pipeline:
             tifffile.imwrite(pfm.downsmpl1.val, downsmpl1_arr)
 
     @classmethod
-    @log_func_decorator(logger)
     def reg_img_fine(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.downsmpl2.val):
             return cls.logger.warning(file_exists_msg())
@@ -272,7 +265,6 @@ class Pipeline:
         tifffile.imwrite(pfm.downsmpl2.val, downsmpl2_arr)
 
     @classmethod
-    @log_func_decorator(logger)
     def reg_img_trim(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.trimmed.val):
             return cls.logger.warning(file_exists_msg())
@@ -290,7 +282,6 @@ class Pipeline:
         tifffile.imwrite(pfm.trimmed.val, trimmed_arr)
 
     @classmethod
-    @log_func_decorator(logger)
     def reg_img_bound(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.bounded.val):
             return cls.logger.warning(file_exists_msg())
@@ -319,7 +310,6 @@ class Pipeline:
         tifffile.imwrite(pfm.bounded.val, bounded_arr)
 
     @classmethod
-    @log_func_decorator(logger)
     def reg_elastix(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.regresult.val):
             return cls.logger.warning(file_exists_msg())
@@ -337,7 +327,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def make_mask(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Makes mask of actual image in reference space.
@@ -433,7 +422,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def make_tuning_arr(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Crop raw zarr to make a smaller zarr for tuning the cell counting pipeline.
@@ -463,7 +451,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def img_overlap(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.overlap.val):
             return cls.logger.warning(file_exists_msg())
@@ -476,7 +463,6 @@ class Pipeline:
             overlap_arr = disk_cache(overlap_arr, pfm.overlap.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc1(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 1
@@ -501,7 +487,6 @@ class Pipeline:
             bgrm_arr = disk_cache(bgrm_arr, pfm.bgrm.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc2(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 2
@@ -527,7 +512,6 @@ class Pipeline:
             dog_arr = disk_cache(dog_arr, pfm.dog.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc3(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 3
@@ -552,7 +536,6 @@ class Pipeline:
             adaptv_arr = disk_cache(adaptv_arr, pfm.adaptv.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc4(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 4
@@ -582,7 +565,6 @@ class Pipeline:
             threshd_arr = disk_cache(threshd_arr, pfm.threshd.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc5(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 5
@@ -604,7 +586,6 @@ class Pipeline:
             threshd_volumes_arr = disk_cache(threshd_volumes_arr, pfm.threshd_volumes.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc6(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 6
@@ -631,7 +612,6 @@ class Pipeline:
             threshd_filt_arr = disk_cache(threshd_filt_arr, pfm.threshd_filt.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc7(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 7
@@ -658,7 +638,6 @@ class Pipeline:
             maxima_arr = disk_cache(maxima_arr, pfm.maxima.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc8(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 8
@@ -685,7 +664,6 @@ class Pipeline:
             wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc9(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 9
@@ -712,7 +690,6 @@ class Pipeline:
             wshed_filt_arr = disk_cache(wshed_filt_arr, pfm.wshed_filt.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc10(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 11
@@ -755,7 +732,6 @@ class Pipeline:
             cells_df.to_parquet(pfm.cells_raw_df.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc_coords_only(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Get maxima coords.
@@ -783,7 +759,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def transform_coords(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         `in_id` and `out_id` are either maxima or region
@@ -825,7 +800,6 @@ class Pipeline:
             cells_trfm_df.to_parquet(pfm.cells_trfm_df.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cell_mapping(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Using the transformed cell coordinates, get the region ID and name for each cell
@@ -889,7 +863,6 @@ class Pipeline:
             cells_df.to_parquet(pfm.cells_df.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def group_cells(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Grouping cells by region name and aggregating total cell volume
@@ -925,7 +898,6 @@ class Pipeline:
             cells_agg_df.to_parquet(pfm.cells_agg_df.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def cells2csv(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.cells_agg_csv.val):
             return cls.logger.warning(file_exists_msg())
@@ -941,7 +913,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def cellc_trim_to_final(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 10
@@ -972,7 +943,6 @@ class Pipeline:
             wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final.val)
 
     @classmethod
-    @log_func_decorator(logger)
     def coords2points_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.points_raw.val):
             return cls.logger.warning(file_exists_msg())
@@ -984,7 +954,6 @@ class Pipeline:
             )
 
     @classmethod
-    @log_func_decorator(logger)
     def coords2heatmap_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.heatmap_raw.val):
             return cls.logger.warning(file_exists_msg())
@@ -998,7 +967,6 @@ class Pipeline:
             )
 
     @classmethod
-    @log_func_decorator(logger)
     def coords2points_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.points_trfm.val):
             return cls.logger.warning(file_exists_msg())
@@ -1010,7 +978,6 @@ class Pipeline:
             )
 
     @classmethod
-    @log_func_decorator(logger)
     def coords2heatmap_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.heatmap_trfm.val):
             return cls.logger.warning(file_exists_msg())
@@ -1028,7 +995,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def combine_reg(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.comb_reg.val):
             return cls.logger.warning(file_exists_msg())
@@ -1038,7 +1004,6 @@ class Pipeline:
         )
 
     @classmethod
-    @log_func_decorator(logger)
     def combine_cellc(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.comb_cellc.val):
             return cls.logger.warning(file_exists_msg())
@@ -1054,7 +1019,6 @@ class Pipeline:
         )
 
     @classmethod
-    @log_func_decorator(logger)
     def combine_points(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         if not overwrite and check_files_exist(pfm.comb_points.val):
             return cls.logger.warning(file_exists_msg())
@@ -1069,7 +1033,6 @@ class Pipeline:
     ###################################################################################################
 
     @classmethod
-    @log_func_decorator(logger)
     def run_pipeline(cls, in_fp: str, proj_dir: str, overwrite: bool = False, **kwargs) -> None:
         """
         Running all pipelines in order.
