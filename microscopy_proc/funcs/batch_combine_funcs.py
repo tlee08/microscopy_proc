@@ -65,8 +65,10 @@ class BatchCombineFuncs:
             annot_v = configs.annot_version
             map_v = configs.map_version
             # Asserting that all projects have cells_agg and mask_df files
-            assert os.path.exists(pfm.cells_agg_df), f"Missing cells_agg_df for {name}"
-            assert os.path.exists(pfm.mask_df), f"Missing mask_df for {name}"
+            assert os.path.exists(
+                pfm.cells_agg_df.val
+            ), f"Missing cells_agg_df for {name}"
+            assert os.path.exists(pfm.mask_df.val), f"Missing mask_df for {name}"
             # Asserting that all projects are using the same origin for reference atlas
             # to verify the same regions are being used
             assert atlas_dir0 == atlas_dir, (
@@ -88,7 +90,7 @@ class BatchCombineFuncs:
 
         # Making combined_agg_df
         # Starting with annot_df (asserted all the same so using first)
-        total_df = MapFuncs.annot_dict2df(read_json(pfm0.map))
+        total_df = MapFuncs.annot_dict2df(read_json(pfm0.map.val))
         # Adding parent columns to annot_df
         total_df = MapFuncs.annot_df_get_parents(total_df)
         # Adding special rows (e.g. "universe")
@@ -121,14 +123,14 @@ class BatchCombineFuncs:
             pfm = Pipeline.get_pfm(proj_dir)
             # CELL_AGG_DF
             # Reading experiment's cells_agg dataframe
-            cells_agg_df = pd.read_parquet(pfm.cells_agg_df)
+            cells_agg_df = pd.read_parquet(pfm.cells_agg_df.val)
             # Sanitising (removing smb columns)
             cells_agg_df = sanitise_smb_df(cells_agg_df)
             # Keeping only the required columns (not annot columns)
             cells_agg_df = cells_agg_df[enum2list(CellColumns)]
             # MASK_DF
             # Reading experiment's mask_counts dataframe
-            mask_df = pd.read_parquet(pfm.mask_df)
+            mask_df = pd.read_parquet(pfm.mask_df.val)
             # Keeping only the required columns
             mask_df = mask_df[enum2list(MaskColumns)]
             # Merging cells_agg_df with mask_df to combine columns
@@ -176,7 +178,7 @@ class BatchCombineFuncs:
             pfm = Pipeline.get_pfm(proj_dir)
             try:
                 # If proj has config_params file, then add to list of projs to combine
-                ConfigParamsModel.model_validate(read_json(pfm.config_params))
+                ConfigParamsModel.model_validate(read_json(pfm.config_params.val))
                 proj_dir_ls.append(proj_dir)
             except FileNotFoundError:
                 pass
