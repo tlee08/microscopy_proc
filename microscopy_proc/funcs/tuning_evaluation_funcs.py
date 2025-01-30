@@ -33,9 +33,10 @@ def read_img_histograms(my_dir, _bins=256, _range=(0, 5000)):
 
 
 def plot_img_histograms(hist_ls, bins_ls, fp_ls):
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(10, 5))
     for hist, bins, fp in zip(hist_ls, bins_ls, fp_ls):
         sns.lineplot(x=bins, y=hist, label=fp, alpha=0.3, ax=ax)
+    ax.legend().remove()
     return fig
 
 
