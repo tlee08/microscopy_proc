@@ -86,7 +86,7 @@ class ViewerFuncs:
             raise NotImplementedError("Only .zarr and .tif files are supported.")
 
     @classmethod
-    async def view_arrs(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
+    def view_arrs(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         # Asserting all kwargs_ls list lengths are equal to fp_ls length
         for k, v in kwargs.items():
             assert len(v) == len(fp_ls)
