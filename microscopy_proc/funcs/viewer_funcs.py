@@ -29,49 +29,35 @@ class Colormaps(Enum):
 
 
 imgs_view_params = {
-    "Atlas": {
-        "ref": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
-        "annot": {VRANGE: (0, 10000), CMAP: Colormaps.SET1.value},
-    },
-    "Raw": {
-        "raw": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-    },
-    "Registration": {
-        "downsmpl1": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "downsmpl2": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "trimmed": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "bounded": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "regresult": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
-    },
-    "Mask": {
-        "premask_blur": {VRANGE: (0, 10000), CMAP: Colormaps.RED.value},
-        "mask": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
-        "outline": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
-        "mask_reg": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
-    },
-    "Cell Counting (overlapped)": {
-        "overlap": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "bgrm": {VRANGE: (0, 2000), CMAP: Colormaps.GRAY.value},
-        "dog": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
-        "adaptv": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
-        "threshd": {VRANGE: (0, 5), CMAP: Colormaps.GRAY.value},
-        "threshd_volumes": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
-        "threshd_filt": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
-        "maxima": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
-        "wshed_volumes": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
-        "wshed_filt": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
-    },
-    "Cell Counting (trimmed)": {
-        "threshd_final": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
-        "maxima_final": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
-        "wshed_final": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
-    },
-    "Post Processing Checks": {
-        "points_raw": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
-        "heatmap_raw": {VRANGE: (0, 20), CMAP: Colormaps.RED.value},
-        "points_trfm": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
-        "heatmap_trfm": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
-    },
+    "ref": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
+    "annot": {VRANGE: (0, 10000), CMAP: Colormaps.SET1.value},
+    "raw": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "downsmpl1": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "downsmpl2": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "trimmed": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "bounded": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "regresult": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
+    "premask_blur": {VRANGE: (0, 10000), CMAP: Colormaps.RED.value},
+    "mask": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+    "outline": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+    "mask_reg": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+    "overlap": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "bgrm": {VRANGE: (0, 2000), CMAP: Colormaps.GRAY.value},
+    "dog": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
+    "adaptv": {VRANGE: (0, 500), CMAP: Colormaps.GRAY.value},
+    "threshd": {VRANGE: (0, 5), CMAP: Colormaps.GRAY.value},
+    "threshd_volumes": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
+    "threshd_filt": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
+    "maxima": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+    "wshed_volumes": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
+    "wshed_filt": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
+    "threshd_final": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
+    "maxima_final": {VRANGE: (0, 5), CMAP: Colormaps.RED.value},
+    "wshed_final": {VRANGE: (0, 1000), CMAP: Colormaps.GREEN.value},
+    "points_raw": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+    "heatmap_raw": {VRANGE: (0, 20), CMAP: Colormaps.RED.value},
+    "points_trfm": {VRANGE: (0, 5), CMAP: Colormaps.GREEN.value},
+    "heatmap_trfm": {VRANGE: (0, 100), CMAP: Colormaps.RED.value},
 }
 
 
@@ -104,6 +90,7 @@ class ViewerFuncs:
             assert len(v) == len(fp_ls)
         # Reading arrays
         arr_ls = []
+        # TODO: make async (big IO bottleneck)
         for i, fp in enumerate(fp_ls):
             cls.logger.info(f"Loading image # {i+1} / {len(fp_ls)}")
             arr_ls.append(cls.read_img(fp, trimmer))
