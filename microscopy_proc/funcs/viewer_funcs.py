@@ -1,3 +1,4 @@
+import asyncio
 import re
 from enum import Enum
 from multiprocessing import Process
@@ -91,7 +92,7 @@ class ViewerFuncs:
             assert len(v) == len(fp_ls)
         # Reading arrays
         # TODO: make async (big IO bottleneck)
-        arr_ls = await read_files_async(fp_ls, lambda fp: cls.read_img(fp, trimmer))
+        arr_ls = asyncio.run(read_files_async(fp_ls, lambda fp: cls.read_img(fp, trimmer)))
         # for i, fp in enumerate(fp_ls):
         #     arr_ls.append(cls.read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts

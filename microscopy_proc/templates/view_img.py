@@ -1,6 +1,5 @@
 from microscopy_proc.funcs.viewer_funcs import CMAP, VRANGE, ViewerFuncs, imgs_view_params
 from microscopy_proc.pipeline.pipeline import Pipeline
-import asyncio
 
 if __name__ == "__main__":
     # Filenames
@@ -60,7 +59,7 @@ if __name__ == "__main__":
         contrast_limits.append(imgs_view_params[img_to_run][VRANGE])
         colormap.append(imgs_view_params[img_to_run][CMAP])
     # Running the Napari viewer
-    await ViewerFuncs.view_arrs(
+    ViewerFuncs.view_arrs(
         fp_ls=tuple(fp_ls),
         trimmer=trimmer,
         name=tuple(name),
