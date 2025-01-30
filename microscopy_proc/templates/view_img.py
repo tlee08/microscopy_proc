@@ -54,7 +54,7 @@ if __name__ == "__main__":
     contrast_limits = []
     colormap = []
     for img_to_run in imgs_to_run_ls:
-        fp_ls.append(getattr(pfm, img_to_run))
+        fp_ls.append(getattr(pfm, img_to_run).val)
         name.append(img_to_run)
         contrast_limits.append(imgs_view_params[img_to_run][VRANGE])
         colormap.append(imgs_view_params[img_to_run][CMAP])
