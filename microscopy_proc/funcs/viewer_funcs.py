@@ -72,11 +72,11 @@ class ViewerFuncs:
         Reading, trimming (if possible), and returning the array in memory.
         """
         if re.search(r"\.zarr$", fp):
-            with cluster_proc_contxt(LocalCluster()):
-                arr = da.from_zarr(fp)
-                if trimmer is not None:
-                    arr = arr[*trimmer]
-                return arr.compute()
+            # with cluster_proc_contxt(LocalCluster()):
+            arr = da.from_zarr(fp)
+            if trimmer is not None:
+                arr = arr[*trimmer]
+            return arr.compute()
         elif re.search(r"\.tif$", fp):
             arr = tifffile.imread(fp)
             if trimmer is not None:
