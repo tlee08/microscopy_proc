@@ -13,6 +13,5 @@ dependencies:
   # - cuda-toolkit
   - cupy
   - pip:
-      # - microscopy_proc
-      # - -e "."
+      # - microscopy_proc[gpu,elastix]
       - -e ".[gpu,elastix]"

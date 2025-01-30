@@ -10,7 +10,6 @@ from typing import Any
 from jinja2 import Environment, PackageLoader
 
 from microscopy_proc.utils.diagnostics_utils import file_exists_msg
-from microscopy_proc.utils.io_utils import check_files_exist
 from microscopy_proc.utils.logging_utils import init_logger
 
 logger = init_logger(__name__)
@@ -68,7 +67,7 @@ def import_static_templates_script(
     # Copying the Python files to the project folder
     for template_fp in templates_ls:
         dst_fp = os.path.join(root_dir, template_fp)
-        if not overwrite and check_files_exist(dst_fp):
+        if not overwrite and os.path.exists(dst_fp):
             # Check if we should skip importing (i.e. overwrite is False and file exists)
             print(file_exists_msg(dst_fp))
             continue

@@ -6,16 +6,12 @@ import shutil
 import numpy as np
 from natsort import natsorted
 
-from microscopy_proc.utils.logging_utils import init_logger
-
 # TODO: add request functionality to download Allen Mouse Atlas image:
 # Atlas from https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/
 
 #####################################################################
 #                     Getting filepaths in order
 #####################################################################
-
-logger = init_logger(__name__)
 
 
 def get_filepaths(dir, pattern):
@@ -41,13 +37,14 @@ def rename_slices_filepaths(dir, pattern):
     """
 
     for fp in os.listdir(dir):
-        logger.debug(fp)
+        print(fp)
         fp_new = re.sub(
             pattern,
             lambda x: x.group(0).zfill(4),
             fp,
         )
-        logger.debug(fp_new)
+        print(fp_new)
+        print()
         # os.rename(os.path.join(dir, fp), os.path.join(dir, new_fp))
 
 
@@ -129,21 +126,6 @@ def silent_remove(fp):
             shutil.rmtree(fp)
         except OSError:
             pass
-
-
-def check_files_exist(*args: str):
-    """
-    args is dst_fp_ls
-    """
-    logger.debug(f"Checking if the following files exist already: {args}")
-    for dst_fp in args:
-        if os.path.exists(dst_fp):
-            logger.debug(f"{dst_fp} already exists.")
-            logger.debug("Returning True.")
-            return True
-    logger.debug("None of the filepaths exist.")
-    logger.debug("Returning False.")
-    return False
 
 
 def sanitise_smb_df(df):

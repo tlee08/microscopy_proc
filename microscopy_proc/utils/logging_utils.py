@@ -1,8 +1,5 @@
-import functools
 import logging
 import os
-import traceback
-from typing import Callable
 
 from microscopy_proc.constants import CACHE_DIR
 
@@ -37,22 +34,3 @@ def init_logger(name: str = __name__) -> logging.Logger:
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
     return logger
-
-
-def log_func_decorator(logger: logging.Logger):
-    def decorator(func: Callable):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                logger.debug(f"STARTED {func.__name__}")
-                output = func(*args, **kwargs)
-                logger.debug(f"FINISHED {func.__name__}")
-                return output
-            except Exception as e:
-                logger.error(f"Error in {func.__name__}: {e}")
-                logger.debug(traceback.format_exc())
-                raise e
-
-        return wrapper
-
-    return decorator

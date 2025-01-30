@@ -64,7 +64,7 @@ class ConfigParamsModel(BaseModel):
     z_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     y_trim: tuple[int | None, int | None, int | None] = (None, None, None)
     x_trim: tuple[int | None, int | None, int | None] = (None, None, None)
-    lower_bound: tuple[int, int] = (500, 0)
+    lower_bound: tuple[int, int] = (100, 0)
     upper_bound: tuple[int, int] = (5000, 5000)
     # MASK
     mask_gaus_blur: int = 1

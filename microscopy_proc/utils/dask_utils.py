@@ -11,10 +11,7 @@ import pandas as pd
 from dask.distributed import Client, SpecCluster
 
 from microscopy_proc.constants import DEPTH, Coords
-from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import const2iter
-
-logger = init_logger(__name__)
 
 
 def block2coords(func, *args: Any) -> dd.DataFrame:
@@ -40,10 +37,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     # Getting first da.Array
     arr0 = arr_blocks_ls[0]
     # Asserting that all da.Arrays have the same number of blocks
-    assert all(
-        len(i.to_delayed().ravel()) == len(arr0.to_delayed().ravel())
-        for i in arr_blocks_ls
-    )
+    assert all(len(i.to_delayed().ravel()) == len(arr0.to_delayed().ravel()) for i in arr_blocks_ls)
     # Converting chunks tuple[tuple] from chunk sizes to block offsets
     curr_chunks_offsets = [np.cumsum([0, *i[:-1]]) for i in arr0.chunks]
     # Creating the meshgrid of offsets to get offsets for each block in order
@@ -55,10 +49,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     # Getting number of blocks
     n = arr0.to_delayed().ravel().shape[0]
     # Converting dask arrays to list of delayed blocks in args list
-    args_blocks = [
-        i.to_delayed().ravel() if isinstance(i, da.Array) else list(const2iter(i, n))
-        for i in args
-    ]
+    args_blocks = [i.to_delayed().ravel() if isinstance(i, da.Array) else list(const2iter(i, n)) for i in args]
     # Transposing so (block, arg) dimensions.
     args_blocks = [list(i) for i in zip(*args_blocks)]
 
@@ -68,24 +59,16 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     @dask.delayed
     def func_offsetted(args: list, z_offset: int, y_offset: int, x_offset: int):
         df = func(*args)
-        df.loc[:, Coords.Z.value] = (
-            df[Coords.Z.value] + z_offset if Coords.Z.value in df.columns else z_offset
-        )
-        df.loc[:, Coords.Y.value] = (
-            df[Coords.Y.value] + y_offset if Coords.Y.value in df.columns else y_offset
-        )
-        df.loc[:, Coords.X.value] = (
-            df[Coords.X.value] + x_offset if Coords.X.value in df.columns else x_offset
-        )
+        df.loc[:, Coords.Z.value] = df[Coords.Z.value] + z_offset if Coords.Z.value in df.columns else z_offset
+        df.loc[:, Coords.Y.value] = df[Coords.Y.value] + y_offset if Coords.Y.value in df.columns else y_offset
+        df.loc[:, Coords.X.value] = df[Coords.X.value] + x_offset if Coords.X.value in df.columns else x_offset
         return df
 
     # Applying the function to each block
     return dd.from_delayed(
         [
             func_offsetted(args_block, z_offset, y_offset, x_offset)
-            for args_block, z_offset, y_offset, x_offset in zip(
-                args_blocks, z_offsets, y_offsets, x_offsets
-            )
+            for args_block, z_offset, y_offset, x_offset in zip(args_blocks, z_offsets, y_offsets, x_offsets)
         ]
     )
 
@@ -114,9 +97,7 @@ def disk_cache(arr: da.Array, fp):
 
 
 def da_overlap(arr, d=DEPTH):
-    return da.overlap.overlap(arr, depth=d, boundary="reflect").rechunk(
-        [i + 2 * d for i in arr.chunksize]
-    )
+    return da.overlap.overlap(arr, depth=d, boundary="reflect").rechunk([i + 2 * d for i in arr.chunksize])
 
 
 def da_trim(arr, d=DEPTH):
@@ -150,7 +131,7 @@ def cluster_proc_dec(cluster_factory: Callable[[], SpecCluster]):
         def wrapper(*args, **kwargs):
             cluster = cluster_factory()
             client = Client(cluster)
-            logger.debug(client.dashboard_link)
+            print(client.dashboard_link)
             res = func(*args, **kwargs)
             client.close()
             cluster.close()
@@ -168,12 +149,9 @@ def cluster_proc_contxt(cluster: SpecCluster):
     then closes the client and cluster.
     """
     client = Client(cluster)
-    logger.debug("Created Dask Cluster and Client")
-    logger.info(f"Dask Dashboard is accessible at {client.dashboard_link}")
+    print(f"Dask Dashboard is accessible at {client.dashboard_link}")
     try:
         yield
     finally:
         client.close()
-        logger.debug("Closed Dask Client")
         cluster.close()
-        logger.debug("Closed Dask Cluster")

@@ -38,7 +38,6 @@ from microscopy_proc.utils.dask_utils import (
 )
 from microscopy_proc.utils.diagnostics_utils import file_exists_msg
 from microscopy_proc.utils.io_utils import (
-    check_files_exist,
     read_json,
     sanitise_smb_df,
     write_json,
@@ -52,8 +51,13 @@ from microscopy_proc.utils.proj_org_utils import (
     RefFpModel,
 )
 
+# TODO: make logger for each indiv func
+# TODO: cluster funcs
+
 logger = init_logger(__name__)
 
+
+# TODO: fix up configs
 if DASK_CUDA_ENABLED:
     from dask_cuda import LocalCUDACluster
 else:
@@ -84,6 +88,41 @@ else:
 
 class Pipeline:
     logger = init_logger(__name__)
+
+    # Clusters
+    # light
+    light_n_workers = 2
+    light_threads_per_worker = 1
+    # heavy
+    heavy_n_workers = 2
+    heavy_threads_per_worker = 1
+    # gpu
+    gpu_cluster = LocalCUDACluster
+    # GPU enabled cell funcs
+    cell_funcs = Gf
+
+    ###################################################################################################
+    # SETTING PROCESSING CONFIGS (NUMBER OF WORKERS, GPU ENABLED, ETC.)
+    ###################################################################################################
+
+    @classmethod
+    def light_cluster(cls):
+        return LocalCluster(n_workers=cls.light_n_workers, threads_per_worker=cls.light_threads_per_worker)
+
+    @classmethod
+    def heavy_cluster(cls):
+        return LocalCluster(n_workers=cls.heavy_n_workers, threads_per_worker=cls.heavy_threads_per_worker)
+
+    @classmethod
+    def set_gpu(cls, enabled: bool = True):
+        if enabled:
+            cls.cell_funcs = Gf
+            cls.gpu_cluster = LocalCUDACluster
+        else:
+            cls.cell_funcs = Cf
+            cls.gpu_cluster = lambda: LocalCluster(
+                n_workers=cls.heavy_n_workers, threads_per_worker=cls.heavy_threads_per_worker
+            )
 
     ###################################################################################################
     # GETTING PROJECT FILEPATH MODEL
@@ -166,8 +205,10 @@ class Pipeline:
         ValueError
             _description_
         """
-        if not overwrite and check_files_exist(pfm.raw.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.raw.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         cls.logger.debug("Reading config params")
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         cls.logger.debug("Making zarr from tiff file(s)")
@@ -199,10 +240,10 @@ class Pipeline:
 
     @classmethod
     def reg_ref_prepare(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(
-            pfm.ref.val, pfm.annot.val, pfm.map.val, pfm.affine.val, pfm.bspline.val
-        ):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.ref.val, pfm.annot.val, pfm.map.val, pfm.affine.val, pfm.bspline.val):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Making ref_fp_model of original atlas images filepaths
@@ -237,8 +278,8 @@ class Pipeline:
 
     @classmethod
     def reg_img_rough(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.downsmpl1.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite and os.path.exist(pfm.downsmpl1.val):
+            return cls.logger.warning(file_exists_msg(pfm.downsmpl1.val))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         with cluster_proc_contxt(LocalCluster()):
@@ -253,8 +294,10 @@ class Pipeline:
 
     @classmethod
     def reg_img_fine(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.downsmpl2.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.downsmpl2.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Reading
@@ -266,8 +309,10 @@ class Pipeline:
 
     @classmethod
     def reg_img_trim(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.trimmed.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.trimmed.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Reading
@@ -283,20 +328,22 @@ class Pipeline:
 
     @classmethod
     def reg_img_bound(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.bounded.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.bounded.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Asserting that lower bound is less than upper bound
         assert configs.lower_bound[0] < configs.upper_bound[0], (
-            "Error in configL parameters: " "lower bound condition must be less than upper bound condition."
+            "Error in config parameters: " "lower bound condition must be less than upper bound condition."
         )
         assert configs.lower_bound[1] <= configs.lower_bound[0], (
-            "Error in configL parameters: "
+            "Error in config parameters: "
             "lower bound final value must be less than or equal to lower bound condition."
         )
         assert configs.upper_bound[1] >= configs.upper_bound[0], (
-            "Error in configL parameters: "
+            "Error in config parameters: "
             "upper bound final value must be greater than or equal to upper bound condition."
         )
         # Reading
@@ -311,8 +358,10 @@ class Pipeline:
 
     @classmethod
     def reg_elastix(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.regresult.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.regresult.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Running Elastix registration
         ElastixFuncs.registration(
             fixed_img_fp=pfm.bounded.val,
@@ -333,10 +382,10 @@ class Pipeline:
         Also stores # and proportion of existent voxels
         for each region.
         """
-        if not overwrite and check_files_exist(
-            pfm.mask_fill.val, pfm.mask_outline.val, pfm.mask_reg.val, pfm.mask_df.val
-        ):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.mask_fill.val, pfm.mask_outline.val, pfm.mask_reg.val, pfm.mask_df.val):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Reading annot img (proj oriented and trimmed) and bounded img
@@ -441,8 +490,10 @@ class Pipeline:
                 slice(*configs.tuning_y_trim),
                 slice(*configs.tuning_x_trim),
             ]
-            if not overwrite and check_files_exist(pfm_tuning.raw.val):
-                return cls.logger.warning(file_exists_msg())
+            if not overwrite:
+                for fp in (pfm_tuning.raw.val,):
+                    if os.path.exists(fp):
+                        return cls.logger.warning(file_exists_msg(fp))
             cls.logger.debug("Saving cropped raw zarr")
             raw_arr = disk_cache(raw_arr, pfm_tuning.raw.val)
 
@@ -452,8 +503,10 @@ class Pipeline:
 
     @classmethod
     def img_overlap(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.overlap.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.overlap.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Making overlap image
@@ -469,8 +522,10 @@ class Pipeline:
 
         Top-hat filter (background subtraction)
         """
-        if not overwrite and check_files_exist(pfm.bgrm.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.bgrm.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -493,8 +548,10 @@ class Pipeline:
 
         Difference of Gaussians (edge detection)
         """
-        if not overwrite and check_files_exist(pfm.dog.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.dog.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -518,8 +575,10 @@ class Pipeline:
 
         Gaussian subtraction with large sigma for adaptive thresholding
         """
-        if not overwrite and check_files_exist(pfm.adaptv.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.adaptv.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -543,8 +602,10 @@ class Pipeline:
         Currently, manual thresholding.
         Ideally, mean thresholding with standard deviation offset
         """
-        if not overwrite and check_files_exist(pfm.threshd.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.threshd.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
@@ -571,8 +632,10 @@ class Pipeline:
 
         Getting object sizes
         """
-        if not overwrite and check_files_exist(pfm.threshd_volumes.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.threshd_volumes.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Reading input images
@@ -592,8 +655,10 @@ class Pipeline:
 
         Filter out large objects (likely outlines, not cells)
         """
-        if not overwrite and check_files_exist(pfm.threshd_filt.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.threshd_filt.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
@@ -618,8 +683,10 @@ class Pipeline:
 
         Get maxima of image masked by labels.
         """
-        if not overwrite and check_files_exist(pfm.maxima.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.maxima.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         with cluster_proc_contxt(LocalCUDACluster()):
             # Getting configs
@@ -644,8 +711,10 @@ class Pipeline:
 
         Watershed segmentation volumes.
         """
-        if not overwrite and check_files_exist(pfm.wshed_volumes.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.wshed_volumes.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
             # n_workers=2
@@ -670,8 +739,10 @@ class Pipeline:
 
         Filter out large watershed objects (again cell areas, not cells).
         """
-        if not overwrite and check_files_exist(pfm.wshed_filt.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.wshed_filt.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
@@ -700,8 +771,10 @@ class Pipeline:
         get the cell volumes in a table. Hence, don't run cellc8 and cellc9 if
         you don't want to view the cells visually (good for pipeline, not for tuning).
         """
-        if not overwrite and check_files_exist(pfm.cells_raw_df.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.cells_raw_df.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
             # n_workers=2
             # Getting configs
@@ -737,8 +810,10 @@ class Pipeline:
         Get maxima coords.
         Very basic but faster version of cellc11_pipeline get_cells.
         """
-        if not overwrite and check_files_exist(pfm.maxima_df.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.maxima_df.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Reading filtered and maxima images (trimmed to orig space)
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Read filtered and maxima images (trimmed to orig space)
@@ -765,8 +840,10 @@ class Pipeline:
 
         NOTE: saves the cells_trfm dataframe as pandas parquet.
         """
-        if not overwrite and check_files_exist(pfm.cells_trfm_df.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.cells_trfm_df.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
@@ -807,8 +884,10 @@ class Pipeline:
 
         NOTE: saves the cells dataframe as pandas parquet.
         """
-        if not overwrite and check_files_exist(pfm.cells_df.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.cells_df.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Getting region for each detected cell (i.e. row) in cells_df
         with cluster_proc_contxt(LocalCluster()):
             # Reading cells_raw and cells_trfm dataframes
@@ -870,8 +949,10 @@ class Pipeline:
 
         NOTE: saves the cells_agg dataframe as pandas parquet.
         """
-        if not overwrite and check_files_exist(pfm.cells_agg_df.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.cells_agg_df.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making cells_agg_df
         with cluster_proc_contxt(LocalCluster()):
             # Reading cells dataframe
@@ -899,8 +980,10 @@ class Pipeline:
 
     @classmethod
     def cells2csv(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.cells_agg_csv.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.cells_agg_csv.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Reading cells dataframe
         cells_agg_df = pd.read_parquet(pfm.cells_agg_df.val)
         # Sanitising (removing smb columns)
@@ -922,8 +1005,10 @@ class Pipeline:
         - Trimmed threshold image
         - Trimmed watershed image
         """
-        if not overwrite and check_files_exist(pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
         with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
@@ -944,8 +1029,10 @@ class Pipeline:
 
     @classmethod
     def coords2points_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.points_raw.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.points_raw.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         with cluster_proc_contxt(LocalCluster()):
             VisualCheckFuncsDask.coords2points(
                 coords=pd.read_parquet(pfm.cells_raw_df.val),
@@ -955,8 +1042,10 @@ class Pipeline:
 
     @classmethod
     def coords2heatmap_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.heatmap_raw.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.heatmap_raw.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         with cluster_proc_contxt(LocalCluster()):
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsDask.coords2heatmap(
@@ -968,8 +1057,10 @@ class Pipeline:
 
     @classmethod
     def coords2points_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.points_trfm.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.points_trfm.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         with cluster_proc_contxt(LocalCluster()):
             VisualCheckFuncsTiff.coords2points(
                 coords=pd.read_parquet(pfm.cells_trfm_df.val),
@@ -979,8 +1070,10 @@ class Pipeline:
 
     @classmethod
     def coords2heatmap_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.heatmap_trfm.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.heatmap_trfm.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         with cluster_proc_contxt(LocalCluster()):
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsTiff.coords2heatmap(
@@ -996,8 +1089,10 @@ class Pipeline:
 
     @classmethod
     def combine_reg(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.comb_reg.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.comb_reg.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.trimmed.val, pfm.bounded.val, pfm.regresult.val),
             fp_out=pfm.comb_reg.val,
@@ -1005,8 +1100,10 @@ class Pipeline:
 
     @classmethod
     def combine_cellc(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.comb_cellc.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.comb_cellc.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.raw.val, pfm.threshd_final.val, pfm.wshed_final.val),
@@ -1020,8 +1117,10 @@ class Pipeline:
 
     @classmethod
     def combine_points(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        if not overwrite and check_files_exist(pfm.comb_points.val):
-            return cls.logger.warning(file_exists_msg())
+        if not overwrite:
+            for fp in (pfm.comb_points.val,):
+                if os.path.exists(fp):
+                    return cls.logger.warning(file_exists_msg(fp))
         ViewerFuncs.combine_arrs(
             fp_in_ls=(pfm.ref.val, pfm.annot.val, pfm.heatmap_trfm.val),
             # 2nd regresult means the combining works in ImageJ
