@@ -15,51 +15,37 @@ if __name__ == "__main__":
         slice(None, None, None),
     )
     # Imgs to run
-    imgs_to_run_dict = {
-        "Atlas": [
-            "ref",
-            "annot",
-        ],
-        "Raw": [
-            "raw",
-        ],
-        "Registration": [
-            "downsmpl1",
-            "downsmpl2",
-            "trimmed",
-            "bounded",
-            "regresult",
-        ],
-        "Mask": [
-            "premask_blur",
-            "mask",
-            "outline",
-            "mask_reg",
-        ],
-        "Cell Counting (overlapped)": [
-            "overlap",
-            "bgrm",
-            "dog",
-            "adaptv",
-            "threshd",
-            "threshd_volumes",
-            "threshd_filt",
-            "maxima",
-            "wshed_volumes",
-            "wshed_filt",
-        ],
-        "Cell Counting (trimmed)": [
-            "threshd_final",
-            "maxima_final",
-            "wshed_final",
-        ],
-        "Post Processing Checks": [
-            "points_check",
-            "heatmap_check",
-            "points_trfm_check",
-            "heatmap_trfm_check",
-        ],
-    }
+    imgs_to_run_ls = [
+        "ref",
+        "annot",
+        "raw",
+        "downsmpl1",
+        "downsmpl2",
+        "trimmed",
+        "bounded",
+        "regresult",
+        "premask_blur",
+        "mask",
+        "outline",
+        "mask_reg",
+        "overlap",
+        "bgrm",
+        "dog",
+        "adaptv",
+        "threshd",
+        "threshd_volumes",
+        "threshd_filt",
+        "maxima",
+        "wshed_volumes",
+        "wshed_filt",
+        "threshd_final",
+        "maxima_final",
+        "wshed_final",
+        "points_check",
+        "heatmap_check",
+        "points_trfm_check",
+        "heatmap_trfm_check",
+    ]
 
     pfm = Pipeline.get_pfm(proj_dir)
     # Making parameter lists. Index i refers to the same image
@@ -67,12 +53,11 @@ if __name__ == "__main__":
     name = []
     contrast_limits = []
     colormap = []
-    for group_k, group_v in imgs_to_run_dict.items():
-        for img_i in group_v:
-            fp_ls.append(getattr(pfm, img_i))
-            name.append(img_i)
-            contrast_limits.append(imgs_view_params[group_k][img_i][VRANGE])
-            colormap.append(imgs_view_params[group_k][img_i][CMAP])
+    for img_to_run in imgs_to_run_ls:
+        fp_ls.append(getattr(pfm, img_to_run))
+        name.append(img_to_run)
+        contrast_limits.append(imgs_view_params[img_to_run][VRANGE])
+        colormap.append(imgs_view_params[img_to_run][CMAP])
     # Running the Napari viewer
     ViewerFuncs.view_arrs(
         fp_ls=tuple(fp_ls),

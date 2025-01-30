@@ -16,6 +16,8 @@ from microscopy_proc.utils.misc_utils import dictlists2listdicts
 VRANGE = "vrange"
 CMAP = "cmap"
 
+# TODO: function that simplified view_img.py (accept list of pfm attribute names)
+
 
 class Colormaps(Enum):
     GRAY = "gray"
