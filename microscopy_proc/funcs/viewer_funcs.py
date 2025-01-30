@@ -10,13 +10,12 @@ import tifffile
 from dask.distributed import LocalCluster
 
 from microscopy_proc.utils.dask_utils import cluster_proc_contxt
+from microscopy_proc.utils.io_utils import read_files_async
 from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
 
 VRANGE = "vrange"
 CMAP = "cmap"
-
-# TODO: function that simplified view_img.py (accept list of pfm attribute names)
 
 
 class Colormaps(Enum):
@@ -86,16 +85,15 @@ class ViewerFuncs:
             raise NotImplementedError("Only .zarr and .tif files are supported.")
 
     @classmethod
-    def view_arrs(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
+    async def view_arrs(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
         # Asserting all kwargs_ls list lengths are equal to fp_ls length
         for k, v in kwargs.items():
             assert len(v) == len(fp_ls)
         # Reading arrays
-        arr_ls = []
         # TODO: make async (big IO bottleneck)
-        for i, fp in enumerate(fp_ls):
-            cls.logger.info(f"Loading image # {i+1} / {len(fp_ls)}")
-            arr_ls.append(cls.read_img(fp, trimmer))
+        arr_ls = await read_files_async(fp_ls, lambda fp: cls.read_img(fp, trimmer))
+        # for i, fp in enumerate(fp_ls):
+        #     arr_ls.append(cls.read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
         # Making napari viewer

@@ -1,7 +1,10 @@
+import asyncio
 import json
 import os
 import re
 import shutil
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Callable
 
 import numpy as np
 from natsort import natsorted
@@ -136,3 +139,21 @@ def sanitise_smb_df(df):
     if "smb-share:server" in df.columns:
         df = df.drop(columns="smb-share:server")
     return df
+
+
+#####################################################################
+# ASYNC READ MULTIPLE FILES
+#####################################################################
+
+
+async def read_async(fp: str, executor: ThreadPoolExecutor, read_func: Callable) -> Any:
+    """Asynchronously read a single file."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(executor, read_func, fp)
+
+
+async def read_files_async(fp_ls, read_func: Callable) -> list:
+    """Asynchronously read a list of files and return a list of numpy arrays."""
+    with ThreadPoolExecutor() as executor:
+        tasks = [read_async(fp, executor, read_func) for fp in fp_ls]
+        return await asyncio.gather(*tasks)
