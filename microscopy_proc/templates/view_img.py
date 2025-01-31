@@ -1,9 +1,16 @@
+import os
+
 from microscopy_proc.funcs.viewer_funcs import ViewerFuncs
 from microscopy_proc.pipeline.pipeline import Pipeline
 
 if __name__ == "__main__":
     # Filenames
-    proj_dir = "/path/to/analysis_output_folder"
+    root_dir = "/path/to/analysis_output_folder"
+    ###### CHANGE PROJ NAME ######
+    proj_name = "proj_name"
+    ##############################
+    proj_dir = os.path.join(root_dir, proj_name)
+
     # Trimmer
     trimmer = [
         slice(None, None, None),
