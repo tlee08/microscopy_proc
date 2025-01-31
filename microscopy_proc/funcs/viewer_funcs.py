@@ -1,4 +1,3 @@
-import asyncio
 import re
 from enum import Enum
 from multiprocessing import Process
@@ -11,7 +10,7 @@ import tifffile
 from dask.distributed import LocalCluster
 
 from microscopy_proc.utils.dask_utils import cluster_process
-from microscopy_proc.utils.io_utils import read_files_async
+from microscopy_proc.utils.io_utils import async_read_files_run
 from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
 
@@ -90,7 +89,7 @@ class ViewerFuncs:
         for k, v in kwargs.items():
             assert len(v) == len(fp_ls)
         # Reading arrays
-        arr_ls = asyncio.run(read_files_async(fp_ls, lambda fp: cls.read_img(fp, trimmer)))
+        arr_ls = async_read_files_run(fp_ls, lambda fp: cls.read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
         # Making napari viewer
