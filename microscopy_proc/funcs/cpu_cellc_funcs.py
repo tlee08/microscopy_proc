@@ -319,7 +319,7 @@ class CpuCellcFuncs:
                 },
                 index=pd.Index(cp2np(ids_m).astype(np.uint32), name=CELL_IDX_NAME),
             )
-            .drop(index=0)
+            .drop(index=0)  # Not including the 0 valued row (because there's no cell here)
             .astype(np.uint16)
         )
         cls.logger.debug("Watershed of overlap_arr, seeds maxima_arr, mask mask_arr")
