@@ -13,17 +13,17 @@ if __name__ == "__main__":
     # Images to run
     # COMMENT OUT THE IMAGES THAT YOU DON'T WANT TO VIEW
     imgs_to_run_ls = [
+        "raw",
         "ref",
         "annot",
-        "raw",
         "downsmpl1",
         "downsmpl2",
         "trimmed",
         "bounded",
         "regresult",
         "premask_blur",
-        "mask",
-        "outline",
+        "mask_fill",
+        "mask_outline",
         "mask_reg",
         "overlap",
         "bgrm",
@@ -38,10 +38,10 @@ if __name__ == "__main__":
         "threshd_final",
         "maxima_final",
         "wshed_final",
-        "points_check",
-        "heatmap_check",
-        "points_trfm_check",
-        "heatmap_trfm_check",
+        "points_raw",
+        "heatmap_raw",
+        "points_trfm",
+        "heatmap_trfm",
     ]
     # Making the project file model
     pfm = Pipeline.get_pfm(proj_dir)
