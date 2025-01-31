@@ -24,7 +24,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     Importantly, this offsets the coords in each block using ONLY
     the chunks of the first da.Array object in `args`.
 
-    All da.Arrays must have the same number of blocks but
+    All da.Arrays must have the same shape of chunks but
     can have different chunk sizes.
 
     Process is:
@@ -38,12 +38,12 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     assert len(arr_blocks_ls) > 0, "At least one da.Array must be passed."
     # Getting first da.Array
     arr0 = arr_blocks_ls[0]
-    # Asserting that all da.Arrays have the same number of blocks
-    assert all(len(i.to_delayed().ravel()) == len(arr0.to_delayed().ravel()) for i in arr_blocks_ls)
+    # Asserting that all da.Arrays have the same shape of chunks
+    assert all(i.to_delayed().shape == arr0.to_delayed().shape for i in arr_blocks_ls)
     # Converting chunks tuple[tuple] from chunk sizes to block offsets
-    curr_chunks_offsets = [np.cumsum([0, *i[:-1]]) for i in arr0.chunks]
+    chunks_offsets = [np.cumsum([0, *i[:-1]]) for i in arr0.chunks]
     # Creating the meshgrid of offsets to get offsets for each block in order
-    z_offsets, y_offsets, x_offsets = np.meshgrid(*curr_chunks_offsets, indexing="ij")
+    z_offsets, y_offsets, x_offsets = np.meshgrid(*chunks_offsets, indexing="ij")
     # Flattening offsets ndarrays to 1D
     z_offsets = z_offsets.ravel()
     y_offsets = y_offsets.ravel()
@@ -52,7 +52,7 @@ def block2coords(func, *args: Any) -> dd.DataFrame:
     n = arr0.to_delayed().ravel().shape[0]
     # Converting dask arrays to list of delayed blocks in args list
     args_blocks = [i.to_delayed().ravel() if isinstance(i, da.Array) else list(const2iter(i, n)) for i in args]
-    # Transposing so (block, arg) dimensions.
+    # Transposing from (arg, blocks) to (block, arg) dimensions
     args_blocks = [list(i) for i in zip(*args_blocks)]
 
     # Defining the function that offsets the coords in each block
