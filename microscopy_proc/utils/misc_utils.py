@@ -4,6 +4,7 @@ from typing import Any, Iterable
 
 
 def import_extra_error_func(extra_dep_name: str):
+    @property
     def error_func(*args, **kwargs):
         raise ImportError(
             f"{extra_dep_name} dependency not installed.\n"
@@ -14,7 +15,7 @@ def import_extra_error_func(extra_dep_name: str):
 
 
 def enum2list(my_enum: EnumType) -> list[Any]:
-    return [e.value for e in my_enum]
+    return [e.value for e in my_enum]  # type: ignore
 
 
 def const2iter(x: Any, n: int) -> Iterable[Any]:
@@ -56,21 +57,58 @@ def listdicts2dictlists(my_list):
     return {k: [v[k] for v in my_list] for k in keys}
 
 
-def get_current_function_name() -> str:
+def get_func_name_in_stack(levels_back: int = 1) -> str:
     """
     Returns the name of the function that called this function.
     This is useful for debugging and dynamically changing function behavior
     (e.g. getting attributes according to the functions name).
 
-    Note
-    ----
+    Parameters
+    ----------
+    levels_back : int
+        The number of levels back in the stack to get the function name from.
+        0 is the function itself ("get_func_name_in_stack"), 1 is the function it's called from, etc.
+        Default is 1 (i.e. the function that called this function).
+
+    Returns
+    -------
+    str
+        The name of the function at the given stack level. If the level is out of range, returns an empty string.
+
+    Notes
+    -----
     If this function is called from the main script (i.e. no function),
     it will return an empty string.
+
+    Examples
+    --------
+    Where `levels_back = 0`
+    ```
+    f_name = get_func_name_in_stack(0)
+    # f_name == "get_func_name_in_stack"
+    ```
+    Where `levels_back = 1`
+    ```
+    def my_func():
+        f_name = get_func_name_in_stack(1)
+        # f_name == "my_func"
+    ```
+    Where `levels_back = 2`
+    ```
+    def my_func():
+        f_name = get_func_name_in_stack(2)
+        # f_name == ""
+    ```
     """
     # Getting the current frame
     c_frame = inspect.currentframe()
-    # If this function is called from the main script, return empty string
-    if c_frame.f_back is None:
+    # Traverse back the specified number of levels
+    for _ in range(levels_back):
+        if c_frame is None:
+            return ""
+        c_frame = c_frame.f_back
+    # If the frame is None, return an empty string
+    if c_frame is None:
         return ""
-    # Returning the name of the function that called this function
-    return c_frame.f_back.f_code.co_name
+    # Returning function name
+    return c_frame.f_code.co_name

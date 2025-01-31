@@ -20,7 +20,7 @@ from microscopy_proc.constants import (
     Coords,
     MaskColumns,
 )
-from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs as Cf
+from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs
 from microscopy_proc.funcs.map_funcs import MapFuncs
 from microscopy_proc.funcs.mask_funcs import MaskFuncs
 from microscopy_proc.funcs.reg_funcs import RegFuncs
@@ -31,7 +31,7 @@ from microscopy_proc.funcs.visual_check_funcs_tiff import VisualCheckFuncsTiff
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block2coords,
-    cluster_proc_contxt,
+    cluster_process,
     da_overlap,
     da_trim,
     disk_cache,
@@ -57,33 +57,40 @@ from microscopy_proc.utils.proj_org_utils import (
 logger = init_logger(__name__)
 
 
-# TODO: fix up configs
+# Optional dependency: gpu (with dask-cuda)
 if DASK_CUDA_ENABLED:
     from dask_cuda import LocalCUDACluster
 else:
-    # Substituting LocalCluster for LocalCUDACluster
+    # Substituting LocalCUDACluster with LocalCluster
     LocalCUDACluster = lambda: LocalCluster(n_workers=1, threads_per_worker=1)
-    logger.warning("Warning Dask-Cuda functionality not installed.")
-    logger.warning("Using single GPU functionality instead (1 worker)")
-    logger.warning("Dask-Cuda currently only available on Linux")
+    logger.warning(
+        "Warning Dask-Cuda functionality not installed.\n"
+        "Using single GPU functionality instead (1 worker)\n"
+        "Dask-Cuda currently only available on Linux"
+    )
 # Optional dependency: gpu
 if package_is_importable("cupy"):
-    # System dependency after gpu: dask-cuda
-    from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs as Gf
+    from microscopy_proc.funcs.gpu_cellc_funcs import GpuCellcFuncs
 else:
-    # Substituting LocalCluster for LocalCUDACluster
+    # Substituting LocalCUDACluster with LocalCluster
+    # TODO: allow more flexibility in number of workers here
     LocalCUDACluster = lambda: LocalCluster(n_workers=2, threads_per_worker=1)
-    Gf = Cf
-    logger.warning("Warning GPU functionality not installed.")
-    logger.warning("Using CPU functionality instead (much slower).")
-    logger.warning('Can install with `pip install "microscopy_proc[gpu]"`')
+    # Substituting GpuCellcFuncs with CpuCellcFuncs
+    GpuCellcFuncs = CpuCellcFuncs
+    logger.warning(
+        "Warning GPU functionality not installed.\n"
+        "Using CPU functionality instead (much slower).\n"
+        'Can install with `pip install "microscopy_proc[gpu]"`'
+    )
 # Optional dependency: elastix
 if ELASTIX_ENABLED:
     from microscopy_proc.funcs.elastix_funcs import ElastixFuncs
 else:
     ElastixFuncs = import_extra_error_func("elastix")
-    logger.warning("Warning Elastix functionality not installed and unavailable.")
-    logger.warning('Can install with `pip install "microscopy_proc[elastix]"`')
+    logger.warning(
+        "Warning Elastix functionality not installed and unavailable.\n"
+        'Can install with `pip install "microscopy_proc[elastix]"`'
+    )
 
 
 class Pipeline:
@@ -99,7 +106,7 @@ class Pipeline:
     # gpu
     gpu_cluster = LocalCUDACluster
     # GPU enabled cell funcs
-    cell_funcs = Gf
+    cell_funcs = GpuCellcFuncs
 
     ###################################################################################################
     # SETTING PROCESSING CONFIGS (NUMBER OF WORKERS, GPU ENABLED, ETC.)
@@ -116,13 +123,13 @@ class Pipeline:
     @classmethod
     def set_gpu(cls, enabled: bool = True):
         if enabled:
-            cls.cell_funcs = Gf
             cls.gpu_cluster = LocalCUDACluster
+            cls.cell_funcs = GpuCellcFuncs
         else:
-            cls.cell_funcs = Cf
             cls.gpu_cluster = lambda: LocalCluster(
                 n_workers=cls.heavy_n_workers, threads_per_worker=cls.heavy_threads_per_worker
             )
+            cls.cell_funcs = CpuCellcFuncs
 
     ###################################################################################################
     # GETTING PROJECT FILEPATH MODEL
@@ -212,7 +219,7 @@ class Pipeline:
         cls.logger.debug("Reading config params")
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         cls.logger.debug("Making zarr from tiff file(s)")
-        with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=6)):
+        with cluster_process(LocalCluster(n_workers=1, threads_per_worker=6)):
             if os.path.isdir(in_fp):
                 cls.logger.debug(f"in_fp ({in_fp}) is a directory")
                 cls.logger.debug("Making zarr from tiff file stack in directory")
@@ -282,7 +289,7 @@ class Pipeline:
             return cls.logger.warning(file_exists_msg(pfm.downsmpl1.val))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             # Reading
             raw_arr = da.from_zarr(pfm.raw.val)
             # Rough downsample
@@ -394,9 +401,9 @@ class Pipeline:
         # Storing annot_arr shape
         s = annot_arr.shape
         # Making mask
-        blur_arr = Gf.gauss_blur_filt(bounded_arr, configs.mask_gaus_blur)
+        blur_arr = GpuCellcFuncs.gauss_blur_filt(bounded_arr, configs.mask_gaus_blur)
         tifffile.imwrite(pfm.premask_blur.val, blur_arr)
-        mask_arr = Gf.manual_thresh(blur_arr, configs.mask_thresh)
+        mask_arr = GpuCellcFuncs.manual_thresh(blur_arr, configs.mask_thresh)
         tifffile.imwrite(pfm.mask_fill.val, mask_arr)
 
         # Make outline
@@ -481,7 +488,7 @@ class Pipeline:
         pfm_tuning = ProjFpModelTuning(root_dir)
         cls.logger.debug("Reading config params")
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             cls.logger.debug("Reading raw zarr")
             raw_arr = da.from_zarr(pfm.raw.val)
             cls.logger.debug("Cropping raw zarr")
@@ -510,7 +517,7 @@ class Pipeline:
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
         # Making overlap image
-        with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=4)):
+        with cluster_process(LocalCluster(n_workers=1, threads_per_worker=4)):
             raw_arr = da.from_zarr(pfm.raw.val, chunks=configs.zarr_chunksize)
             overlap_arr = da_overlap(raw_arr, d=configs.overlap_depth)
             overlap_arr = disk_cache(overlap_arr, pfm.overlap.val)
@@ -527,14 +534,14 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCUDACluster()):
+        with cluster_process(LocalCUDACluster()):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
             overlap_arr = da.from_zarr(pfm.overlap.val)
             # Declaring processing instructions
             bgrm_arr = da.map_blocks(
-                Gf.tophat_filt,
+                GpuCellcFuncs.tophat_filt,
                 overlap_arr,
                 configs.tophat_sigma,
             )
@@ -553,14 +560,14 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCUDACluster()):
+        with cluster_process(LocalCUDACluster()):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
             bgrm_arr = da.from_zarr(pfm.bgrm.val)
             # Declaring processing instructions
             dog_arr = da.map_blocks(
-                Gf.dog_filt,
+                GpuCellcFuncs.dog_filt,
                 bgrm_arr,
                 configs.dog_sigma1,
                 configs.dog_sigma2,
@@ -580,14 +587,14 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCUDACluster()):
+        with cluster_process(LocalCUDACluster()):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
             dog_arr = da.from_zarr(pfm.dog.val)
             # Declaring processing instructions
             adaptv_arr = da.map_blocks(
-                Gf.gauss_subt_filt,
+                GpuCellcFuncs.gauss_subt_filt,
                 dog_arr,
                 configs.large_gauss_sigma,
             )
@@ -608,7 +615,7 @@ class Pipeline:
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # # Visually inspect sd offset
@@ -618,7 +625,7 @@ class Pipeline:
             adaptv_arr = da.from_zarr(pfm.adaptv.val)
             # Declaring processing instructions
             threshd_arr = da.map_blocks(
-                Cf.manual_thresh,
+                CpuCellcFuncs.manual_thresh,
                 adaptv_arr,
                 configs.threshd_value,
             )
@@ -637,12 +644,12 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Reading input images
             threshd_arr = da.from_zarr(pfm.threshd.val)
             # Declaring processing instructions
             threshd_volumes_arr = da.map_blocks(
-                Cf.label_with_volumes,
+                CpuCellcFuncs.label_with_volumes,
                 threshd_arr,
             )
             # Computing and saving
@@ -661,14 +668,14 @@ class Pipeline:
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
             threshd_volumes_arr = da.from_zarr(pfm.threshd_volumes.val)
             # Declaring processing instructions
             threshd_filt_arr = da.map_blocks(
-                Cf.volume_filter,
+                CpuCellcFuncs.volume_filter,
                 threshd_volumes_arr,
                 configs.min_threshd_size,
                 configs.max_threshd_size,
@@ -688,7 +695,7 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCUDACluster()):
+        with cluster_process(LocalCUDACluster()):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
@@ -696,7 +703,7 @@ class Pipeline:
             threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
             # Declaring processing instructions
             maxima_arr = da.map_blocks(
-                Gf.get_local_maxima,
+                GpuCellcFuncs.get_local_maxima,
                 overlap_arr,
                 configs.maxima_sigma,
                 threshd_filt_arr,
@@ -716,7 +723,7 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
-        with cluster_proc_contxt(LocalCluster(n_workers=3, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=3, threads_per_worker=1)):
             # n_workers=2
             # Reading input images
             overlap_arr = da.from_zarr(pfm.overlap.val)
@@ -724,7 +731,7 @@ class Pipeline:
             threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
             # Declaring processing instructions
             wshed_volumes_arr = da.map_blocks(
-                Cf.wshed_segm_volumes,
+                CpuCellcFuncs.wshed_segm_volumes,
                 overlap_arr,
                 maxima_arr,
                 threshd_filt_arr,
@@ -745,14 +752,14 @@ class Pipeline:
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
             wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes.val)
             # Declaring processing instructions
             wshed_filt_arr = da.map_blocks(
-                Cf.volume_filter,
+                CpuCellcFuncs.volume_filter,
                 wshed_volumes_arr,
                 configs.min_wshed_size,
                 configs.max_wshed_size,
@@ -775,7 +782,7 @@ class Pipeline:
             for fp in (pfm.cells_raw_df.val,):
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
-        with cluster_proc_contxt(LocalCluster(n_workers=2, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=2, threads_per_worker=1)):
             # n_workers=2
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
@@ -787,7 +794,7 @@ class Pipeline:
             # Declaring processing instructions
             # Getting maxima coords and cell measures in table
             cells_df = block2coords(
-                Cf.get_cells,
+                CpuCellcFuncs.get_cells,
                 raw_arr,
                 overlap_arr,
                 maxima_arr,
@@ -815,13 +822,13 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Reading filtered and maxima images (trimmed to orig space)
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Read filtered and maxima images (trimmed to orig space)
             maxima_final_arr = da.from_zarr(pfm.maxima_final.val)
             # Declaring processing instructions
             # Storing coords of each maxima in df
             coords_df = block2coords(
-                Gf.get_coords,
+                GpuCellcFuncs.get_coords,
                 maxima_final_arr,
             )
             # Converting from dask to pandas
@@ -846,7 +853,7 @@ class Pipeline:
                     return cls.logger.warning(file_exists_msg(fp))
         # Getting configs
         configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-        with cluster_proc_contxt(LocalCluster(n_workers=4, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=4, threads_per_worker=1)):
             # Setting output key (in the form "<maxima/region>_trfm_df")
             # Getting cell coords
             cells_df = pd.read_parquet(pfm.cells_raw_df.val)
@@ -889,7 +896,7 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Getting region for each detected cell (i.e. row) in cells_df
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             # Reading cells_raw and cells_trfm dataframes
             cells_df = pd.read_parquet(pfm.cells_raw_df.val)
             coords_trfm = pd.read_parquet(pfm.cells_trfm_df.val)
@@ -954,7 +961,7 @@ class Pipeline:
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
         # Making cells_agg_df
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             # Reading cells dataframe
             cells_df = pd.read_parquet(pfm.cells_df.val)
             # Sanitising (removing smb columns)
@@ -1011,7 +1018,7 @@ class Pipeline:
                     return cls.logger.warning(file_exists_msg(fp))
         # Making Dask cluster
         # with cluster_proc_contxt(LocalCluster()):
-        with cluster_proc_contxt(LocalCluster(n_workers=6, threads_per_worker=1)):
+        with cluster_process(LocalCluster(n_workers=6, threads_per_worker=1)):
             # Getting configs
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             # Reading input images
@@ -1033,7 +1040,7 @@ class Pipeline:
             for fp in (pfm.points_raw.val,):
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             VisualCheckFuncsDask.coords2points(
                 coords=pd.read_parquet(pfm.cells_raw_df.val),
                 shape=da.from_zarr(pfm.raw.val).shape,
@@ -1046,7 +1053,7 @@ class Pipeline:
             for fp in (pfm.heatmap_raw.val,):
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsDask.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_raw_df.val),
@@ -1061,7 +1068,7 @@ class Pipeline:
             for fp in (pfm.points_trfm.val,):
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             VisualCheckFuncsTiff.coords2points(
                 coords=pd.read_parquet(pfm.cells_trfm_df.val),
                 shape=tifffile.imread(pfm.ref.val).shape,
@@ -1074,7 +1081,7 @@ class Pipeline:
             for fp in (pfm.heatmap_trfm.val,):
                 if os.path.exists(fp):
                     return cls.logger.warning(file_exists_msg(fp))
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             configs = ConfigParamsModel.read_fp(pfm.config_params.val)
             VisualCheckFuncsTiff.coords2heatmap(
                 coords=pd.read_parquet(pfm.cells_trfm_df.val),

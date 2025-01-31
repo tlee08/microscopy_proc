@@ -10,7 +10,7 @@ import numpy as np
 import tifffile
 from dask.distributed import LocalCluster
 
-from microscopy_proc.utils.dask_utils import cluster_proc_contxt
+from microscopy_proc.utils.dask_utils import cluster_process
 from microscopy_proc.utils.io_utils import read_files_async
 from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
@@ -72,16 +72,16 @@ class ViewerFuncs:
         Reading, trimming (if possible), and returning the array in memory.
         """
         if re.search(r"\.zarr$", fp):
-            # with cluster_proc_contxt(LocalCluster()):
-            arr = da.from_zarr(fp)
-            if trimmer is not None:
-                arr = arr[*trimmer]
-            return arr.compute()
-        elif re.search(r"\.tif$", fp):
-            arr = tifffile.imread(fp)
-            if trimmer is not None:
-                arr = arr[*trimmer]
-            return arr
+            with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=1)):
+                arr = da.from_zarr(fp)
+                if trimmer is not None:
+                    arr = arr[*trimmer]
+                return arr.compute()
+            elif re.search(r"\.tif$", fp):
+                arr = tifffile.imread(fp)
+                if trimmer is not None:
+                    arr = arr[*trimmer]
+                return arr
         else:
             raise NotImplementedError("Only .zarr and .tif files are supported.")
 
@@ -91,10 +91,7 @@ class ViewerFuncs:
         for k, v in kwargs.items():
             assert len(v) == len(fp_ls)
         # Reading arrays
-        # TODO: make async (big IO bottleneck)
         arr_ls = asyncio.run(read_files_async(fp_ls, lambda fp: cls.read_img(fp, trimmer)))
-        # for i, fp in enumerate(fp_ls):
-        #     arr_ls.append(cls.read_img(fp, trimmer))
         # "Transposing" kwargs from dict of lists to list of dicts
         kwargs_ls = dictlists2listdicts(kwargs)
         # Making napari viewer
@@ -131,7 +128,7 @@ class ViewerFuncs:
         """
         NOTE: exports as tiff only.
         """
-        with cluster_proc_contxt(LocalCluster()):
+        with cluster_process(LocalCluster()):
             # Reading
             arr = cls.read_img(fp_in, trimmer)
             # Writing
