@@ -13,18 +13,18 @@ if __name__ == "__main__":
     # Images to run
     # COMMENT OUT THE IMAGES THAT YOU DON'T WANT TO VIEW
     imgs_to_run_ls = [
-        "raw",
-        "ref",
-        "annot",
-        "downsmpl1",
-        "downsmpl2",
-        "trimmed",
-        "bounded",
-        "regresult",
-        "premask_blur",
-        "mask_fill",
-        "mask_outline",
-        "mask_reg",
+        # "raw",
+        # "ref",
+        # "annot",
+        # "downsmpl1",
+        # "downsmpl2",
+        # "trimmed",
+        # "bounded",
+        # "regresult",
+        # "premask_blur",
+        # "mask_fill",
+        # "mask_outline",
+        # "mask_reg",
         "overlap",
         "bgrm",
         "dog",
@@ -32,18 +32,19 @@ if __name__ == "__main__":
         "threshd",
         "threshd_volumes",
         "threshd_filt",
-        "maxima",
+        # "maxima",
         "wshed_volumes",
         "wshed_filt",
-        "threshd_final",
-        "maxima_final",
-        "wshed_final",
-        "points_raw",
-        "heatmap_raw",
-        "points_trfm",
-        "heatmap_trfm",
+        # "threshd_final",
+        # "maxima_final",
+        # "wshed_final",
+        # "points_raw",
+        # "heatmap_raw",
+        # "points_trfm",
+        # "heatmap_trfm",
     ]
     # Making the project file model
-    pfm = Pipeline.get_pfm(proj_dir)
+    # pfm = Pipeline.get_pfm(proj_dir)
+    pfm = Pipeline.get_pfm_tuning(proj_dir)
     # Viewing the images
     ViewerFuncs.view_arrs_from_pfm(pfm, imgs_to_run_ls, trimmer)
