@@ -8,9 +8,9 @@ import streamlit as st
 
 from microscopy_proc.constants import Coords
 from microscopy_proc.funcs.viewer_funcs import CMAP as CMAP_D
+from microscopy_proc.funcs.viewer_funcs import VIEW_IMGS_PARAMS as IMGS_D
 from microscopy_proc.funcs.viewer_funcs import VRANGE as VRANGE_D
 from microscopy_proc.funcs.viewer_funcs import ViewerFuncs
-from microscopy_proc.funcs.viewer_funcs import imgs_view_params as IMGS_D
 from microscopy_proc.gui.gui_funcs import PROJ_DIR, init_var, page_decorator
 from microscopy_proc.pipeline.pipeline import Pipeline
 from microscopy_proc.utils.misc_utils import enum2list

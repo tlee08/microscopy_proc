@@ -1,6 +1,5 @@
 import re
 from enum import Enum
-from multiprocessing import Process
 from typing import Optional
 
 import dask.array as da
@@ -13,6 +12,7 @@ from microscopy_proc.utils.dask_utils import cluster_process
 from microscopy_proc.utils.io_utils import async_read_files_run
 from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
+from microscopy_proc.utils.proj_org_utils import ProjFpModelBase
 
 VRANGE = "vrange"
 CMAP = "cmap"
@@ -29,7 +29,7 @@ class Colormaps(Enum):
     SET1 = "Set1"
 
 
-imgs_view_params = {
+VIEW_IMGS_PARAMS = {
     "ref": {VRANGE: (0, 10000), CMAP: Colormaps.GREEN.value},
     "annot": {VRANGE: (0, 10000), CMAP: Colormaps.SET1.value},
     "raw": {VRANGE: (0, 10000), CMAP: Colormaps.GRAY.value},
@@ -84,7 +84,7 @@ class ViewerFuncs:
             raise NotImplementedError("Only .zarr and .tif files are supported.")
 
     @classmethod
-    def view_arrs(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
+    def view_arrs(cls, fp_ls: list[str], trimmer: list[slice], **kwargs):
         # Asserting all kwargs_ls list lengths are equal to fp_ls length
         for k, v in kwargs.items():
             assert len(v) == len(fp_ls)
@@ -107,12 +107,14 @@ class ViewerFuncs:
         napari.run()
 
     @classmethod
-    def view_arrs_mp(cls, fp_ls: tuple[str, ...], trimmer: tuple[slice, ...], **kwargs):
-        cls.logger.info("Starting napari viewer")
-        # Making napari viewer multiprocess
-        napari_proc = Process(target=cls.view_arrs, args=(fp_ls, trimmer), kwargs=kwargs)
-        napari_proc.start()
-        # napari_proc.join()
+    def view_arrs_from_pfm(cls, pfm: ProjFpModelBase, imgs_to_view_ls: list[str], trimmer: list[slice]):
+        return cls.view_arrs(
+            fp_ls=[getattr(pfm, i).val for i in imgs_to_view_ls],
+            trimmer=trimmer,
+            name=imgs_to_view_ls,
+            contrast_limits=[VIEW_IMGS_PARAMS[i][VRANGE] for i in imgs_to_view_ls],
+            colormap=[VIEW_IMGS_PARAMS[i][CMAP] for i in imgs_to_view_ls],
+        )
 
     # TODO: implement elsewhere for usage examples
     @classmethod
