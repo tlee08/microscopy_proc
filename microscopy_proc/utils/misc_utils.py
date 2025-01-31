@@ -4,7 +4,6 @@ from typing import Any, Iterable
 
 
 def import_extra_error_func(extra_dep_name: str):
-    @property
     def error_func(*args, **kwargs):
         raise ImportError(
             f"{extra_dep_name} dependency not installed.\n"

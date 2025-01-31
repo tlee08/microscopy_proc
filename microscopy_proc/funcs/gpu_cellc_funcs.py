@@ -135,4 +135,5 @@ class GpuCellcFuncs(CpuCellcFuncs):
 
     @classmethod
     def get_cells(cls, *args, **kwargs):
+        # NOTE: This is a CPU function
         return cls._clear_cuda_mem_dec(super().get_cells)(*args, **kwargs)
