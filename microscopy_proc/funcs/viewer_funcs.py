@@ -72,7 +72,7 @@ class ViewerFuncs:
         Reading, trimming (if possible), and returning the array in memory.
         """
         if re.search(r"\.zarr$", fp):
-            with cluster_process(LocalCluster()):
+            with cluster_process(LocalCluster(n_workers=1, threads_per_worker=1)):
                 arr = da.from_zarr(fp)
                 if trimmer is not None:
                     arr = arr[*trimmer]
