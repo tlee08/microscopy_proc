@@ -138,7 +138,6 @@ class Pipeline:
         Returns a ProjFpModel object created from the project directory.
         """
         pfm = ProjFpModel(proj_dir)
-        pfm.make_subdirs()
         return pfm
 
     @classmethod
@@ -147,7 +146,6 @@ class Pipeline:
         Returns a ProjFpModel object created from the project directory.
         """
         pfm_tuning = ProjFpModelTuning(proj_dir)
-        pfm_tuning.make_subdirs()
         return pfm_tuning
 
     ###################################################################################################

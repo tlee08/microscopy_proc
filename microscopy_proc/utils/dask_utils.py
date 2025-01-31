@@ -1,5 +1,6 @@
 import contextlib
 import functools
+import os
 from multiprocessing import current_process
 from typing import Any, Callable
 
@@ -93,6 +94,7 @@ def coords2block(df: pd.DataFrame, block_info: dict) -> pd.DataFrame:
 
 
 def disk_cache(arr: da.Array, fp):
+    os.makedirs(os.path.dirname(fp), exist_ok=True)
     arr.to_zarr(fp, overwrite=True)
     return da.from_zarr(fp)
 

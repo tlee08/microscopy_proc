@@ -114,6 +114,7 @@ def read_json(fp: str) -> dict:
 
 
 def write_json(fp: str, data: dict) -> None:
+    os.makedirs(os.path.dirname(fp), exist_ok=True)
     with open(fp, "w") as f:
         json.dump(data, f, indent=4)
 
