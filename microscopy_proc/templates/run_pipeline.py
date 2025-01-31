@@ -4,6 +4,7 @@ from natsort import natsorted
 
 from microscopy_proc.funcs.batch_combine_funcs import BatchCombineFuncs
 from microscopy_proc.pipeline.pipeline import Pipeline
+from microscopy_proc.pipeline.visual_check import VisualCheck
 
 if __name__ == "__main__":
     # Filenames
@@ -120,15 +121,21 @@ if __name__ == "__main__":
             # Exporting cells_agg parquet as csv
             Pipeline.cells2csv(pfm, overwrite=overwrite)
 
-            # Making points and heatmap images
-            Pipeline.coords2points_raw(pfm, overwrite=overwrite)
-            Pipeline.coords2points_trfm(pfm, overwrite=overwrite)
-            Pipeline.coords2heatmap_trfm(pfm, overwrite=overwrite)
-
-            # Combining arrays
-            Pipeline.combine_reg(pfm, overwrite=overwrite)
-            Pipeline.combine_cellc(pfm, overwrite=overwrite)
-            Pipeline.combine_points(pfm, overwrite=overwrite)
+            # VISUAL CHECKS
+            # Registration visual check
+            VisualCheck.combine_reg(pfm, overwrite=overwrite)
+            # Cell counting visual checks
+            for pfm_i in [
+                pfm_tuning,
+                # pfm,
+            ]:
+                VisualCheck.cellc_trim_to_final(pfm_i, overwrite=overwrite)
+                VisualCheck.coords2points_raw(pfm_i, overwrite=overwrite)
+                VisualCheck.combine_cellc(pfm_i, overwrite=overwrite)
+            # Transformed space visual checks
+            VisualCheck.coords2points_trfm(pfm, overwrite=overwrite)
+            VisualCheck.coords2heatmap_trfm(pfm, overwrite=overwrite)
+            VisualCheck.combine_trfm_points(pfm, overwrite=overwrite)
         except Exception as e:
             print(f"Error in {exp}: {e}")
     # Combining all experiment dataframes

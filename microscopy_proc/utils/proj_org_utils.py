@@ -2,6 +2,12 @@ import inspect
 import os
 from abc import ABC, abstractmethod
 
+# TODO: completely restructure into a single class
+# (ONLY options for production or tuning)
+
+# ALSO, WAY overcomplicated with ObservedAttr
+# Just use properties, even if it is a bit more verbose
+
 
 class ObservedAttr:
     """ """
@@ -227,6 +233,8 @@ class ProjFpModelBase(FpModel):
         self.threshd_volumes = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "5_threshd_volumes.zarr"])
         self.threshd_filt = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "6_threshd_filt.zarr"])
         self.maxima = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "7_maxima.zarr"])
+        self.maxima_labels = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "7_maxima_labels.zarr"])  # NOTE: NEW
+        self.wshed_labels = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "8_wshed_labels.zarr"])  # NOTE: NEW
         self.wshed_volumes = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "8_wshed_volumes.zarr"])
         self.wshed_filt = FpAttr([self.root_dir.val, self.cellcount_sdir.val, "9_wshed_filt.zarr"])
         self.maxima_df = FpAttr([self.root_dir.val, self.analysis_sdir.val, "1_maxima.parquet"])
@@ -324,7 +332,7 @@ class ProjFpModelTuning(ProjFpModelBase):
             mask_sdir="mask",
             cellcount_sdir="cellcount_tuning",
             analysis_sdir="analysis_tuning",
-            visual_sdir="visual",
+            visual_sdir="visual_tuning",
         )
 
     def set_filepaths(self):
@@ -344,3 +352,6 @@ class ProjFpModelTuning(ProjFpModelBase):
         self.wshed_filt.set_implement()
         self.maxima_df.set_implement()
         self.cells_raw_df.set_implement()
+        self.points_raw.set_implement()
+        self.heatmap_raw.set_implement()
+        self.comb_cellc.set_implement()

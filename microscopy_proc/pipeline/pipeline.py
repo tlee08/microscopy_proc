@@ -26,15 +26,12 @@ from microscopy_proc.funcs.map_funcs import MapFuncs
 from microscopy_proc.funcs.mask_funcs import MaskFuncs
 from microscopy_proc.funcs.reg_funcs import RegFuncs
 from microscopy_proc.funcs.tiff2zarr_funcs import Tiff2ZarrFuncs
-from microscopy_proc.funcs.viewer_funcs import ViewerFuncs
-from microscopy_proc.funcs.visual_check_funcs_dask import VisualCheckFuncsDask
 from microscopy_proc.funcs.visual_check_funcs_tiff import VisualCheckFuncsTiff
 from microscopy_proc.utils.config_params_model import ConfigParamsModel
 from microscopy_proc.utils.dask_utils import (
     block2coords,
     cluster_process,
     da_overlap,
-    da_trim,
     disk_cache,
 )
 from microscopy_proc.utils.diagnostics_utils import file_exists_msg
@@ -94,8 +91,8 @@ class Pipeline:
     heavy_n_workers = 2
     heavy_threads_per_worker = 1
     # busy (many workers - carrying low RAM computations)
-    busy_n_workers = 2
-    busy_threads_per_worker = 1
+    busy_n_workers = 6
+    busy_threads_per_worker = 2
     # gpu
     _gpu_cluster = LocalCUDACluster
     # GPU enabled cell funcs
@@ -659,7 +656,7 @@ class Pipeline:
             threshd_arr = da.from_zarr(pfm.threshd.val)
             # Declaring processing instructions
             threshd_volumes_arr = da.map_blocks(
-                cls.cellc_funcs.label_with_volumes,  # NOTE: previously CPU
+                cls.cellc_funcs.mask2volume,  # NOTE: previously CPU
                 threshd_arr,
             )
             # Computing and saving
@@ -721,6 +718,78 @@ class Pipeline:
             maxima_arr = disk_cache(maxima_arr, pfm.maxima.val)
 
     @classmethod
+    def cellc7b(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
+        """
+        Cell counting pipeline - Step 7
+
+        Convert maxima mask to uniquely labelled points.
+        """
+        # TODO: Check that the results of cellc10 and cellc7b, cellc8a, cellc10a are the same (df)
+        logger = init_logger_file()
+        if not overwrite:
+            for fp in (pfm.maxima_labels.val,):
+                if os.path.exists(fp):
+                    return logger.warning(file_exists_msg(fp))
+        with cluster_process(cls.gpu_cluster()):
+            # Reading input images
+            maxima_arr = da.from_zarr(pfm.maxima.val)
+            # Declaring processing instructions
+            maxima_labels_arr = da.map_blocks(
+                cls.cellc_funcs.mask2label,
+                maxima_arr,
+            )
+            maxima_labels_arr = disk_cache(maxima_labels_arr, pfm.maxima_labels.val)
+
+    # NOTE: NOT NEEDED TO GET WSHED_LABELS AS ALL WE NEED IS WSBEED_VOLUMES FOR CELLC10b
+    # @classmethod
+    # def cellc8a(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
+    #     """
+    #     Cell counting pipeline - Step 8
+
+    #     Watershed segmentation labels.
+    #     """
+    #     logger = init_logger_file()
+    #     if not overwrite:
+    #         for fp in (pfm.maxima_labels.val,):
+    #             if os.path.exists(fp):
+    #                 return logger.warning(file_exists_msg(fp))
+    #     with cluster_process(cls.heavy_cluster()):
+    #         # Reading input images
+    #         overlap_arr = da.from_zarr(pfm.overlap.val)
+    #         maxima_labels_arr = da.from_zarr(pfm.maxima_labels.val)
+    #         threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
+    #         # Declaring processing instructions
+    #         wshed_labels_arr = da.map_blocks(
+    #             cls.cellc_funcs.wshed_segm,
+    #             overlap_arr,
+    #             maxima_labels_arr,
+    #             threshd_filt_arr,
+    #         )
+    #         wshed_labels_arr = disk_cache(wshed_labels_arr, pfm.wshed_labels.val)
+
+    # @classmethod
+    # def cellc8b(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
+    #     """
+    #     Cell counting pipeline - Step 8
+
+    #     Watershed segmentation volumes.
+    #     """
+    #     logger = init_logger_file()
+    #     if not overwrite:
+    #         for fp in (pfm.maxima_labels.val,):
+    #             if os.path.exists(fp):
+    #                 return logger.warning(file_exists_msg(fp))
+    #     with cluster_process(cls.heavy_cluster()):
+    #         # Reading input images
+    #         wshed_labels_arr = da.from_zarr(pfm.wshed_labels.val)
+    #         # Declaring processing instructions
+    #         wshed_volumes_arr = da.map_blocks(
+    #             cls.cellc_funcs.label2volume,
+    #             wshed_labels_arr,
+    #         )
+    #         wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes.val)
+
+    @classmethod
     def cellc8(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
         """
         Cell counting pipeline - Step 8
@@ -745,7 +814,6 @@ class Pipeline:
                 maxima_arr,
                 threshd_filt_arr,
             )
-            # Computing and saving
             wshed_volumes_arr = disk_cache(wshed_volumes_arr, pfm.wshed_volumes.val)
 
     @classmethod
@@ -816,6 +884,44 @@ class Pipeline:
                 f"({CellColumns.VOLUME.value} >= {configs.min_wshed_size}) & "
                 f"({CellColumns.VOLUME.value} <= {configs.max_wshed_size})"
             )
+            # Computing and saving as parquet
+            cells_df.to_parquet(pfm.cells_raw_df.val)
+
+    @classmethod
+    def cellc10b(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
+        """
+        Alternative to cellc10.
+
+        Uses raw, overlap, maxima_labels, wshed_filt (so wshed computation not run again).
+        Also allows GPU processing.
+        """
+        logger = init_logger_file()
+        if not overwrite:
+            for fp in (pfm.cells_raw_df.val,):
+                if os.path.exists(fp):
+                    return logger.warning(file_exists_msg(fp))
+        with cluster_process(cls.heavy_cluster()):
+            # Getting configs
+            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
+            # Reading input images
+            raw_arr = da.from_zarr(pfm.raw.val)
+            overlap_arr = da.from_zarr(pfm.overlap.val)
+            maxima_labels_arr = da.from_zarr(pfm.maxima_labels.val)
+            wshed_labels_arr = da.from_zarr(pfm.wshed_labels.val)
+            wshed_filt_arr = da.from_zarr(pfm.wshed_filt.val)
+            # Declaring processing instructions
+            # Getting maxima coords and cell measures in table
+            cells_df = block2coords(
+                CpuCellcFuncs.get_cells_b,
+                raw_arr,
+                overlap_arr,
+                maxima_labels_arr,
+                wshed_labels_arr,
+                wshed_filt_arr,
+                configs.overlap_depth,
+            )
+            # Converting from dask to pandas
+            cells_df = cells_df.compute()
             # Computing and saving as parquet
             cells_df.to_parquet(pfm.cells_raw_df.val)
 
@@ -1011,146 +1117,6 @@ class Pipeline:
         cells_agg_df.to_csv(pfm.cells_agg_csv.val)
 
     ###################################################################################################
-    # VISUAL CHECK
-    ###################################################################################################
-
-    @classmethod
-    def cellc_trim_to_final(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        """
-        Cell counting pipeline - Step 10
-
-        Trimming filtered regions overlaps to make:
-        - Trimmed maxima image
-        - Trimmed threshold image
-        - Trimmed watershed image
-        """
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.maxima_final.val, pfm.threshd_final.val, pfm.wshed_final.val):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        with cluster_process(cls.busy_cluster()):
-            # Getting configs
-            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-            # Reading input images
-            maxima_arr = da.from_zarr(pfm.maxima.val)
-            threshd_filt_arr = da.from_zarr(pfm.threshd_filt.val)
-            wshed_volumes_arr = da.from_zarr(pfm.wshed_volumes.val)
-            # Declaring processing instructions
-            maxima_final_arr = da_trim(maxima_arr, d=configs.overlap_depth)
-            threshd_final_arr = da_trim(threshd_filt_arr, d=configs.overlap_depth)
-            wshed_final_arr = da_trim(wshed_volumes_arr, d=configs.overlap_depth)
-            # Computing and saving
-            maxima_final_arr = disk_cache(maxima_final_arr, pfm.maxima_final.val)
-            threshd_final_arr = disk_cache(threshd_final_arr, pfm.threshd_final.val)
-            wshed_final_arr = disk_cache(wshed_final_arr, pfm.wshed_final.val)
-
-    @classmethod
-    def coords2points_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.points_raw.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        with cluster_process(cls.busy_cluster()):
-            VisualCheckFuncsDask.coords2points(
-                coords=pd.read_parquet(pfm.cells_raw_df.val),
-                shape=da.from_zarr(pfm.raw.val).shape,
-                out_fp=pfm.points_raw.val,
-            )
-
-    @classmethod
-    def coords2heatmap_raw(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.heatmap_raw.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        with cluster_process(cls.busy_cluster()):
-            configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-            VisualCheckFuncsDask.coords2heatmap(
-                coords=pd.read_parquet(pfm.cells_raw_df.val),
-                shape=da.from_zarr(pfm.raw.val).shape,
-                out_fp=pfm.heatmap_raw.val,
-                radius=configs.heatmap_raw_radius,
-            )
-
-    @classmethod
-    def coords2points_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.points_trfm.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        VisualCheckFuncsTiff.coords2points(
-            coords=pd.read_parquet(pfm.cells_trfm_df.val),
-            shape=tifffile.imread(pfm.ref.val).shape,
-            out_fp=pfm.points_trfm.val,
-        )
-
-    @classmethod
-    def coords2heatmap_trfm(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.heatmap_trfm.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-        VisualCheckFuncsTiff.coords2heatmap(
-            coords=pd.read_parquet(pfm.cells_trfm_df.val),
-            shape=tifffile.imread(pfm.ref.val).shape,
-            out_fp=pfm.heatmap_trfm.val,
-            radius=configs.heatmap_trfm_radius,
-        )
-
-    ###################################################################################################
-    # COMBINING/MERGING ARRAYS IN RGB LAYERS
-    ###################################################################################################
-
-    @classmethod
-    def combine_reg(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.comb_reg.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.trimmed.val, pfm.bounded.val, pfm.regresult.val),
-            fp_out=pfm.comb_reg.val,
-        )
-
-    @classmethod
-    def combine_cellc(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.comb_cellc.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        configs = ConfigParamsModel.read_fp(pfm.config_params.val)
-        ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.raw.val, pfm.threshd_final.val, pfm.wshed_final.val),
-            fp_out=pfm.comb_cellc.val,
-            trimmer=(
-                slice(*configs.combine_cellc_z_trim),
-                slice(*configs.combine_cellc_y_trim),
-                slice(*configs.combine_cellc_x_trim),
-            ),
-        )
-
-    @classmethod
-    def combine_points(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
-        logger = init_logger_file()
-        if not overwrite:
-            for fp in (pfm.comb_points.val,):
-                if os.path.exists(fp):
-                    return logger.warning(file_exists_msg(fp))
-        ViewerFuncs.combine_arrs(
-            fp_in_ls=(pfm.ref.val, pfm.annot.val, pfm.heatmap_trfm.val),
-            # 2nd regresult means the combining works in ImageJ
-            fp_out=pfm.comb_points.val,
-        )
-
-    ###################################################################################################
     # ALL PIPELINE FUNCTION
     ###################################################################################################
 
@@ -1159,7 +1125,7 @@ class Pipeline:
         """
         Running all pipelines in order.
         """
-        # Getting pfm's
+        # Getting PFMs
         pfm = cls.get_pfm(proj_dir)
         pfm_tuning = cls.get_pfm_tuning(proj_dir)
         # Updating project configs
@@ -1198,21 +1164,3 @@ class Pipeline:
         cls.cell_mapping(pfm, overwrite=overwrite)
         cls.group_cells(pfm, overwrite=overwrite)
         cls.cells2csv(pfm, overwrite=overwrite)
-
-    @classmethod
-    def run_make_visual_checks(cls, proj_dir: str, overwrite: bool = False) -> None:
-        """
-        Running all visual check pipelines in order.
-        """
-        # Getting pfm's
-        pfm = cls.get_pfm(proj_dir)
-        # Visual check - heatmaps and points
-        cls.cellc_trim_to_final(pfm, overwrite=overwrite)
-        cls.coords2points_raw(pfm, overwrite=overwrite)
-        cls.coords2heatmap_raw(pfm, overwrite=overwrite)
-        cls.coords2points_trfm(pfm, overwrite=overwrite)
-        cls.coords2heatmap_trfm(pfm, overwrite=overwrite)
-        # Visual check - combining arrays
-        cls.combine_reg(pfm, overwrite=overwrite)
-        cls.combine_cellc(pfm, overwrite=overwrite)
-        cls.combine_points(pfm, overwrite=overwrite)

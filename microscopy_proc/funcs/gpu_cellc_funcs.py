@@ -91,17 +91,17 @@ class GpuCellcFuncs(CpuCellcFuncs):
         return cls._clear_cuda_mem_dec(super().manual_thresh)(*args, **kwargs).get()
 
     @classmethod
-    def mask2ids(cls, *args, **kwargs):
-        return cls._clear_cuda_mem_dec(super().mask2ids)(*args, **kwargs).get()
+    def mask2label(cls, *args, **kwargs):
+        return cls._clear_cuda_mem_dec(super().mask2label)(*args, **kwargs).get()
 
     @classmethod
-    def label_with_volumes(cls, *args, **kwargs):
+    def mask2volume(cls, *args, **kwargs):
         # NOTE: Already returns a numpy array
-        return cls._clear_cuda_mem_dec(super().label_with_volumes)(*args, **kwargs)
+        return cls._clear_cuda_mem_dec(super().mask2volume)(*args, **kwargs)
 
     @classmethod
-    def ids2volumes(cls, *args, **kwargs):
-        return cls._clear_cuda_mem_dec(super().ids2volumes)(*args, **kwargs).get()
+    def label2volume(cls, *args, **kwargs):
+        return cls._clear_cuda_mem_dec(super().label2volume)(*args, **kwargs).get()
 
     @classmethod
     def visualise_stats(cls, *args, **kwargs):
