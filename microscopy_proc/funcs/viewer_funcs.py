@@ -72,16 +72,16 @@ class ViewerFuncs:
         Reading, trimming (if possible), and returning the array in memory.
         """
         if re.search(r"\.zarr$", fp):
-            with cluster_proc_contxt(LocalCluster(n_workers=1, threads_per_worker=1)):
+            with cluster_proc_contxt(LocalCluster()):
                 arr = da.from_zarr(fp)
                 if trimmer is not None:
                     arr = arr[*trimmer]
                 return arr.compute()
-            elif re.search(r"\.tif$", fp):
-                arr = tifffile.imread(fp)
-                if trimmer is not None:
-                    arr = arr[*trimmer]
-                return arr
+        elif re.search(r"\.tif$", fp):
+            arr = tifffile.imread(fp)
+            if trimmer is not None:
+                arr = arr[*trimmer]
+            return arr
         else:
             raise NotImplementedError("Only .zarr and .tif files are supported.")
 
