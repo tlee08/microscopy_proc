@@ -7,11 +7,11 @@ from microscopy_proc.constants import (
     AnnotExtraColumns,
     SpecialRegions,
 )
-from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.logging_utils import init_logger_file
 
 
 class MapFuncs:
-    logging = init_logger(__name__)
+    logging = init_logger_file(__name__)
 
     @classmethod
     def annot_dict2df(cls, data_dict: dict) -> pd.DataFrame:
@@ -40,10 +40,7 @@ class MapFuncs:
             return pd.concat(
                 [
                     curr_row,
-                    *[
-                        recursive_gen(i)
-                        for i in annot_dict[AnnotExtraColumns.CHILDREN.value]
-                    ],
+                    *[recursive_gen(i) for i in annot_dict[AnnotExtraColumns.CHILDREN.value]],
                 ]
             )
 
@@ -104,9 +101,7 @@ class MapFuncs:
         # Making copy
         annot_df = annot_df.copy()
         # Making a children list column in cells_agg
-        annot_df[AnnotExtraColumns.CHILDREN.value] = [
-            [] for i in range(annot_df.shape[0])
-        ]
+        annot_df[AnnotExtraColumns.CHILDREN.value] = [[] for i in range(annot_df.shape[0])]
         # For each row (i.e. region), adding the current row ID to the parent's (by ID)
         # children column list
         for i in annot_df.index:
@@ -158,12 +153,7 @@ class MapFuncs:
             # BASE CASE: no children - use current values
             # REC CASE: has children - recursively sum children values + current values
             cells_agg_df.loc[row_id, sum_cols] += np.sum(
-                [
-                    recursive_sum(child_id)
-                    for child_id in cells_agg_df.at[
-                        row_id, AnnotExtraColumns.CHILDREN.value
-                    ]
-                ],
+                [recursive_sum(child_id) for child_id in cells_agg_df.at[row_id, AnnotExtraColumns.CHILDREN.value]],
                 axis=0,
             )
             return cells_agg_df.loc[row_id, sum_cols]
@@ -172,9 +162,7 @@ class MapFuncs:
         # recursively summing (i.e. top-down recursive approach)
         [
             recursive_sum(row_id)
-            for row_id in cells_agg_df[
-                cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
-            ].index
+            for row_id in cells_agg_df[cells_agg_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index
         ]
         # Removing unnecessary columns (AnnotExtraColumns.CHILDREN.value column)
         cells_agg_df = cells_agg_df.drop(columns=[AnnotExtraColumns.CHILDREN.value])
@@ -201,19 +189,13 @@ class MapFuncs:
             # RECURSIVE CASE: has children - recursively get children info
             # NOTE: also covers base case (no children)
             tree[AnnotExtraColumns.CHILDREN.value] = [
-                recursive_gen(j)
-                for j in annot_df.at[i, AnnotExtraColumns.CHILDREN.value]
+                recursive_gen(j) for j in annot_df.at[i, AnnotExtraColumns.CHILDREN.value]
             ]
             return tree
 
         # For each root (i.e. nodes with no parent region),
         # recursively storing (i.e. top-down recursive approach)
-        tree = [
-            recursive_gen(i)
-            for i in annot_df[
-                annot_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()
-            ].index
-        ]
+        tree = [recursive_gen(i) for i in annot_df[annot_df[AnnotColumns.PARENT_STRUCTURE_ID.value].isna()].index]
         return tree
 
     @classmethod
@@ -240,7 +222,5 @@ class MapFuncs:
         # Setting points with ID == 0 as "universe" label
         cells_df.loc[cells_df[id_col] == 0, name_col] = SpecialRegions.UNIVERSE.value
         # Setting points with no region map name (but have a positive ID value) as "no label" label
-        cells_df.loc[cells_df[name_col].isna(), name_col] = (
-            SpecialRegions.NO_LABEL.value
-        )
+        cells_df.loc[cells_df[name_col].isna(), name_col] = SpecialRegions.NO_LABEL.value
         return cells_df

@@ -8,7 +8,7 @@ import tifffile
 from microscopy_proc import ELASTIX_ENABLED
 from microscopy_proc.constants import CACHE_DIR, Coords
 from microscopy_proc.utils.io_utils import silent_remove
-from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import import_extra_error_func
 
 # Optional dependency: elastix
@@ -19,7 +19,7 @@ else:
 
 
 class ElastixFuncs:
-    logger = init_logger(__name__)
+    logger = init_logger_file(__name__)
 
     @classmethod
     def registration(
@@ -126,9 +126,7 @@ class ElastixFuncs:
         # Execute cell transformation
         transformix_img_filt.Execute()
         # Converting transformix output to df
-        coords_transformed = cls._transformix_file2coords(
-            os.path.join(out_dir, "outputpoints.txt")
-        )
+        coords_transformed = cls._transformix_file2coords(os.path.join(out_dir, "outputpoints.txt"))
         # Removing temporary and unecessary transformix files
         # silentremove(out_dir)
         return coords_transformed
@@ -161,17 +159,13 @@ class ElastixFuncs:
             df = pd.read_csv(output_points_fp, header=None, sep=";")
         except pd.errors.EmptyDataError:
             # If there are no points, then return empty df
-            return pd.DataFrame(
-                columns=[Coords.Z.value, Coords.Y.value, Coords.X.value]
-            )
+            return pd.DataFrame(columns=[Coords.Z.value, Coords.Y.value, Coords.X.value])
         df.columns = df.loc[0].str.strip().str.split(r"\s").str[0]
         # Try either "OutputIndexFixed" or "OutputPoint"
-        df = df["OutputPoint"].apply(
-            lambda x: [float(i) for i in x.replace(" ]", "").split("[ ")[1].split()]
-        )
-        return pd.DataFrame(
-            df.values.tolist(), columns=[Coords.X.value, Coords.Y.value, Coords.Z.value]
-        )[[Coords.Z.value, Coords.Y.value, Coords.X.value]]
+        df = df["OutputPoint"].apply(lambda x: [float(i) for i in x.replace(" ]", "").split("[ ")[1].split()])
+        return pd.DataFrame(df.values.tolist(), columns=[Coords.X.value, Coords.Y.value, Coords.Z.value])[
+            [Coords.Z.value, Coords.Y.value, Coords.X.value]
+        ]
 
     @classmethod
     def transformation_img(

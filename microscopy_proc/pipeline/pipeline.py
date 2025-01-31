@@ -52,8 +52,6 @@ from microscopy_proc.utils.proj_org_utils import (
     RefFpModel,
 )
 
-# TODO: make logger for each indiv func
-
 logger = init_logger_file(__name__)
 
 

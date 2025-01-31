@@ -8,14 +8,14 @@ from scipy import ndimage as sc_ndimage
 from skimage.segmentation import watershed
 
 from microscopy_proc.constants import CELL_IDX_NAME, DEPTH, CellColumns, Coords
-from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.logging_utils import init_logger_file
 
 
 class CpuCellcFuncs:
     xp = np
     xdimage = sc_ndimage
 
-    logger = init_logger(__name__)
+    logger = init_logger_file(__name__)
 
     @classmethod
     def tophat_filt(cls, arr: np.ndarray, sigma: int = 10) -> np.ndarray:
@@ -65,9 +65,7 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    def intensity_cutoff(
-        cls, arr: np.ndarray, min_: None | float = None, max_: None | float = None
-    ) -> np.ndarray:
+    def intensity_cutoff(cls, arr: np.ndarray, min_: None | float = None, max_: None | float = None) -> np.ndarray:
         """
         Performing cutoffs on a 3D tensor.
         """
@@ -95,9 +93,7 @@ class CpuCellcFuncs:
         cum_mean = cls.xp.cumsum(prob_hist * cls.xp.arange(256))
         cls.logger.debug("Compute global mean")
         global_mean = cum_mean[-1]
-        cls.logger.debug(
-            "Compute between class variance for all thresholds and find the threshold that maximizes it"
-        )
+        cls.logger.debug("Compute between class variance for all thresholds and find the threshold that maximizes it")
         numerator = (global_mean * cum_sum - cum_mean) ** 2
         denominator = cum_sum * (1.0 - cum_sum)
         cls.logger.debug("Avoid division by zero")
@@ -236,9 +232,7 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    def wshed_segm(
-        cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
-    ) -> np.ndarray:
+    def wshed_segm(cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray) -> np.ndarray:
         """
         NOTE: NOT GPU accelerated
 
@@ -253,9 +247,7 @@ class CpuCellcFuncs:
         return res
 
     @classmethod
-    def wshed_segm_volumes(
-        cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray
-    ) -> np.ndarray:
+    def wshed_segm_volumes(cls, raw_arr: np.ndarray, maxima_arr: np.ndarray, mask_arr: np.ndarray) -> np.ndarray:
         """
         NOTE: NOT GPU accelerated
         """
@@ -308,9 +300,7 @@ class CpuCellcFuncs:
         # Asserting arr sizes match between arr_raw, arr_overlap, and depth
         # NOTE: we NEED raw_arr as the first da.Array to get chunking coord offsets correct
         assert raw_arr.shape == tuple(i - 2 * depth for i in overlap_arr.shape)
-        cls.logger.debug(
-            "Trimming maxima labels array to raw array dimensions using `d`"
-        )
+        cls.logger.debug("Trimming maxima labels array to raw array dimensions using `d`")
         slicer = slice(depth, -depth) if depth > 0 else slice(None)
         maxima_arr = maxima_arr[slicer, slicer, slicer]
         cls.logger.debug("Getting unique labels in maxima_arr")
@@ -334,9 +324,7 @@ class CpuCellcFuncs:
         )
         cls.logger.debug("Watershed of overlap_arr, seeds maxima_arr, mask mask_arr")
         # NOTE: padding maxima_l_arr because we previously trimmed maxima_arr
-        maxima_l_arr = np.pad(
-            cp2np(maxima_l_arr), depth, mode="constant", constant_values=0
-        )
+        maxima_l_arr = np.pad(cp2np(maxima_l_arr), depth, mode="constant", constant_values=0)
         wshed_arr = cls.wshed_segm(overlap_arr, maxima_l_arr, mask_arr)
         cls.logger.debug("Making vector of watershed region volumes")
         ids_w, counts = cls.xp.unique(wshed_arr[wshed_arr > 0], return_counts=True)
@@ -357,9 +345,7 @@ class CpuCellcFuncs:
         df[CellColumns.SUM_INTENSITY.value] = pd.Series(sum_intensity, index=idx)
         # df["max_intensity"] = pd.Series(max_intensity, index=idx)
         # Filtering out rows with NaNs in z, y, or x columns (i.e. no na values)
-        df = df[
-            df[[Coords.Z.value, Coords.Y.value, Coords.X.value]].isna().sum(axis=1) == 0
-        ]
+        df = df[df[[Coords.Z.value, Coords.Y.value, Coords.X.value]].isna().sum(axis=1) == 0]
         return df
 
 

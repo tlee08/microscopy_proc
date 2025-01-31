@@ -1,7 +1,4 @@
-from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.template_utils import import_static_templates_script
-
-logger = init_logger(__name__)
 
 
 def main() -> None:

@@ -10,9 +10,6 @@ from typing import Any
 from jinja2 import Environment, PackageLoader
 
 from microscopy_proc.utils.diagnostics_utils import file_exists_msg
-from microscopy_proc.utils.logging_utils import init_logger
-
-logger = init_logger(__name__)
 
 
 def render_template(tmpl_name: str, pkg_name: str, pkg_subdir: str, **kwargs: Any) -> str:

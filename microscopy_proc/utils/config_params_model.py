@@ -9,9 +9,6 @@ from microscopy_proc.constants import (
     RESOURCES_DIR,
 )
 from microscopy_proc.utils.io_utils import read_json, write_json
-from microscopy_proc.utils.logging_utils import init_logger
-
-logger = init_logger(__name__)
 
 
 class RefVersions(Enum):
@@ -108,7 +105,6 @@ class ConfigParamsModel(BaseModel):
     @classmethod
     def read_fp(cls, fp: str):
         model = cls.model_validate(read_json(fp))
-        logger.info(f'Loaded in model from filepath, "{fp}"')
         return model
 
     def update(self, **kwargs):

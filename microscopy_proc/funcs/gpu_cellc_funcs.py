@@ -2,7 +2,7 @@ import functools
 
 from microscopy_proc import GPU_ENABLED
 from microscopy_proc.funcs.cpu_cellc_funcs import CpuCellcFuncs
-from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import import_extra_error_func
 
 # Optional dependency: gpu
@@ -17,7 +17,7 @@ class GpuCellcFuncs(CpuCellcFuncs):
     xp = cp
     xdimage = cp_ndimage
 
-    logger = init_logger(__name__)
+    logger = init_logger_file(__name__)
 
     ###################################################################################################
     # GPU HELPER FUNCTIONS

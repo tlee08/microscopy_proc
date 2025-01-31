@@ -1,5 +1,6 @@
 import contextlib
 import functools
+from multiprocessing import current_process
 from typing import Any, Callable
 
 import dask
@@ -8,7 +9,7 @@ import dask.array as da
 import dask.dataframe as dd
 import numpy as np
 import pandas as pd
-from dask.distributed import Client, SpecCluster
+from dask.distributed import Client, SpecCluster, get_worker
 
 from microscopy_proc.constants import DEPTH, Coords
 from microscopy_proc.utils.misc_utils import const2iter
@@ -155,3 +156,15 @@ def cluster_process(cluster: SpecCluster):
     finally:
         client.close()
         cluster.close()
+
+
+@staticmethod
+def get_cpid() -> int:
+    """Get child process ID for multiprocessing."""
+    return current_process()._identity[0] if current_process()._identity else 0
+
+
+def get_dask_pid() -> int:
+    """Get the Dask process ID."""
+    worker_id = get_worker().id
+    return int(worker_id)

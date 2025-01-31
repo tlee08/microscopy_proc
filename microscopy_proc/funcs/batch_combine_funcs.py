@@ -20,6 +20,8 @@ from microscopy_proc.utils.io_utils import read_json, sanitise_smb_df
 from microscopy_proc.utils.logging_utils import init_logger
 from microscopy_proc.utils.misc_utils import enum2list
 
+# TODO: move to pipeline and refactor
+
 COMBINED_FP = "combined_df"
 
 
@@ -65,9 +67,7 @@ class BatchCombineFuncs:
             annot_v = configs.annot_version
             map_v = configs.map_version
             # Asserting that all projects have cells_agg and mask_df files
-            assert os.path.exists(
-                pfm.cells_agg_df.val
-            ), f"Missing cells_agg_df for {name}"
+            assert os.path.exists(pfm.cells_agg_df.val), f"Missing cells_agg_df for {name}"
             assert os.path.exists(pfm.mask_df.val), f"Missing mask_df for {name}"
             # Asserting that all projects are using the same origin for reference atlas
             # to verify the same regions are being used
@@ -95,12 +95,8 @@ class BatchCombineFuncs:
         total_df = MapFuncs.annot_df_get_parents(total_df)
         # Adding special rows (e.g. "universe")
         # TODO: is neither clean nor modular
-        total_df.loc[-1] = pd.Series(
-            {AnnotColumns.NAME.value: SpecialRegions.INVALID.value}
-        )
-        total_df.loc[0] = pd.Series(
-            {AnnotColumns.NAME.value: SpecialRegions.UNIVERSE.value}
-        )
+        total_df.loc[-1] = pd.Series({AnnotColumns.NAME.value: SpecialRegions.INVALID.value})
+        total_df.loc[0] = pd.Series({AnnotColumns.NAME.value: SpecialRegions.UNIVERSE.value})
         # total_df.loc[np.nan] = pd.Series(
         #     {AnnotColumns.NAME.value: SpecialRegions.NO_LABEL.value}
         # )

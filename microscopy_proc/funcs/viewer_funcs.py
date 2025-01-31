@@ -12,7 +12,7 @@ from dask.distributed import LocalCluster
 
 from microscopy_proc.utils.dask_utils import cluster_process
 from microscopy_proc.utils.io_utils import read_files_async
-from microscopy_proc.utils.logging_utils import init_logger
+from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
 
 VRANGE = "vrange"
@@ -64,7 +64,7 @@ imgs_view_params = {
 
 
 class ViewerFuncs:
-    logger = init_logger(__name__)
+    logger = init_logger_file(__name__)
 
     @classmethod
     def read_img(cls, fp, trimmer: None | tuple[slice, ...] = None):
