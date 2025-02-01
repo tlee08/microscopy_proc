@@ -130,9 +130,9 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint8)
 
     @classmethod
-    def mask2ids(cls, arr: np.ndarray) -> np.ndarray:
+    def mask2label(cls, arr: np.ndarray) -> np.ndarray:
         """
-        Label objects in a 3D tensor.
+        Convert array of mask (usually binary) to contiguous label values.
         """
         arr = cls.xp.asarray(arr).astype(cls.xp.uint8)
         cls.logger.debug("Labelling contiguous objects uniquely")
@@ -141,10 +141,9 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint32)
 
     @classmethod
-    def ids2volumes(cls, arr: np.ndarray) -> np.ndarray:
+    def label2volume(cls, arr: np.ndarray) -> np.ndarray:
         """
-        Convert array of label values to
-        contiguous volume (i.e. count) values.
+        Convert array of label values to contiguous volume (i.e. count) values.
         """
         arr = cls.xp.asarray(arr)
         cls.logger.debug("Getting vector of ids and volumes (not incl. 0)")
@@ -157,12 +156,12 @@ class CpuCellcFuncs:
         return res.astype(cls.xp.uint16)
 
     @classmethod
-    def label_with_volumes(cls, arr: np.ndarray) -> np.ndarray:
+    def mask2volume(cls, arr: np.ndarray) -> np.ndarray:
         """
-        Label objects in a 3D tensor.
+        Convert array of mask (usually binary) to contiguous volume (i.e. count) values.
         """
-        arr = cls.mask2ids(arr)
-        res = cls.ids2volumes(arr)
+        arr = cls.mask2label(arr)
+        res = cls.label2volume(arr)
         return res
 
     @classmethod
@@ -252,11 +251,11 @@ class CpuCellcFuncs:
         NOTE: NOT GPU accelerated
         """
         # Labelling contiguous maxima with unique labels
-        maxima_arr = cls.mask2ids(maxima_arr)
+        maxima_arr = cls.mask2label(maxima_arr)
         # Watershed segmentation
         wshed_arr = cls.wshed_segm(raw_arr, maxima_arr, mask_arr)
         # Getting volumes of watershed regions
-        res = cls.ids2volumes(wshed_arr)
+        res = cls.label2volume(wshed_arr)
         return res
 
     @classmethod
@@ -304,7 +303,7 @@ class CpuCellcFuncs:
         slicer = slice(depth, -depth) if depth > 0 else slice(None)
         maxima_arr = maxima_arr[slicer, slicer, slicer]
         cls.logger.debug("Getting unique labels in maxima_arr")
-        maxima_l_arr = cls.mask2ids(maxima_arr)
+        maxima_l_arr = cls.mask2label(maxima_arr)
         cls.logger.debug("Converting to DataFrame of coordinates and measures")
         # NOTE: getting first coord of each unique label
         # NOTE: np.unique auto flattens arr so reshaping it back with np.unravel_index
@@ -347,6 +346,70 @@ class CpuCellcFuncs:
         # Filtering out rows with NaNs in z, y, or x columns (i.e. no na values)
         df = df[df[[Coords.Z.value, Coords.Y.value, Coords.X.value]].isna().sum(axis=1) == 0]
         return df
+
+    @classmethod
+    def get_cells_b(
+        cls,
+        raw_arr: np.ndarray,
+        overlap_arr: np.ndarray,
+        maxima_labels_arr: np.ndarray,
+        wshed_labels_arr: np.ndarray,
+        wshed_filt_arr: np.ndarray,
+        depth: int = DEPTH,
+    ) -> pd.DataFrame:
+        """
+        Get the cells from the maxima labels and the watershed segmentation
+        (with corresponding labels).
+        """
+        # NOTE: we NEED raw_arr as the first da.Array to get chunking coord offsets correct
+        # Asserting arr sizes match between arr_raw, arr_overlap, and depth
+        assert raw_arr.shape == tuple(i - 2 * depth for i in overlap_arr.shape)
+        assert overlap_arr.shape == maxima_labels_arr.shape
+        assert overlap_arr.shape == wshed_filt_arr.shape
+        # Asserting that maxima_labels_arr and wshed_labels_arr have the same unique labels
+        assert cls.xp.all(
+            cls.xp.unique(cls.xp.asarray(maxima_labels_arr)) == cls.xp.unique(cls.xp.asarray(wshed_labels_arr))
+        )
+        cls.logger.debug("Trimming maxima labels array to raw array dimensions using `d`")
+        slicer = slice(depth, -depth) if depth > 0 else slice(None)
+        maxima_labels_trimmed_arr = maxima_labels_arr[slicer, slicer, slicer]
+        cls.logger.debug("Converting to DataFrame of coordinates and measures")
+        # Getting first coord of each unique label (as some maxima are contiguous)
+        # NOTE: np.unique auto flattens arr so reshaping it back with np.unravel_index
+        labels_vect, coords_flat = cls.xp.unique(maxima_labels_trimmed_arr, return_index=True)
+        label_max = cp2np(labels_vect.max())
+        z, y, x = cls.xp.unravel_index(coords_flat, maxima_labels_trimmed_arr.shape)
+        cells_df = (
+            pd.DataFrame(
+                {
+                    Coords.Z.value: cp2np(z),
+                    Coords.Y.value: cp2np(y),
+                    Coords.X.value: cp2np(x),
+                },
+                index=pd.Index(cp2np(labels_vect).astype(np.uint32), name=CELL_IDX_NAME),
+            )
+            .drop(index=0)  # Not including the 0 valued row (because it's background)
+            .astype(np.uint16)
+        )
+        cells_df[CellColumns.COUNT.value] = 1
+        cls.logger.debug("Getting wshed_filt_arr (volume) values for each cell (z, y, x)")
+        cells_df[CellColumns.VOLUME.value] = wshed_filt_arr[
+            cells_df[Coords.Z.value], cells_df[Coords.Y.value], cells_df[Coords.X.value]
+        ]
+        # Filtering out cells with 0 volume (i.e evidently filtered out in wshed_filt_arr)
+        cells_df = cells_df[cells_df[CellColumns.VOLUME.value] > 0]
+        cls.logger.debug("Getting summed intensities for each cell")
+        # NOTE: with bincount, positional arg is the label category and weights sums (helpful for intensity)
+        sum_intensity = cls.xp.bincount(
+            cls.xp.asarray(wshed_labels_arr[wshed_labels_arr > 0].ravel()),
+            weights=cls.xp.asarray(overlap_arr[wshed_labels_arr > 0].ravel()),
+        )
+        # NOTE: a series with index is used here to "auto" filter labels not in cells_df
+        index = pd.Index(np.arange(label_max + 1), name=CELL_IDX_NAME)
+        cells_df[CellColumns.SUM_INTENSITY.value] = pd.Series(cp2np(sum_intensity), index=index)
+        # There should be no na values
+        assert np.all(cells_df.notna())
+        return cells_df
 
 
 def cp2np(arr) -> np.ndarray:
