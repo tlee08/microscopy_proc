@@ -94,8 +94,8 @@ class Pipeline:
     heavy_n_workers = 2
     heavy_threads_per_worker = 1
     # busy (many workers - carrying low RAM computations)
-    busy_n_workers = 2
-    busy_threads_per_worker = 1
+    busy_n_workers = 6
+    busy_threads_per_worker = 2
     # gpu
     _gpu_cluster = LocalCUDACluster
     # GPU enabled cell funcs
