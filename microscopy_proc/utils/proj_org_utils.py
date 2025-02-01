@@ -8,6 +8,8 @@ from abc import ABC, abstractmethod
 # ALSO, WAY overcomplicated with ObservedAttr
 # Just use properties, even if it is a bit more verbose
 
+# TODO: implement diagnostics message for ecah indiv specimen (i.e. PFM)
+
 
 class ObservedAttr:
     """ """
@@ -209,6 +211,7 @@ class ProjFpModelBase(FpModel):
         ]
         # Setting filepath attributes
         self.config_params = FpAttr([self.root_dir.val, "config_params.json"])
+        self.diagnostics = FpAttr([self.root_dir.val, "diagnostics.csv"])
         self.raw = FpAttr([self.root_dir.val, self.raw_sdir.val, "raw.zarr"])
         self.ref = FpAttr([self.root_dir.val, self.registration_sdir.val, "0a_reference.tif"])
         self.annot = FpAttr([self.root_dir.val, self.registration_sdir.val, "0b_annotation.tif"])
@@ -275,6 +278,7 @@ class ProjFpModel(ProjFpModelBase):
         super().set_filepaths()
         # Setting attributes as implemented
         self.config_params.set_implement()
+        self.diagnostics.set_implement()
         self.raw.set_implement()
         self.ref.set_implement()
         self.annot.set_implement()
@@ -339,6 +343,7 @@ class ProjFpModelTuning(ProjFpModelBase):
         super().set_filepaths()
         # Setting attributes as implemented
         self.config_params.set_implement()
+        self.diagnostics.set_implement()
         self.raw.set_implement()
         self.overlap.set_implement()
         self.bgrm.set_implement()
