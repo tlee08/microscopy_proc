@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
 import numpy as np
+import pandas as pd
 from natsort import natsorted
 
 # TODO: add request functionality to download Allen Mouse Atlas image:
@@ -140,6 +141,16 @@ def sanitise_smb_df(df):
     if "smb-share:server" in df.columns:
         df = df.drop(columns="smb-share:server")
     return df
+
+
+#####################################################################
+# DF IO
+#####################################################################
+
+
+def write_parquet(df: pd.DataFrame, fp: str):
+    os.makedirs(os.path.dirname(fp), exist_ok=True)
+    df.to_parquet(fp)
 
 
 #####################################################################

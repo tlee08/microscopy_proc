@@ -39,6 +39,7 @@ from microscopy_proc.utils.io_utils import (
     read_json,
     sanitise_smb_df,
     write_json,
+    write_parquet,
 )
 from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
@@ -472,7 +473,7 @@ class Pipeline:
         # Selecting and ordering relevant columns
         mask_df = mask_df[[*ANNOT_COLUMNS_FINAL, *enum2list(MaskColumns)]]
         # Saving
-        mask_df.to_parquet(pfm.mask_df.val)
+        write_parquet(mask_df, pfm.mask_df.val)
 
     ###################################################################################################
     # CROP RAW ZARR TO MAKE TUNING ZARR
@@ -885,7 +886,7 @@ class Pipeline:
                 f"({CellColumns.VOLUME.value} <= {configs.max_wshed_size})"
             )
             # Computing and saving as parquet
-            cells_df.to_parquet(pfm.cells_raw_df.val)
+            write_parquet(cells_df, pfm.cells_raw_df.val)
 
     @classmethod
     def cellc10b(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -923,7 +924,7 @@ class Pipeline:
             # Converting from dask to pandas
             cells_df = cells_df.compute()
             # Computing and saving as parquet
-            cells_df.to_parquet(pfm.cells_raw_df.val)
+            write_parquet(cells_df, pfm.cells_raw_df.val)
 
     @classmethod
     def cellc_coords_only(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -948,7 +949,7 @@ class Pipeline:
             # Converting from dask to pandas
             coords_df = coords_df.compute()
             # Computing and saving as parquet
-            coords_df.to_parquet(pfm.maxima_df.val)
+            write_parquet(coords_df, pfm.maxima_df.val)
 
     ###################################################################################################
     # CELL COUNT REALIGNMENT TO REFERENCE AND AGGREGATION PIPELINE FUNCS
@@ -996,7 +997,7 @@ class Pipeline:
             # cells_df = cells_df.map_partitions(
             #     ElastixFuncs.transformation_coords, pfm.ref.val, pfm.regresult.val
             # )
-            cells_trfm_df.to_parquet(pfm.cells_trfm_df.val)
+            write_parquet(cells_trfm_df, pfm.cells_trfm_df.val)
 
     @classmethod
     def cell_mapping(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -1062,7 +1063,7 @@ class Pipeline:
             # Saving to disk
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_df = dd.from_pandas(cells_df)
-            cells_df.to_parquet(pfm.cells_df.val)
+            write_parquet(cells_df, pfm.cells_df.val)
 
     @classmethod
     def group_cells(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -1100,7 +1101,7 @@ class Pipeline:
             # Saving to disk
             # NOTE: Using pandas parquet. does not work with dask yet
             # cells_agg = dd.from_pandas(cells_agg)
-            cells_agg_df.to_parquet(pfm.cells_agg_df.val)
+            write_parquet(cells_agg_df, pfm.cells_agg_df.val)
 
     @classmethod
     def cells2csv(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
