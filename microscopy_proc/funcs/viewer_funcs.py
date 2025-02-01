@@ -9,7 +9,7 @@ import tifffile
 from dask.distributed import LocalCluster
 
 from microscopy_proc.utils.dask_utils import cluster_process
-from microscopy_proc.utils.io_utils import async_read_files_run
+from microscopy_proc.utils.io_utils import async_read_files_run, write_tiff
 from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import dictlists2listdicts
 from microscopy_proc.utils.proj_org_utils import ProjFpModelBase
@@ -132,7 +132,7 @@ class ViewerFuncs:
             # Reading
             arr = cls.read_img(fp_in, trimmer)
             # Writing
-            tifffile.imwrite(fp_out, arr)
+            write_tiff(arr, fp_out)
 
     @classmethod
     def combine_arrs(
@@ -155,4 +155,4 @@ class ViewerFuncs:
         # Stacking arrays
         arr = np.stack(arr_ls, axis=-1, dtype=dtype)
         # Writing to file
-        tifffile.imwrite(fp_out, arr)
+        write_tiff(arr, fp_out)

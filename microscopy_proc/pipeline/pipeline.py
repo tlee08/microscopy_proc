@@ -40,6 +40,7 @@ from microscopy_proc.utils.io_utils import (
     sanitise_smb_df,
     write_json,
     write_parquet,
+    write_tiff,
 )
 from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import enum2list, import_extra_error_func
@@ -272,7 +273,7 @@ class Pipeline:
                 slice(*configs.ref_x_trim),
             ]
             # Saving
-            tifffile.imwrite(fp_o, arr)
+            write_tiff(arr, fp_o)
         # Copying region mapping json to project folder
         shutil.copyfile(rfm.map.val, pfm.map.val)
         # Copying transformation files
@@ -294,7 +295,7 @@ class Pipeline:
             # Computing (from dask array)
             downsmpl1_arr = downsmpl1_arr.compute()
             # Saving
-            tifffile.imwrite(pfm.downsmpl1.val, downsmpl1_arr)
+            write_tiff(downsmpl1_arr, pfm.downsmpl1.val)
 
     @classmethod
     def reg_img_fine(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -310,7 +311,7 @@ class Pipeline:
         # Fine downsample
         downsmpl2_arr = RegFuncs.downsmpl_fine(downsmpl1_arr, configs.z_fine, configs.y_fine, configs.x_fine)
         # Saving
-        tifffile.imwrite(pfm.downsmpl2.val, downsmpl2_arr)
+        write_tiff(downsmpl2_arr, pfm.downsmpl2.val)
 
     @classmethod
     def reg_img_trim(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -330,7 +331,7 @@ class Pipeline:
             slice(*configs.x_trim),
         ]
         # Saving
-        tifffile.imwrite(pfm.trimmed.val, trimmed_arr)
+        write_tiff(trimmed_arr, pfm.trimmed.val)
 
     @classmethod
     def reg_img_bound(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -361,7 +362,7 @@ class Pipeline:
         # Bounding upper
         bounded_arr[bounded_arr > configs.upper_bound[0]] = configs.upper_bound[1]
         # Saving
-        tifffile.imwrite(pfm.bounded.val, bounded_arr)
+        write_tiff(bounded_arr, pfm.bounded.val)
 
     @classmethod
     def reg_elastix(cls, pfm: ProjFpModelBase, overwrite: bool = False) -> None:
@@ -404,9 +405,9 @@ class Pipeline:
         s = annot_arr.shape
         # Making mask
         blur_arr = cls.cellc_funcs.gauss_blur_filt(bounded_arr, configs.mask_gaus_blur)
-        tifffile.imwrite(pfm.premask_blur.val, blur_arr)
+        write_tiff(blur_arr, pfm.premask_blur.val)
         mask_arr = cls.cellc_funcs.manual_thresh(blur_arr, configs.mask_thresh)
-        tifffile.imwrite(pfm.mask_fill.val, mask_arr)
+        write_tiff(mask_arr, pfm.mask_fill.val)
 
         # Make outline
         outline_df = MaskFuncs.make_outline(mask_arr)
@@ -433,7 +434,7 @@ class Pipeline:
         in_arr = tifffile.imread(pfm.mask_outline.val)
         VisualCheckFuncsTiff.coords2points(outline_df[outline_df.is_in == 0], s, pfm.mask_outline.val)
         out_arr = tifffile.imread(pfm.mask_outline.val)
-        tifffile.imwrite(pfm.mask_outline.val, in_arr + out_arr * 2)
+        write_tiff(in_arr + out_arr * 2, pfm.mask_outline.val)
 
         # Fill in outline to recreate mask (not perfect)
         mask_reg_arr = MaskFuncs.fill_outline(outline_df, s)
@@ -441,7 +442,7 @@ class Pipeline:
         mask_reg_arr = ndimage.binary_closing(mask_reg_arr, iterations=2).astype(np.uint8)
         mask_reg_arr = ndimage.binary_opening(mask_reg_arr, iterations=2).astype(np.uint8)
         # Saving
-        tifffile.imwrite(pfm.mask_reg.val, mask_reg_arr)
+        write_tiff(mask_reg_arr, pfm.mask_reg.val)
 
         # Counting mask voxels in each region
         # Getting original annot fp by making ref_fp_model

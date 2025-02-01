@@ -2,10 +2,9 @@ import os
 
 import numpy as np
 import pandas as pd
-import tifffile
 
 from microscopy_proc.constants import CACHE_DIR, AnnotColumns, Coords
-from microscopy_proc.utils.io_utils import silent_remove
+from microscopy_proc.utils.io_utils import silent_remove, write_tiff
 
 #####################################################################
 #             Converting coordinates to spatial
@@ -75,7 +74,7 @@ class VisualCheckFuncsTiff:
         # Adding coords to image
         cls.coords2points_workers(arr, coords)
         # Saving the subsampled array
-        tifffile.imwrite(out_fp, arr)
+        write_tiff(arr, out_fp)
         # Removing temporary memmap
         silent_remove(temp_fp)
 
@@ -106,17 +105,12 @@ class VisualCheckFuncsTiff:
 
         # Constructing sphere array mask
         zz, yy, xx = np.ogrid[1 : radius * 2, 1 : radius * 2, 1 : radius * 2]
-        circ = (
-            np.sqrt((xx - radius) ** 2 + (yy - radius) ** 2 + (zz - radius) ** 2)
-            < radius
-        )
+        circ = np.sqrt((xx - radius) ** 2 + (yy - radius) ** 2 + (zz - radius) ** 2) < radius
         # Constructing offset indices
         i = np.arange(-radius + 1, radius)
         z_ind, y_ind, x_ind = np.meshgrid(i, i, i, indexing="ij")
         # Adding coords to image
-        for z, y, x, t in zip(
-            z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()
-        ):
+        for z, y, x, t in zip(z_ind.ravel(), y_ind.ravel(), x_ind.ravel(), circ.ravel()):
             if t:
                 coords_i = coords.copy()
                 coords_i[Coords.Z.value] += z
@@ -125,7 +119,7 @@ class VisualCheckFuncsTiff:
                 cls.coords2points_workers(arr, coords_i)
 
         # Saving the subsampled array
-        tifffile.imwrite(out_fp, arr)
+        write_tiff(arr, out_fp)
         # Removing temporary memmap
         silent_remove(temp_fp)
 
@@ -155,16 +149,12 @@ class VisualCheckFuncsTiff:
 
         # Formatting coord values as (z, y, x) and rounding to integers
         coords = (
-            coords[
-                [Coords.Z.value, Coords.Y.value, Coords.X.value, AnnotColumns.ID.value]
-            ]
-            .round(0)
-            .astype(np.int16)
+            coords[[Coords.Z.value, Coords.Y.value, Coords.X.value, AnnotColumns.ID.value]].round(0).astype(np.int16)
         )
         if coords.shape[0] > 0:
             np.apply_along_axis(f, 1, coords)
 
         # Saving the subsampled array
-        tifffile.imwrite(out_fp, arr)
+        write_tiff(arr, out_fp)
         # Removing temporary memmap
         silent_remove(temp_fp)

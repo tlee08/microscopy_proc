@@ -3,11 +3,10 @@ import re
 
 import numpy as np
 import pandas as pd
-import tifffile
 
 from microscopy_proc import ELASTIX_ENABLED
 from microscopy_proc.constants import CACHE_DIR, Coords
-from microscopy_proc.utils.io_utils import silent_remove
+from microscopy_proc.utils.io_utils import silent_remove, write_tiff
 from microscopy_proc.utils.logging_utils import init_logger_file
 from microscopy_proc.utils.misc_utils import import_extra_error_func
 
@@ -67,7 +66,7 @@ class ElastixFuncs:
         # Saving output file
         res_img = elastix_img_filt.GetResultImage()
         # sitk.WriteImage(res_img, output_img_fp)
-        tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
+        write_tiff(sitk.GetArrayFromImage(res_img), output_img_fp)
         # Removing temporary and unecessary elastix files
         for i in os.listdir(output_img_dir):
             # Removing IterationInfo files
@@ -214,7 +213,7 @@ class ElastixFuncs:
         # Saving output file
         res_img = transformix_img_filt.GetResultImage()
         # # sitk.WriteImage(res_img, output_img_fp)
-        # tifffile.imwrite(output_img_fp, sitk.GetArrayFromImage(res_img))
+        # write_tiff(sitk.GetArrayFromImage(res_img), output_img_fp)
         # Removing temporary and unecessary transformix files
         silent_remove(out_dir)
         # return coords_transformed
